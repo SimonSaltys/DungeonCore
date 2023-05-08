@@ -14,7 +14,6 @@ public class DungeonHeartbeat extends GameHeartbeat {
     private final DungeonGame game;
     public DungeonHeartbeat(DungeonGame game) {
         super(game);
-
         this.game = game;
     }
 

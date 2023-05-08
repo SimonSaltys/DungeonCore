@@ -5,8 +5,8 @@ import org.bukkit.Location;
 
 public abstract class SpawnPoint implements ConfigSerializable {
 
-    abstract void spawn();
+    protected abstract void spawn();
 
-   abstract  Location getLocation();
+   protected abstract  Location getLocation();
 
 }

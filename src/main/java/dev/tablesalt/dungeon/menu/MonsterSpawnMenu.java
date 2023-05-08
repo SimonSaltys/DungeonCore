@@ -23,7 +23,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
-public class MonsterPointMenu extends Menu {
+public class MonsterSpawnMenu extends Menu {
 
     private final Button monsterSelectButton;
 
@@ -33,7 +33,7 @@ public class MonsterPointMenu extends Menu {
 
     private final MonsterSpawnPoint point;
 
-    private MonsterPointMenu(MonsterSpawnPoint point) {
+    private MonsterSpawnMenu(MonsterSpawnPoint point) {
         this.point = point;
         setTitle("&0&lMonster Point Menu");
         setSize(9);
@@ -45,13 +45,13 @@ public class MonsterPointMenu extends Menu {
     }
 
 
-    public static void openSelectMenu(Player player, MonsterSpawnPoint point) {
-        new MonsterPointMenu(point).displayTo(player);
+    public static void openConfigMenu(Player player, MonsterSpawnPoint point) {
+        new MonsterSpawnMenu(point).displayTo(player);
     }
 
     @Override
     public Menu newInstance() {
-        return new MonsterPointMenu(point);
+        return new MonsterSpawnMenu(point);
     }
 
     @Override
@@ -74,7 +74,7 @@ public class MonsterPointMenu extends Menu {
         private final MonsterSpawnPoint point;
 
         private MonsterSelectMenu(MonsterSpawnPoint point) {
-            super(MonsterPointMenu.this, Arrays.stream(EntityType.values()).filter(entityType -> entityType.isSpawnable() && entityType.isAlive())
+            super(MonsterSpawnMenu.this, Arrays.stream(EntityType.values()).filter(entityType -> entityType.isSpawnable() && entityType.isAlive())
                     .collect(Collectors.toList()));
 
             this.point = point;

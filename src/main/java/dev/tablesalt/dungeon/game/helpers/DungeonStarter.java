@@ -1,7 +1,10 @@
 package dev.tablesalt.dungeon.game.helpers;
 
 import dev.tablesalt.dungeon.game.DungeonGame;
+import dev.tablesalt.dungeon.maps.DungeonMap;
+import dev.tablesalt.dungeon.maps.LootSpawnPoint;
 import dev.tablesalt.dungeon.util.MessageUtil;
+import dev.tablesalt.gameLib.lib.RandomUtil;
 import dev.tablesalt.gameLib.lib.model.RandomNoRepeatPicker;
 import dev.tablesalt.gamelib.game.enums.GameJoinMode;
 import dev.tablesalt.gamelib.game.helpers.Game;
@@ -21,6 +24,7 @@ public class DungeonStarter extends Starter {
     @Override
     protected void onGameStart() {
         teleportPlayers();
+        spawnLoot();
         broadcastInfo();
         //todo randomize extracts, spawn loot crates, etc.
     }
@@ -43,5 +47,18 @@ public class DungeonStarter extends Starter {
 
         }, GameJoinMode.PLAYING);
 
+    }
+
+    private void spawnLoot() {
+        DungeonMap map = game.getMapRotator().getCurrentMap();
+        RandomNoRepeatPicker<LootSpawnPoint> lootSpawnPoints = RandomNoRepeatPicker.newPicker(LootSpawnPoint.class);
+        lootSpawnPoints.setItems(map.getLootSpawnPoints());
+
+        int lootCount = RandomUtil.nextBetween(map.getMinLootSpawns(),map.getMaxLootSpawns());
+
+        for (int i = 0; i < lootCount; i++) {
+            LootSpawnPoint lootSpawnPoint = lootSpawnPoints.pickRandom();
+            lootSpawnPoint.spawn();
+        }
     }
 }

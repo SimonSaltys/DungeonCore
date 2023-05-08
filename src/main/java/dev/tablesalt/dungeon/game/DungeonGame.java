@@ -41,6 +41,11 @@ public class DungeonGame extends Game {
     }
 
     @Override
+    protected Stopper compileStopper() {
+        return new DungeonStopper(this);
+    }
+
+    @Override
     protected PlayerLeaver compileLeaver() {
         return new DungeonLeaver(this);
     }
@@ -69,6 +74,11 @@ public class DungeonGame extends Game {
 
     public DungeonStarter getStarter() {
         return (DungeonStarter) super.getStarter();
+    }
+
+    @Override
+    public DungeonStopper getStopper() {
+        return (DungeonStopper) super.getStopper();
     }
 
     public DungeonHeartbeat getHeartbeat() {

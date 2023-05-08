@@ -1,4 +1,5 @@
 package dev.tablesalt.dungeon.maps;
+import dev.tablesalt.dungeon.menu.MonsterSpawnMenu;
 import dev.tablesalt.gameLib.lib.Common;
 import dev.tablesalt.gameLib.lib.Valid;
 import dev.tablesalt.gameLib.lib.remain.CompSound;
@@ -20,7 +21,7 @@ public class DungeonMap extends GameMap {
     @Getter
     private List<LootSpawnPoint> lootSpawnPoints;
     @Getter
-    private int maxMonstersSpawns, maxLootSpawns;
+    private int maxMonstersSpawns, maxLootSpawns, minLootSpawns;
 
     protected DungeonMap(String name, Game game) {
         super(name, game);
@@ -36,6 +37,7 @@ public class DungeonMap extends GameMap {
         playerSpawnPoints = getLocationList("player-spawn-points");
         monsterSpawnPoints = getList("monster-spawn-points", MonsterSpawnPoint.class);
         lootSpawnPoints = getList("loot-spawn-points", LootSpawnPoint.class);
+        minLootSpawns = getInteger("min-loot-spawns", 5);
 
     }
 
@@ -46,85 +48,60 @@ public class DungeonMap extends GameMap {
        set("max-monster-spawns", maxMonstersSpawns);
        set("max-loot-spawns", maxLootSpawns);
        set("loot-spawn-points", lootSpawnPoints);
+       set("min-loot-spawns", minLootSpawns);
 
        Common.broadcast("SAVING");
 
        super.onSave();
     }
 
+    public boolean toggleLootSpawnPoint(Location location) {
+        for (LootSpawnPoint point : lootSpawnPoints)
+            if (point.getLocation().equals(location)) {
+                lootSpawnPoints.remove(point);
+                save();
+                return false;
+            }
+
+        lootSpawnPoints.add(new LootSpawnPoint(location));
+        save();
+        return true;
+    }
+
+    public boolean toggleMonsterSpawnPoint(Location location) {
+        for (MonsterSpawnPoint point : monsterSpawnPoints)
+            if (point.getLocation().equals(location)) {
+                monsterSpawnPoints.remove(point);
+                save();
+                return false;
+            }
+        monsterSpawnPoints.add(new MonsterSpawnPoint(location));
+        save();
+        return true;
+    }
+
+    public LootSpawnPoint getLootSpawnPoint(Location location) {
+        for (LootSpawnPoint point : lootSpawnPoints)
+            if (point.getLocation().equals(location))
+                return point;
+        return null;
+    }
+
+    public MonsterSpawnPoint getMonsterSpawnPoint(Location location) {
+        for (MonsterSpawnPoint point : monsterSpawnPoints)
+            if (point.getLocation().equals(location))
+                return point;
+        return null;
+    }
+
 
     public boolean spawnPointsValid() {
        return Valid.isInRange(playerSpawnPoints.size(),game.getMinPlayers(),game.getMaxPlayers())
-               && Valid.isInRange(monsterSpawnPoints.size(),1,maxMonstersSpawns);
+               && Valid.isInRange(monsterSpawnPoints.size(),1,maxMonstersSpawns) &&
+               Valid.isInRange(lootSpawnPoints.size(),minLootSpawns,maxLootSpawns);
     }
     @Override
     public boolean isSetup() {
         return super.isSetup() && spawnPointsValid();
-    }
-
-    /**
-     * Toggles a monster spawn point at the given location.
-     */
-    public void toggleLocationInList(Player player, SpawnPoint spawnPoint, List<?> listToToggle) {
-
-        boolean removed = iterateAndRemovePointFromList(spawnPoint, listToToggle);
-
-
-        if (removed) {
-            Common.tellNoPrefix(player, "&cRemoved &7point.");
-            CompSound.BLOCK_STONE_BREAK.play(player);
-            save();
-            return;
-        }
-
-        boolean added = addSpawnPointToCorrectList(spawnPoint);
-
-        if (added) {
-            Common.tellNoPrefix(player, "&aAdded &7point.");
-            CompSound.BLOCK_STONE_PLACE.play(player);
-        } else {
-            Common.tellNoPrefix(player, "&cCould not add point. &7Max points reached.");
-            CompSound.BLOCK_ANVIL_LAND.play(player);
-        }
-       save();
-    }
-
-    public SpawnPoint hasPointWithLocation(Location location, List<?> listToFind) {
-        for (Object obj : listToFind) {
-            if (obj instanceof SpawnPoint checkPoint)
-                if (checkPoint.getLocation().equals(location))
-                    return checkPoint;
-        }
-        return null;
-    }
-
-    private boolean iterateAndRemovePointFromList(SpawnPoint spawnPoint, List<?> listToToggle) {
-        Iterator<?> itr = listToToggle.iterator();
-
-        while (itr.hasNext()) {
-            Object point = itr.next();
-            if (point instanceof SpawnPoint) {
-                if (((SpawnPoint) point).getLocation().equals(spawnPoint.getLocation())) {
-                    itr.remove();
-                    return true;
-                }
-            }
-        }
-
-        return false;
-    }
-
-    private boolean addSpawnPointToCorrectList(SpawnPoint spawnPoint) {
-        if(spawnPoint instanceof MonsterSpawnPoint) {
-            if (maxMonstersSpawns > monsterSpawnPoints.size()) {
-                monsterSpawnPoints.add((MonsterSpawnPoint) spawnPoint);
-                return true;
-            }
-        } else if (spawnPoint instanceof LootSpawnPoint)
-            if (maxLootSpawns > lootSpawnPoints.size()) {
-                lootSpawnPoints.add((LootSpawnPoint) spawnPoint);
-                return true;
-            }
-            return false;
     }
 }
