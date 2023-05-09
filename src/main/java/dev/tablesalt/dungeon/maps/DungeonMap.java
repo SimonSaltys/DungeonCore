@@ -8,6 +8,7 @@ import dev.tablesalt.gamelib.game.map.GameMap;
 import lombok.Getter;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
+import org.mineacademy.fo.visual.VisualizedRegion;
 
 import java.util.*;
 import java.util.function.Consumer;
@@ -20,6 +21,9 @@ public class DungeonMap extends GameMap {
     private List<MonsterSpawnPoint> monsterSpawnPoints;
     @Getter
     private List<LootSpawnPoint> lootSpawnPoints;
+    @Getter
+    private List<VisualizedRegion> extractRegions;
+
     @Getter
     private int maxMonstersSpawns, maxLootSpawns, minLootSpawns;
 
@@ -38,6 +42,7 @@ public class DungeonMap extends GameMap {
         monsterSpawnPoints = getList("monster-spawn-points", MonsterSpawnPoint.class);
         lootSpawnPoints = getList("loot-spawn-points", LootSpawnPoint.class);
         minLootSpawns = getInteger("min-loot-spawns", 5);
+        extractRegions = getList("extract-regions",VisualizedRegion.class);
 
     }
 
@@ -49,10 +54,16 @@ public class DungeonMap extends GameMap {
        set("max-loot-spawns", maxLootSpawns);
        set("loot-spawn-points", lootSpawnPoints);
        set("min-loot-spawns", minLootSpawns);
-
-       Common.broadcast("SAVING");
+       set("extract-regions",extractRegions);
 
        super.onSave();
+    }
+
+    public VisualizedRegion findExtractRegion(Location location) {
+     for (VisualizedRegion region : extractRegions)
+         if (region.isWithin(location))
+             return region;
+     return null;
     }
 
     public boolean toggleLootSpawnPoint(Location location) {

@@ -15,6 +15,6 @@ public class MessageUtil {
     }
 
 
-
+    public String makeError(String message) { return "&c&lERROR! &r" + message;}
 
 }
