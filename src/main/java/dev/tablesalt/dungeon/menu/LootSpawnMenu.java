@@ -1,42 +1,30 @@
 package dev.tablesalt.dungeon.menu;
 
-import dev.tablesalt.dungeon.game.DungeonGame;
-import dev.tablesalt.dungeon.maps.DungeonMap;
-import dev.tablesalt.dungeon.maps.LootSpawnPoint;
+import dev.tablesalt.dungeon.maps.spawnpoints.LootPoint;
 import dev.tablesalt.dungeon.util.PlayerUtil;
-import dev.tablesalt.gameLib.lib.Common;
-import dev.tablesalt.gameLib.lib.menu.Menu;
-import dev.tablesalt.gameLib.lib.menu.button.Button;
-import dev.tablesalt.gameLib.lib.menu.button.ButtonMenu;
-import dev.tablesalt.gameLib.lib.menu.button.ButtonRemove;
-import dev.tablesalt.gameLib.lib.menu.model.ItemCreator;
-import dev.tablesalt.gameLib.lib.menu.model.MenuClickLocation;
-import dev.tablesalt.gameLib.lib.remain.CompMaterial;
-import dev.tablesalt.gamelib.game.helpers.Game;
-import dev.tablesalt.gamelib.game.utils.GameUtil;
-import org.bukkit.entity.Item;
+
 import org.bukkit.entity.Player;
-import org.bukkit.event.inventory.ClickType;
-import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
+import org.mineacademy.fo.menu.Menu;
+import org.mineacademy.fo.menu.button.Button;
+import org.mineacademy.fo.menu.button.ButtonMenu;
+import org.mineacademy.fo.menu.model.MenuClickLocation;
+import org.mineacademy.fo.remain.CompMaterial;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Stack;
-import java.util.function.Consumer;
 
 public class LootSpawnMenu extends Menu {
 
-    private final LootSpawnPoint point;
+    private final LootPoint point;
 
     private final Button lootConfigButton;
 
 
 
-    private LootSpawnMenu(LootSpawnPoint point) {
+    private LootSpawnMenu(LootPoint point) {
         this.point = point;
         setTitle("&0&lMonster Point Menu");
         setSize(9);
@@ -44,7 +32,7 @@ public class LootSpawnMenu extends Menu {
         lootConfigButton = makeLootConfigButton();
     }
 
-    public static void openConfigMenu(Player player, LootSpawnPoint point) {
+    public static void openConfigMenu(Player player, LootPoint point) {
         new LootSpawnMenu(point).displayTo(player);
     }
 
@@ -68,10 +56,10 @@ public class LootSpawnMenu extends Menu {
     }
     private static final class LootConfigMenu extends Menu {
 
-        private final LootSpawnPoint point;
+        private final LootPoint point;
 
         private final Stack<ItemStack> loot;
-        private LootConfigMenu(LootSpawnPoint point) {
+        private LootConfigMenu(LootPoint point) {
 
             this.point = point;
             setTitle("&0&lLoot Config Menu");

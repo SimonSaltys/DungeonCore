@@ -21,14 +21,13 @@ public class DungeonGame extends Game {
     public Plugin getOwningPlugin() {
         return DungeonPlugin.getInstance();
     }
-    @Override
-    protected MapRotator compileMapRotator() { return new DungeonMapRotator(this);}
-
-
 
     /*----------------------------------------------------------------*/
     /* Custom Classes Overrides */
     /*----------------------------------------------------------------*/
+
+    @Override
+    protected MapRotator compileMapRotator() { return new DungeonMapRotator(this);}
 
     @Override
     protected DungeonScoreboard compileScoreboard() {

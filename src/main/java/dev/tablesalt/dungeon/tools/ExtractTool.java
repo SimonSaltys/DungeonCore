@@ -3,22 +3,24 @@ package dev.tablesalt.dungeon.tools;
 import dev.tablesalt.dungeon.game.DungeonGame;
 import dev.tablesalt.dungeon.maps.DungeonMap;
 import dev.tablesalt.dungeon.util.MessageUtil;
-import dev.tablesalt.gameLib.lib.Common;
-import dev.tablesalt.gameLib.lib.Messenger;
-import dev.tablesalt.gameLib.lib.menu.model.ItemCreator;
-import dev.tablesalt.gameLib.lib.remain.CompMaterial;
 import dev.tablesalt.gamelib.players.PlayerCache;
-import dev.tablesalt.gamelib.players.helpers.PlayerTagger;
 import dev.tablesalt.gamelib.tools.GameTool;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.bukkit.Material;
+import net.md_5.bungee.api.chat.ClickEvent;
+import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.inventory.ItemStack;
+import org.mineacademy.fo.Common;
+import org.mineacademy.fo.menu.model.ItemCreator;
+import org.mineacademy.fo.remain.CompMaterial;
 import org.mineacademy.fo.visual.VisualizedRegion;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class ExtractTool extends GameTool<DungeonGame> {
@@ -26,38 +28,75 @@ public final class ExtractTool extends GameTool<DungeonGame> {
     private static final ExtractTool instance = new ExtractTool();
 
     @Override
-    protected void onSuccessfulBlockClick(Player player, DungeonGame game, Block block, ClickType type) {
+    protected void onSuccessfulBlockClick(Player player, DungeonGame game, Block block, ClickType click) {
+        boolean isPrimaryClick = (click == ClickType.LEFT);
+
+        DungeonMap map = game.getMapRotator().getCurrentMap();
+        PlayerCache cache = PlayerCache.from(player);
+        VisualizedRegion currentRegion = cache.getTagger().getPlayerTag("current-region");
+
+        if (currentRegion == null)
+            currentRegion = switchExtractRegion(player,game);
 
 
+        if (isPrimaryClick)
+            currentRegion.setPrimary(block.getLocation());
+        else
+            currentRegion.setSecondary(block.getLocation());
 
+        Common.tellNoPrefix(player, MessageUtil.makeInfo("Set " + (isPrimaryClick ? "&6primary" : "&6secondary") + " &rextract point"));
 
-
+        map.save();
     }
 
     @Override
-    protected void onSuccessfulAirClick(Player player, DungeonGame game, ClickType type) {
+    protected void onSuccessfulAirClick(Player player, DungeonGame game, ClickType click) {
+        switchExtractRegion(player,game);
+    }
+
+    private VisualizedRegion switchExtractRegion(Player player, DungeonGame game) {
         DungeonMap map = game.getMapRotator().getCurrentMap();
         PlayerCache cache = PlayerCache.from(player);
-        PlayerTagger tagger = cache.getTagger();
+        VisualizedRegion currentRegion = cache.getTagger().getPlayerTag("current-region");
 
-        VisualizedRegion foundRegion = map.findExtractRegion(player.getLocation());
-
-        if (map.getExtractRegions().isEmpty() || foundRegion == null) {
-
-            VisualizedRegion region = new VisualizedRegion();
-            map.getExtractRegions().add(region);
-            tagger.setPlayerTag("current-region", region);
-            Common.tellNoPrefix(player,MessageUtil.makeInfo("Created new region"));
-            return;
+        if (currentRegion != null && !currentRegion.isWhole()) {
+            Common.tellNoPrefix(player, MessageUtil.makeError("Make sure this region is whole before proceeding"));
+            return null;
         }
 
-        //todo delete region when in one.
+        if (map.getExtractRegions().size() < map.getExtractRegionAmount())
+            map.addExtractRegion(new VisualizedRegion());
 
+        List<VisualizedRegion> extractRegions = map.getVisualizedExtractRegions();
+
+       VisualizedRegion nextRegion = Common.getNext(currentRegion == null ? extractRegions.get(0) : currentRegion,extractRegions,true);
+
+       if (nextRegion == null)
+           nextRegion = extractRegions.get(0);
+
+        cache.getTagger().setPlayerTag("current-region",nextRegion);
+        Common.tellNoPrefix(player, MessageUtil.makeInfo("Now Editing extract region " + (extractRegions.indexOf(nextRegion) + 1)  + "!"));
+        return nextRegion;
     }
+
+    @Override
+    protected VisualizedRegion getVisualizedRegion(Player player) {
+        VisualizedRegion currentRegion = PlayerCache.from(player).getTagger().getPlayerTag("current-region");
+
+        if (currentRegion == null || !currentRegion.isWhole())
+            return null;
+
+        return currentRegion;
+    }
+
+    protected String getBlockName(Block block, Player player) {
+        return "&l[&fExtract Region&l]";
+    }
+
 
     @Override
     protected CompMaterial getBlockMask(Block block, Player player) {
-        return CompMaterial.GOLD_BLOCK;
+        return CompMaterial.IRON_BLOCK;
     }
 
     @Override
@@ -66,6 +105,6 @@ public final class ExtractTool extends GameTool<DungeonGame> {
                 "",
                 "&b<< &fLeft click (BLock) &7– &fTo add primary point",
                 "&fRight click (Block) &7– &fTo set secondary point&b>>", "",
-                "&b|| &fClick air to cycle regions  &b||", "&b|| &fClick air in a region to &cdelete  &b||").makeMenuTool();
+                "&b|| &fClick air to cycle regions  &b||").makeMenuTool();
     }
 }

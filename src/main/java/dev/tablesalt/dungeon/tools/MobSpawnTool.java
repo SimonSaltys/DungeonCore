@@ -2,16 +2,10 @@ package dev.tablesalt.dungeon.tools;
 
 import dev.tablesalt.dungeon.game.DungeonGame;
 import dev.tablesalt.dungeon.maps.DungeonMap;
-import dev.tablesalt.dungeon.maps.LootSpawnPoint;
-import dev.tablesalt.dungeon.maps.MonsterSpawnPoint;
-import dev.tablesalt.dungeon.maps.SpawnPoint;
-import dev.tablesalt.dungeon.menu.LootSpawnMenu;
+import dev.tablesalt.dungeon.maps.spawnpoints.MonsterPoint;
+import dev.tablesalt.dungeon.maps.spawnpoints.SpawnPoint;
 import dev.tablesalt.dungeon.menu.MonsterSpawnMenu;
 import dev.tablesalt.dungeon.util.PlayerUtil;
-import dev.tablesalt.gameLib.lib.Common;
-import dev.tablesalt.gameLib.lib.Messenger;
-import dev.tablesalt.gameLib.lib.menu.model.ItemCreator;
-import dev.tablesalt.gameLib.lib.remain.CompMaterial;
 import dev.tablesalt.gamelib.tools.GameTool;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -20,6 +14,10 @@ import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.inventory.ItemStack;
+import org.mineacademy.fo.Common;
+import org.mineacademy.fo.Messenger;
+import org.mineacademy.fo.menu.model.ItemCreator;
+import org.mineacademy.fo.remain.CompMaterial;
 
 import java.util.List;
 
@@ -37,7 +35,7 @@ public final class MobSpawnTool extends GameTool<DungeonGame> {
         DungeonMap map = game.getMapRotator().getCurrentMap();
         SpawnPoint point = map.getMonsterSpawnPoint(block.getLocation());
 
-        if (click == ClickType.RIGHT && point instanceof MonsterSpawnPoint monsterPoint) {
+        if (click == ClickType.RIGHT && point instanceof MonsterPoint monsterPoint) {
             MonsterSpawnMenu.openConfigMenu(player, monsterPoint);
             return;
         }
@@ -50,8 +48,8 @@ public final class MobSpawnTool extends GameTool<DungeonGame> {
     @Override
     protected List<Location> getGamePoints(Player player, DungeonGame game) {
 
-            return Common.convert(PlayerUtil.getMapSafe(player).getMonsterSpawnPoints(),
-                    MonsterSpawnPoint::getLocation);
+            return Common.convert(PlayerUtil.getMapSafe(player).getMonsterPoints(),
+                    MonsterPoint::getLocation);
 
 
     }

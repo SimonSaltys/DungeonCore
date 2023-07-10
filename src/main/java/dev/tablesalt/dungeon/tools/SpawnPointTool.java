@@ -3,11 +3,6 @@ package dev.tablesalt.dungeon.tools;
 
 import dev.tablesalt.dungeon.maps.DungeonMap;
 import dev.tablesalt.dungeon.game.DungeonGame;
-import dev.tablesalt.gameLib.lib.Common;
-import dev.tablesalt.gameLib.lib.menu.model.ItemCreator;
-import dev.tablesalt.gameLib.lib.remain.CompMaterial;
-import dev.tablesalt.gameLib.lib.settings.FileConfig;
-import dev.tablesalt.gamelib.tools.GameTool;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -16,6 +11,9 @@ import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.inventory.ItemStack;
+import org.mineacademy.fo.menu.model.ItemCreator;
+import org.mineacademy.fo.remain.CompMaterial;
+import org.mineacademy.fo.settings.FileConfig;
 
 import java.util.List;
 

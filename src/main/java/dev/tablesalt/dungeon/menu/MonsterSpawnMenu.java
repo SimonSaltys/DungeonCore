@@ -1,16 +1,8 @@
 package dev.tablesalt.dungeon.menu;
 
-import dev.tablesalt.dungeon.maps.MonsterSpawnPoint;
+import dev.tablesalt.dungeon.maps.spawnpoints.MonsterPoint;
 import dev.tablesalt.dungeon.util.MessageUtil;
 import dev.tablesalt.dungeon.util.PlayerUtil;
-import dev.tablesalt.gameLib.lib.ItemUtil;
-import dev.tablesalt.gameLib.lib.conversation.SimplePrompt;
-import dev.tablesalt.gameLib.lib.menu.Menu;
-import dev.tablesalt.gameLib.lib.menu.MenuPagged;
-import dev.tablesalt.gameLib.lib.menu.button.Button;
-import dev.tablesalt.gameLib.lib.menu.button.ButtonConversation;
-import dev.tablesalt.gameLib.lib.menu.model.ItemCreator;
-import dev.tablesalt.gameLib.lib.remain.CompMaterial;
 import org.bukkit.conversations.ConversationContext;
 import org.bukkit.conversations.Prompt;
 import org.bukkit.entity.EntityType;
@@ -19,6 +11,14 @@ import org.bukkit.event.inventory.ClickType;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.mineacademy.fo.ItemUtil;
+import org.mineacademy.fo.conversation.SimplePrompt;
+import org.mineacademy.fo.menu.Menu;
+import org.mineacademy.fo.menu.MenuPagged;
+import org.mineacademy.fo.menu.button.Button;
+import org.mineacademy.fo.menu.button.ButtonConversation;
+import org.mineacademy.fo.menu.model.ItemCreator;
+import org.mineacademy.fo.remain.CompMaterial;
 
 import java.util.Arrays;
 import java.util.stream.Collectors;
@@ -31,9 +31,9 @@ public class MonsterSpawnMenu extends Menu {
 
     private final ButtonConversation amountButton;
 
-    private final MonsterSpawnPoint point;
+    private final MonsterPoint point;
 
-    private MonsterSpawnMenu(MonsterSpawnPoint point) {
+    private MonsterSpawnMenu(MonsterPoint point) {
         this.point = point;
         setTitle("&0&lMonster Point Menu");
         setSize(9);
@@ -45,7 +45,7 @@ public class MonsterSpawnMenu extends Menu {
     }
 
 
-    public static void openConfigMenu(Player player, MonsterSpawnPoint point) {
+    public static void openConfigMenu(Player player, MonsterPoint point) {
         new MonsterSpawnMenu(point).displayTo(player);
     }
 
@@ -71,9 +71,9 @@ public class MonsterSpawnMenu extends Menu {
 
     private final class MonsterSelectMenu extends MenuPagged<EntityType> {
 
-        private final MonsterSpawnPoint point;
+        private final MonsterPoint point;
 
-        private MonsterSelectMenu(MonsterSpawnPoint point) {
+        private MonsterSelectMenu(MonsterPoint point) {
             super(MonsterSpawnMenu.this, Arrays.stream(EntityType.values()).filter(entityType -> entityType.isSpawnable() && entityType.isAlive())
                     .collect(Collectors.toList()));
 
@@ -101,9 +101,9 @@ public class MonsterSpawnMenu extends Menu {
 
         private static final String NO_RADIUS = "No Radius";
 
-        private final MonsterSpawnPoint point;
+        private final MonsterPoint point;
 
-        public RadiusPrompt(MonsterSpawnPoint point) {
+        public RadiusPrompt(MonsterPoint point) {
             this.point = point;
         }
 
@@ -154,11 +154,12 @@ public class MonsterSpawnMenu extends Menu {
 
 
     private static class AmountConversation extends SimplePrompt {
-        private final MonsterSpawnPoint point;
+        private final MonsterPoint point;
 
-        public AmountConversation(MonsterSpawnPoint point) {
+        public AmountConversation(MonsterPoint point) {
             this.point = point;
         }
+
         @Override
         protected boolean isInputValid(ConversationContext context, String input) {
 
@@ -181,15 +182,15 @@ public class MonsterSpawnMenu extends Menu {
 
         @Override
         protected String getPrompt(ConversationContext conversationContext) {
-           return "Enter the amount of monsters to spawn. (1-9) default is 1.";
+            return "Enter the amount of monsters to spawn. (1-9) default is 1.";
         }
 
         @Nullable
         @Override
         protected Prompt acceptValidatedInput(@NotNull ConversationContext conversationContext, @NotNull String input) {
 
-                int amount = Integer.parseInt(input);
-                point.setAmountToSpawn(amount);
+            int amount = Integer.parseInt(input);
+            point.setAmountToSpawn(amount);
 
             Player player = (Player) conversationContext.getForWhom();
             PlayerUtil.getMapSafe(player).save();
@@ -198,7 +199,7 @@ public class MonsterSpawnMenu extends Menu {
         }
     }
 
-    private Button makeMonsterSelectButton(MonsterSpawnPoint spawnPoint) {
+    private Button makeMonsterSelectButton(MonsterPoint spawnPoint) {
         return new Button() {
             @Override
             public void onClickedInMenu(Player player, Menu menu, ClickType clickType) {
@@ -208,16 +209,17 @@ public class MonsterSpawnMenu extends Menu {
             @Override
             public ItemStack getItem() {
                 return ItemCreator.ofEgg(spawnPoint.getEntity()).name("&l&3Current Entity: " +
-                                "&7" + ItemUtil.bountifyCapitalized(spawnPoint.getEntity().name())).make();
+                        "&7" + ItemUtil.bountifyCapitalized(spawnPoint.getEntity().name())).make();
             }
         };
     }
-    private ButtonConversation makeSpawnRadiusButton(MonsterSpawnPoint spawnPoint) {
+
+    private ButtonConversation makeSpawnRadiusButton(MonsterPoint spawnPoint) {
         return new ButtonConversation(new RadiusPrompt(spawnPoint), ItemCreator.of(CompMaterial.COMPASS,
                 "&l&3Spawn Radius: &7" + spawnPoint.getTriggerRadius()));
     }
 
-    private ButtonConversation makeAmountButton(MonsterSpawnPoint spawnPoint) {
+    private ButtonConversation makeAmountButton(MonsterPoint spawnPoint) {
         return new ButtonConversation(new AmountConversation(spawnPoint), ItemCreator.of(CompMaterial.CHEST,
                 "&l&3Amount to Spawn: &7" + spawnPoint.getAmountToSpawn()));
     }

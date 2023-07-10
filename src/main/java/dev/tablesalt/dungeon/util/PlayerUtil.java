@@ -2,11 +2,12 @@ package dev.tablesalt.dungeon.util;
 
 import dev.tablesalt.dungeon.game.DungeonGame;
 import dev.tablesalt.dungeon.maps.DungeonMap;
-import dev.tablesalt.gameLib.lib.Valid;
+
 import dev.tablesalt.gamelib.players.PlayerCache;
-import io.lumine.mythic.bukkit.utils.lib.jooq.impl.QOM;
+
 import lombok.experimental.UtilityClass;
 import org.bukkit.entity.Player;
+import org.mineacademy.fo.Valid;
 
 @UtilityClass
 public class PlayerUtil {

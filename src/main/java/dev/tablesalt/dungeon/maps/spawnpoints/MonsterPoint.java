@@ -1,18 +1,14 @@
-package dev.tablesalt.dungeon.maps;
+package dev.tablesalt.dungeon.maps.spawnpoints;
 
 import dev.tablesalt.dungeon.util.EntityUtil;
-import dev.tablesalt.gameLib.lib.collection.SerializedMap;
-import dev.tablesalt.gameLib.lib.model.ConfigSerializable;
-import dev.tablesalt.gameLib.lib.settings.FileConfig;
-import dev.tablesalt.gamelib.game.map.GameMap;
+
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.Location;
 import org.bukkit.entity.*;
+import org.mineacademy.fo.collection.SerializedMap;
 
-import java.util.List;
-
-public class MonsterSpawnPoint extends SpawnPoint {
+public class MonsterPoint extends SpawnPoint {
 
     private final Location location;
     @Getter @Setter
@@ -25,7 +21,7 @@ public class MonsterSpawnPoint extends SpawnPoint {
     @Setter
     private boolean triggered = false;
 
-    public MonsterSpawnPoint(Location location) {
+    public MonsterPoint(Location location) {
         this.location = location;
         this.entity = EntityType.ZOMBIE;
     }
@@ -55,8 +51,8 @@ public class MonsterSpawnPoint extends SpawnPoint {
         );
     }
 
-    public static MonsterSpawnPoint deserialize(SerializedMap map) {
-       MonsterSpawnPoint spawnPoint = new MonsterSpawnPoint(map.getLocation("location"));
+    public static MonsterPoint deserialize(SerializedMap map) {
+       MonsterPoint spawnPoint = new MonsterPoint(map.getLocation("location"));
        spawnPoint.setEntity(map.get("entity", EntityType.class));
        spawnPoint.setTriggerRadius(map.getDouble("trigger-radius",3.5));
        spawnPoint.setAmountToSpawn(map.getInteger("amount-to-spawn",1));

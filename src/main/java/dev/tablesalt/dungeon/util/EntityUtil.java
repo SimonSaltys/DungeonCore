@@ -1,12 +1,9 @@
 package dev.tablesalt.dungeon.util;
-
-import com.earth2me.essentials.utils.LocationUtil;
-import dev.tablesalt.gameLib.lib.RandomUtil;
-import dev.tablesalt.gamelib.game.utils.GameUtil;
 import lombok.experimental.UtilityClass;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.EntityType;
+import org.mineacademy.fo.RandomUtil;
 
 @UtilityClass
 public class EntityUtil {

@@ -18,16 +18,34 @@
 
         <main.class>dev.tablesalt.dungeon.DungeonPlugin</main.class>
 
+        <foundation.version>6.4.2</foundation.version>
+
+        <foundation.path>com.github.kangarko</foundation.path>
+
+
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
     <dependencies>
+        <dependency>
+            <groupId>${foundation.path}</groupId>
+            <artifactId>Foundation</artifactId>
+            <version>${foundation.version}</version>
+        </dependency>
+
         <dependency>
             <groupId>dev.tablesalt</groupId>
             <artifactId>gameLib</artifactId>
             <version>0.1-ALPHA</version>
         </dependency>
     </dependencies>
+
+    <repositories>
+        <repository>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
+        </repository>
+    </repositories>
 
     <!-- DO NOT EDIT unless instructed to do so or you know what you're doing. -->
     <build>
@@ -75,8 +93,15 @@
                     <artifactSet>
                         <includes>
                             <include>dev.tablesalt:gameLib*</include>
+                            <include>${foundation.path}:Foundation*</include>
                         </includes>
                     </artifactSet>
+                    <relocations>
+                        <relocation>
+                            <pattern>org.mineacademy.${project.artifactId}.fo</pattern>
+                            <shadedPattern>${project.groupId}.${project.artifactId}.lib</shadedPattern>
+                        </relocation>
+                    </relocations>
                 </configuration>
             </plugin>
         </plugins>

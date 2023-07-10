@@ -1,29 +1,27 @@
-package dev.tablesalt.dungeon.maps;
+package dev.tablesalt.dungeon.maps.spawnpoints;
 
-import dev.tablesalt.gameLib.lib.RandomUtil;
-import dev.tablesalt.gameLib.lib.collection.SerializedMap;
-import dev.tablesalt.gameLib.lib.remain.CompMaterial;
+
 import lombok.Getter;
-import lombok.Setter;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.Chest;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.mineacademy.fo.collection.SerializedMap;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Stack;
 
-public class LootSpawnPoint extends SpawnPoint {
+public class LootPoint extends SpawnPoint {
 
     private final Location location;
     @Getter
     private List<ItemStack> loot;
 
-    public LootSpawnPoint(Location location) {
+    public LootPoint(Location location) {
         this.location = location;
         this.loot = new ArrayList<>();
     }
@@ -75,8 +73,8 @@ public class LootSpawnPoint extends SpawnPoint {
 
     }
 
-    public static LootSpawnPoint deserialize(SerializedMap map) {
-        LootSpawnPoint spawnPoint = new LootSpawnPoint(map.getLocation("location"));
+    public static LootPoint deserialize(SerializedMap map) {
+        LootPoint spawnPoint = new LootPoint(map.getLocation("location"));
         spawnPoint.loot = map.getList("loot", ItemStack.class);
 
         return spawnPoint;

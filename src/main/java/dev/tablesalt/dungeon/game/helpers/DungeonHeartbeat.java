@@ -2,12 +2,16 @@ package dev.tablesalt.dungeon.game.helpers;
 
 import dev.tablesalt.dungeon.game.DungeonGame;
 import dev.tablesalt.dungeon.maps.DungeonMap;
-import dev.tablesalt.dungeon.maps.MonsterSpawnPoint;
-import dev.tablesalt.gameLib.lib.remain.Remain;
+import dev.tablesalt.dungeon.maps.spawnpoints.ExtractRegion;
+import dev.tablesalt.dungeon.maps.spawnpoints.MonsterPoint;
 import dev.tablesalt.gamelib.game.helpers.GameHeartbeat;
+import org.bukkit.command.Command;
 import org.bukkit.entity.Entity;
-import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
+import org.mineacademy.fo.Common;
+import org.mineacademy.fo.model.Countdown;
+import org.mineacademy.fo.remain.Remain;
+import org.mineacademy.fo.visual.VisualizedRegion;
 
 public class DungeonHeartbeat extends GameHeartbeat {
 
@@ -19,37 +23,56 @@ public class DungeonHeartbeat extends GameHeartbeat {
 
     @Override
     protected void onTick() {
-        tickMobSpawnPoints();
-        super.onTick();
     }
+
+    @Override
+    protected void onTickFast() {
+        tickMobSpawnPoints();
+        tickExtractLocations();
+
+    }
+
     @Override
     protected void onEnd() {
         super.onEnd();
 
-        resetSpawnPoints();
         game.getStopper().stop();
     }
 
+
+    private void tickExtractLocations() {
+        DungeonMap map = game.getMapRotator().getCurrentMap();
+
+        if (map == null)
+            return;
+
+        for (ExtractRegion extractRegion : map.getExtractRegions()) {
+            VisualizedRegion region = extractRegion.getRegion();
+
+            if (!extractRegion.isActive())
+                return;
+
+            for (Entity entity : Remain.getNearbyEntities(region.getCenter(),20))
+                if (entity instanceof Player player) {
+                    if (region.isWithin(player.getLocation()))
+                        extractRegion.startExtractionFor(player);
+
+                    if (!region.canSeeParticles(player))
+                        region.showParticles(player);
+                }
+        }
+    }
     private void tickMobSpawnPoints() {
         DungeonMap map = game.getMapRotator().getCurrentMap();
 
         if (map == null)
             return;
 
-        for (MonsterSpawnPoint point : map.getMonsterSpawnPoints())
+        for (MonsterPoint point : map.getMonsterPoints())
             for(Entity entity : Remain.getNearbyEntities(point.getLocation(),point.getTriggerRadius()))
                 if (entity instanceof Player)
                     point.spawn();
     }
 
-    private void resetSpawnPoints() {
-        DungeonMap map = game.getMapRotator().getCurrentMap();
 
-        if (map == null)
-            return;
-
-        for (MonsterSpawnPoint point : map.getMonsterSpawnPoints())
-            point.setTriggered(false);
-
-    }
 }

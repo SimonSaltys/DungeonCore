@@ -1,31 +1,33 @@
 package dev.tablesalt.dungeon.maps;
-import dev.tablesalt.dungeon.menu.MonsterSpawnMenu;
-import dev.tablesalt.gameLib.lib.Common;
-import dev.tablesalt.gameLib.lib.Valid;
-import dev.tablesalt.gameLib.lib.remain.CompSound;
+import dev.tablesalt.dungeon.maps.spawnpoints.ExtractRegion;
+import dev.tablesalt.dungeon.maps.spawnpoints.LootPoint;
+import dev.tablesalt.dungeon.maps.spawnpoints.MonsterPoint;
+
 import dev.tablesalt.gamelib.game.helpers.Game;
 import dev.tablesalt.gamelib.game.map.GameMap;
 import lombok.Getter;
 import org.bukkit.Location;
-import org.bukkit.entity.Player;
+import org.mineacademy.fo.Common;
+import org.mineacademy.fo.Valid;
 import org.mineacademy.fo.visual.VisualizedRegion;
 
 import java.util.*;
-import java.util.function.Consumer;
-import java.util.function.Function;
 
 public class DungeonMap extends GameMap {
     @Getter
     private LocationList playerSpawnPoints;
     @Getter
-    private List<MonsterSpawnPoint> monsterSpawnPoints;
+    private List<MonsterPoint> monsterPoints;
     @Getter
-    private List<LootSpawnPoint> lootSpawnPoints;
-    @Getter
-    private List<VisualizedRegion> extractRegions;
+    private List<LootPoint> lootPoints;
 
     @Getter
-    private int maxMonstersSpawns, maxLootSpawns, minLootSpawns;
+    private List<ExtractRegion> extractRegions;
+    @Getter
+    private int extractRegionsToActivate;
+
+    @Getter
+    private int maxMonstersSpawns, maxLootSpawns, minLootSpawns, extractRegionAmount;
 
     protected DungeonMap(String name, Game game) {
         super(name, game);
@@ -37,69 +39,85 @@ public class DungeonMap extends GameMap {
 
         maxLootSpawns = getInteger("max-loot-spawns",10);
         maxMonstersSpawns = getInteger("max-monster-spawns",10);
+        extractRegionAmount = getInteger("max-extract-regions",4);
+        extractRegionsToActivate = getInteger("extract-regions-to-activate",1);
 
         playerSpawnPoints = getLocationList("player-spawn-points");
-        monsterSpawnPoints = getList("monster-spawn-points", MonsterSpawnPoint.class);
-        lootSpawnPoints = getList("loot-spawn-points", LootSpawnPoint.class);
+        monsterPoints = getList("monster-spawn-points", MonsterPoint.class);
+        lootPoints = getList("loot-spawn-points", LootPoint.class);
         minLootSpawns = getInteger("min-loot-spawns", 5);
-        extractRegions = getList("extract-regions",VisualizedRegion.class);
+        extractRegions = getList("extract-regions", ExtractRegion.class);
 
     }
 
     @Override
     protected void onSave() {
        set("player-spawn-points", playerSpawnPoints);
-       set("monster-spawn-points", monsterSpawnPoints);
+       set("monster-spawn-points", monsterPoints);
        set("max-monster-spawns", maxMonstersSpawns);
        set("max-loot-spawns", maxLootSpawns);
-       set("loot-spawn-points", lootSpawnPoints);
+       set("loot-spawn-points", lootPoints);
        set("min-loot-spawns", minLootSpawns);
        set("extract-regions",extractRegions);
+       set("max-extract-regions", extractRegionAmount);
+       set("extract-regions-to-activate", extractRegionsToActivate);
 
        super.onSave();
     }
 
-    public VisualizedRegion findExtractRegion(Location location) {
-     for (VisualizedRegion region : extractRegions)
-         if (region.isWithin(location))
-             return region;
-     return null;
+    public ExtractRegion findExtractRegion(Location location) {
+        for (ExtractRegion region : extractRegions)
+            if (region.getRegion().isWithin(location))
+                return region;
+        return null;
+    }
+
+    public List<VisualizedRegion> getVisualizedExtractRegions() {
+        return Common.convert(extractRegions, ExtractRegion::getRegion);
+    }
+
+
+
+    public void addExtractRegion(VisualizedRegion region) {
+            extractRegions.add(new ExtractRegion(region));
+
+        save();
     }
 
     public boolean toggleLootSpawnPoint(Location location) {
-        for (LootSpawnPoint point : lootSpawnPoints)
+        for (LootPoint point : lootPoints)
             if (point.getLocation().equals(location)) {
-                lootSpawnPoints.remove(point);
+                lootPoints.remove(point);
                 save();
                 return false;
             }
 
-        lootSpawnPoints.add(new LootSpawnPoint(location));
+        lootPoints.add(new LootPoint(location));
         save();
         return true;
     }
 
     public boolean toggleMonsterSpawnPoint(Location location) {
-        for (MonsterSpawnPoint point : monsterSpawnPoints)
+        for (MonsterPoint point : monsterPoints)
             if (point.getLocation().equals(location)) {
-                monsterSpawnPoints.remove(point);
+                monsterPoints.remove(point);
                 save();
                 return false;
             }
-        monsterSpawnPoints.add(new MonsterSpawnPoint(location));
+        monsterPoints.add(new MonsterPoint(location));
         save();
         return true;
     }
 
-    public LootSpawnPoint getLootSpawnPoint(Location location) {
-        for (LootSpawnPoint point : lootSpawnPoints)
+    public LootPoint getLootSpawnPoint(Location location) {
+        for (LootPoint point : lootPoints)
             if (point.getLocation().equals(location))
                 return point;
         return null;
     }
 
-    public MonsterSpawnPoint getMonsterSpawnPoint(Location location) {
-        for (MonsterSpawnPoint point : monsterSpawnPoints)
+    public MonsterPoint getMonsterSpawnPoint(Location location) {
+        for (MonsterPoint point : monsterPoints)
             if (point.getLocation().equals(location))
                 return point;
         return null;
@@ -108,11 +126,18 @@ public class DungeonMap extends GameMap {
 
     public boolean spawnPointsValid() {
        return Valid.isInRange(playerSpawnPoints.size(),game.getMinPlayers(),game.getMaxPlayers())
-               && Valid.isInRange(monsterSpawnPoints.size(),1,maxMonstersSpawns) &&
-               Valid.isInRange(lootSpawnPoints.size(),minLootSpawns,maxLootSpawns);
+               && Valid.isInRange(monsterPoints.size(),1,maxMonstersSpawns) &&
+               Valid.isInRange(lootPoints.size(),minLootSpawns,maxLootSpawns);
+    }
+
+    public boolean extractRegionsValid() {
+        for (ExtractRegion region : extractRegions)
+            if (region.getRegion() == null || !region.getRegion().isWhole())
+                return false;
+        return true;
     }
     @Override
     public boolean isSetup() {
-        return super.isSetup() && spawnPointsValid();
+        return super.isSetup() && spawnPointsValid() && extractRegionsValid();
     }
 }
