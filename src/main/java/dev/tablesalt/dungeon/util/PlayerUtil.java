@@ -7,7 +7,11 @@ import dev.tablesalt.gamelib.players.PlayerCache;
 
 import lombok.experimental.UtilityClass;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.mineacademy.fo.Valid;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @UtilityClass
 public class PlayerUtil {
@@ -21,6 +25,20 @@ public class PlayerUtil {
 
         Valid.checkNotNull(map, "Player is not in a map!");
         return map;
+    }
+
+    public void giveItem(Player player,ItemStack itemStack) {
+        if (itemStack == null)
+            return;
+
+
+        HashMap<Integer, ItemStack> failedItems = player.getInventory().addItem(itemStack);
+
+        for(Map.Entry<Integer, ItemStack> entry : failedItems.entrySet()) {
+            player.getWorld().dropItemNaturally(player.getLocation(), entry.getValue());
+        }
+
+
     }
 
 
