@@ -14,6 +14,10 @@ public class MessageUtil {
         return "&e&lINFO! &r" + message;
     }
 
+    public String makeError(String message) { return "&c&lERROR! &r" + message;}
+
+    public String makeSuccessful(String message) {return "&a&lSuccess! &r" + message; }
+
     public String makeClickable(String message, ClickEvent event) {
         TextComponent textComponent = new TextComponent(message);
 
@@ -24,7 +28,7 @@ public class MessageUtil {
         return textComponent.getText();
     }
 
-    public String makeError(String message) { return "&c&lERROR! &r" + message;}
+
 
 
     public String getPromptPrefix() {

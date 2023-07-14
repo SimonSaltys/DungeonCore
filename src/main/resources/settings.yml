@@ -30,7 +30,12 @@
 #
 # !-----------------------------------------------------------------------------------------------!
 
-
+database:
+  host: localhost # host of your database
+  port: 1433 # default port for MariaDB and MySQL
+  database: interesting_murdock # name of your database. A database server can contain multiple databases
+  user: sa
+  password: myPassword
 
 # -------------------------------------------------------------------------------------------------
 # The formats used in the {timestamp} and {location} variables. For help with timestamp, see:
