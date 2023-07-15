@@ -1,8 +1,10 @@
 package dev.tablesalt.dungeon.database;
 
 
+import dev.tablesalt.dungeon.menu.enchanting.EnchantingMenu;
 import dev.tablesalt.dungeon.util.MessageUtil;
 import dev.tablesalt.dungeon.util.PlayerUtil;
+import dev.tablesalt.gamelib.players.PlayerCache;
 import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -55,23 +57,33 @@ public class RedisDatabase  {
             return;
 
         PlayerInventory inventory = player.getInventory();
+        PlayerCache cache = PlayerCache.from(player);
+
+        ItemStack itemLeftInEnchanter = cache.getTagger().getPlayerTag(EnchantingMenu.ITEM_STILL_IN_ENCHANTER);
 
         SerializedMap inventoriesMap = SerializedMap.ofArray(
                 "Main_Inventory", BukkitSerialization.itemStackArrayToBase64(PlayerUtil.getAllItemsExcludingArmor(player)),
                 "Armor_Contents", BukkitSerialization.itemStackArrayToBase64(inventory.getArmorContents()),
                 "Off_Hand_Contents", BukkitSerialization.itemStackToBase64(inventory.getItemInOffHand()),
-                "Enchanting_Table_Contents", "In Progress");
+                "Enchanting_Table_Contents", itemLeftInEnchanter != null ? BukkitSerialization.itemStackToBase64(itemLeftInEnchanter) : null);
 
         jedis.set(PLAYER_ITEMS + player.getUniqueId(), inventoriesMap.toJson());
     }
 
     public void loadItems(Player player) throws IOException {
         SerializedMap map = SerializedMap.fromJson(jedis.get(PLAYER_ITEMS + player.getUniqueId()));
+        PlayerCache cache = PlayerCache.from(player);
+
+        ItemStack itemLeftInEnchanter = cache.getTagger().getPlayerTag(EnchantingMenu.ITEM_STILL_IN_ENCHANTER);
 
         PlayerInventory currentInventory = player.getInventory();
         ItemStack[] savedInventory = BukkitSerialization.itemStackArrayFromBase64(map.get("Main_Inventory",String.class));
         ItemStack[] savedArmor = BukkitSerialization.itemStackArrayFromBase64(map.get("Armor_Contents", String.class));
         ItemStack savedOffHand = BukkitSerialization.itemStackFromBase64(map.get("Off_Hand_Contents", String.class));
+
+        //load enchanting menu if any item was left there
+        if (itemLeftInEnchanter != null)
+            cache.getTagger().setPlayerTag(EnchantingMenu.ITEM_STILL_IN_ENCHANTER,itemLeftInEnchanter);
 
         //load main inventory
         for (int i = 0; i < 36; i++)

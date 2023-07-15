@@ -48,10 +48,6 @@ public class PlayerUtil {
         PlayerInventory inventory = player.getInventory();
         ItemStack[] items = new ItemStack[46];
 
-        for (int i = 0; i < 36; i++) {
-            items[i] = inventory.getItem(i);
-            Common.broadcast("saving " + inventory.getItem(i));
-        }
 
         return items;
     }

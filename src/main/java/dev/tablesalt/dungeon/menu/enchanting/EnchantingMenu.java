@@ -1,5 +1,6 @@
 package dev.tablesalt.dungeon.menu.enchanting;
 
+import dev.tablesalt.dungeon.database.RedisDatabase;
 import dev.tablesalt.dungeon.util.PlayerUtil;
 import dev.tablesalt.gamelib.game.utils.SimpleRunnable;
 import dev.tablesalt.gamelib.game.utils.TBSColor;
@@ -8,12 +9,14 @@ import lombok.Getter;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
+import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
 import org.mineacademy.fo.Common;
 import org.mineacademy.fo.menu.Menu;
 import org.mineacademy.fo.menu.button.Button;
+import org.mineacademy.fo.menu.model.InventoryDrawer;
 import org.mineacademy.fo.menu.model.ItemCreator;
 import org.mineacademy.fo.menu.model.MenuClickLocation;
 import org.mineacademy.fo.remain.CompMaterial;
@@ -26,7 +29,9 @@ public class EnchantingMenu extends Menu {
 
     private final EnchantingAnimation enchantingAnimation;
 
-    private static int ENCHANT_SLOT = 20;
+    public static final String ITEM_STILL_IN_ENCHANTER = "enchanted-item-left";
+
+    private static final int ENCHANT_SLOT = 20;
 
     private EnchantingMenu() {
         setTitle("&5Eternal Well");
@@ -69,6 +74,19 @@ public class EnchantingMenu extends Menu {
     }
 
     @Override
+    protected void onDisplay(InventoryDrawer drawer) {
+        PlayerCache cache = PlayerCache.from(getViewer());
+
+
+        ItemStack itemLeftInMenu = cache.getTagger().getPlayerTag(ITEM_STILL_IN_ENCHANTER);
+
+        if (itemLeftInMenu != null)
+            drawer.setItem(ENCHANT_SLOT,itemLeftInMenu);
+    }
+
+
+
+    @Override
     public ItemStack getItemAt(int slot) {
 
         if (slot == 24)
@@ -84,20 +102,26 @@ public class EnchantingMenu extends Menu {
 
     @Override
     protected void onMenuClose(Player player, Inventory inventory) {
+        PlayerCache cache = PlayerCache.from(player);
+
         if (basicLoopAnimation.isRunning())
             basicLoopAnimation.cancel();
 
         if (enchantingAnimation.isRunning()) {
             enchantingAnimation.cancel();
 
-            //todo have it remember that it is in the menu
             if (enchantingAnimation.getEnchantedItem() != null) {
-                PlayerUtil.giveItem(getViewer(),enchantingAnimation.getEnchantedItem());
-                PlayerCache.from(getViewer()).getTagger().setPlayerTag("upgrading", false);
+                cache.getTagger().setPlayerTag("upgrading", false);
+                cache.getTagger().setPlayerTag(ITEM_STILL_IN_ENCHANTER, enchantingAnimation.getEnchantedItem());
             }
 
-        }
+        } else if(inventory.getItem(ENCHANT_SLOT) != null)
+            cache.getTagger().setPlayerTag(ITEM_STILL_IN_ENCHANTER, inventory.getItem(ENCHANT_SLOT));
+        else
+            cache.getTagger().setPlayerTag(ITEM_STILL_IN_ENCHANTER, NO_ITEM);
 
+
+        RedisDatabase.getInstance().saveItems(player);
     }
 
     private ItemStack enchantItem(ItemStack item) {

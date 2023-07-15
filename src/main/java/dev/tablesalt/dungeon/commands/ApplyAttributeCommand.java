@@ -16,7 +16,7 @@ public final class ApplyAttributeCommand extends GameSubCommand {
 
     @Override
     protected void onCommand() {
-
+        EnchantingMenu.openEnchantMenu(getPlayer());
 
     }
 }
