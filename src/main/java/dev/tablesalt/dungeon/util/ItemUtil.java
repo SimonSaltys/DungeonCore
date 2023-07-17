@@ -1,48 +1,69 @@
 package dev.tablesalt.dungeon.util;
 
+import dev.tablesalt.dungeon.database.DungeonCache;
+import dev.tablesalt.dungeon.database.EnchantableItem;
+import dev.tablesalt.dungeon.item.AttributeActions;
+import dev.tablesalt.dungeon.item.ItemAttribute;
+import dev.tablesalt.dungeon.item.impl.AttributeTestOne;
 import dev.tablesalt.dungeon.item.impl.Tier;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
+import net.md_5.bungee.api.chat.BaseComponent;
+import net.md_5.bungee.api.chat.ComponentBuilder;
+import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.Material;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.mineacademy.fo.menu.model.ItemCreator;
+import org.mineacademy.fo.remain.CompMetadata;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @UtilityClass
 public class ItemUtil {
-
-    public ItemStack increaseTier(@NonNull ItemStack itemStack) {
-        return makeItem(Tier.getNext(getTier(itemStack)).getAsInteger(),itemStack);
+    /**
+     * Used for formatting attribute titles
+     * on items
+     */
+    public String makeItemTitle(String title) {
+        return "&9&l" + org.mineacademy.fo.ItemUtil.bountifyCapitalized(title);
     }
 
+    /**
+     * Enchants the item by increasing its tier
+     * applies a random attribute and
+     * increases the tier of other random attributes
+     */
+    public ItemStack enchantItem(ItemStack item) {
+        return item;
+    }
+
+    /**
+     * returns true if the item can
+     * be enchanted in the enchanting menu
+     */
     public boolean isEnchantable(ItemStack item) {
-        if (item == null)
+        EnchantableItem enchantableItem = fromItemStack(item);
+
+        if (enchantableItem == null)
             return false;
 
         return (item.getType().equals(Material.LEATHER_CHESTPLATE) || item.getType().equals(Material.GOLDEN_SWORD)
-                || item.getType().equals(Material.BOW)) && (getTier(item).getAsInteger() < 3);
+                || item.getType().equals(Material.BOW)) && (enchantableItem.getCurrentTier().getAsInteger() < 3);
     }
 
 
+    public EnchantableItem fromItemStack(ItemStack itemStack) {
 
-    private ItemStack makeItem(int tier, ItemStack itemStack) {
-        return ItemCreator.of(itemStack)
-                .name((tier > 0 && tier < 4 ? "Tier " + Tier.fromInteger(tier).getAsRomanNumeral() + " " : "")
-                + org.mineacademy.fo.ItemUtil.bountifyCapitalized(itemStack.getType().name())).make();
-    }
+        String uuid = CompMetadata.getMetadata(itemStack,"UUID");
 
-    private Tier getTier(@NonNull ItemStack itemStack) {
-        String name = itemStack.getItemMeta().getDisplayName();
 
-        Pattern pattern = Pattern.compile("\\b(?=[MDCLXVI])M*D?C{0,4}L?X{0,4}V?I{0,4}\\b");
-        Matcher matcher = pattern.matcher(name);
-
-        if (matcher.find())
-            return Tier.fromRomanNumeral(matcher.group());
-
-        return Tier.NONE;
+        return null;
     }
 
 

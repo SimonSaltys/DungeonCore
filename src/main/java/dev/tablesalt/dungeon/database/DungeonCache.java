@@ -12,16 +12,9 @@ public class DungeonCache {
 
     private static final Map<UUID, DungeonCache> cacheMap = new HashMap<>();
 
-
     private final UUID uniqueId;
 
     private final String playerName;
-
-    @Getter
-    private final List<ItemStack> items = new ArrayList<>();
-
-
-
 
     private DungeonCache(String name, UUID uniqueId) {
         this.uniqueId = uniqueId;
@@ -50,8 +43,4 @@ public class DungeonCache {
             return cache;
         }
     }
-
-
-
-
 }

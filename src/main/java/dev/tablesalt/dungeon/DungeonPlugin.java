@@ -3,7 +3,6 @@ package dev.tablesalt.dungeon;
 
 import dev.tablesalt.dungeon.database.RedisDatabase;
 import dev.tablesalt.dungeon.game.DungeonGame;
-import dev.tablesalt.dungeon.item.AttributeListener;
 import dev.tablesalt.dungeon.listener.DatabaseListener;
 import dev.tablesalt.gamelib.game.types.GameTypeList;
 import dev.tablesalt.gamelib.game.types.Type;
@@ -33,6 +32,5 @@ public final class DungeonPlugin extends SimplePlugin {
 
     private void registerDungeonEvents() {
         registerEvents(new DatabaseListener());
-        registerEvents(new AttributeListener());
     }
 }

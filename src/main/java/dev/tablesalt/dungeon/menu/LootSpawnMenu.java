@@ -22,8 +22,6 @@ public class LootSpawnMenu extends Menu {
 
     private final Button lootConfigButton;
 
-
-
     private LootSpawnMenu(LootPoint point) {
         this.point = point;
         setTitle("&0&lMonster Point Menu");

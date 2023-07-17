@@ -90,9 +90,7 @@ public class EnchantingMenu extends Menu {
 
     }
 
-    private ItemStack enchantItem(ItemStack item) {
-        return ItemUtil.increaseTier(item);
-    }
+
 
 
     @Override
@@ -192,7 +190,7 @@ public class EnchantingMenu extends Menu {
             this.color = color;
 
             ItemStack item = getInventory().getItem(ENCHANT_SLOT);
-            enchantedItem = enchantItem(item);
+            enchantedItem = ItemUtil.enchantItem(item);
             setItem(ENCHANT_SLOT,NO_ITEM);
 
 
