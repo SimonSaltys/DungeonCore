@@ -1,10 +1,6 @@
 package dev.tablesalt.dungeon.item;
 
 import dev.tablesalt.dungeon.item.impl.Tier;
-import dev.tablesalt.dungeon.util.ItemUtil;
-import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
-import org.mineacademy.fo.remain.CompMetadata;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -23,7 +19,6 @@ public abstract class ItemAttribute {
    private static final List<ItemAttribute> registeredAttributes = new ArrayList<>();
 
    public ItemAttribute() {
-
       registeredAttributes.add(this);
    }
 
@@ -34,6 +29,13 @@ public abstract class ItemAttribute {
 
    public static List<ItemAttribute> getRegisteredAttributes() {
       return Collections.unmodifiableList(registeredAttributes);
+   }
+
+   public static ItemAttribute fromName(String name) {
+       for (ItemAttribute attribute : getRegisteredAttributes())
+           if (attribute.getName().equals(name))
+               return attribute;
+       return null;
    }
 
 }

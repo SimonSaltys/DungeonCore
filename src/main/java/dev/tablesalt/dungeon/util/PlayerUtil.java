@@ -36,7 +36,6 @@ public class PlayerUtil {
         if (itemStack == null)
             return;
 
-
         HashMap<Integer, ItemStack> failedItems = player.getInventory().addItem(itemStack);
 
         for(Map.Entry<Integer, ItemStack> entry : failedItems.entrySet()) {

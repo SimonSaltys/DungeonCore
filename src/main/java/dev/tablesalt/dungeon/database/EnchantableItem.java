@@ -2,6 +2,7 @@ package dev.tablesalt.dungeon.database;
 
 import dev.tablesalt.dungeon.item.ItemAttribute;
 import dev.tablesalt.dungeon.item.impl.Tier;
+import dev.tablesalt.dungeon.util.TBSItemUtil;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.Material;
@@ -9,6 +10,7 @@ import org.bukkit.inventory.ItemStack;
 import org.mineacademy.fo.Common;
 import org.mineacademy.fo.ItemUtil;
 import org.mineacademy.fo.collection.SerializedMap;
+import org.mineacademy.fo.exception.FoException;
 import org.mineacademy.fo.menu.model.ItemCreator;
 import org.mineacademy.fo.model.ConfigSerializable;
 import org.mineacademy.fo.remain.CompMaterial;
@@ -21,6 +23,8 @@ import java.util.UUID;
  @Getter @Setter
 public class EnchantableItem implements ConfigSerializable {
 
+     public static final Integer MAX_ENCHANTS_PER_ITEM = 3;
+
     private String name;
 
     private Material material;
@@ -30,6 +34,10 @@ public class EnchantableItem implements ConfigSerializable {
     private Tier currentTier;
 
     private final UUID uuid;
+
+    public EnchantableItem(UUID uuid) {
+        this("",Material.AIR, new HashMap<>(),Tier.NONE,uuid);
+    }
 
 
     public EnchantableItem(String name, Material material, HashMap<ItemAttribute, Integer> attributeTierMap, Tier tier, UUID uuid) {
@@ -52,7 +60,22 @@ public class EnchantableItem implements ConfigSerializable {
         );
     }
 
-    public ItemStack compileToItemStack() {
+     @Override
+     public String toString() {
+         return "[" + name + ", "
+                 + material + ", "
+                 + Common.convert(attributeTierMap.keySet(),ItemAttribute::getName) + ", "
+                 + currentTier + "]";
+     }
+
+     public void addAttribute(ItemAttribute attribute, Tier tier) {
+        if (attributeTierMap.containsKey(attribute))
+            return;
+
+        attributeTierMap.put(attribute,tier.getAsInteger());
+     }
+
+     public ItemStack compileToItemStack() {
         String formattedName = (currentTier != Tier.NONE ? "Tier " + currentTier.getAsRomanNumeral() + " " : "")
                 + ItemUtil.bountifyCapitalized(name);
 
@@ -80,9 +103,36 @@ public class EnchantableItem implements ConfigSerializable {
                             "Name",attribute.getName(),
                             "Tier", attributeTierMap.get(attribute)).toJson());
         }
-
-
         return nbtTaggedItem;
+    }
+
+
+    public static EnchantableItem getFromItemStack(ItemStack item) {
+        String uuidString = CompMetadata.getMetadata(item,"UUID");
+
+        if (uuidString == null)
+            return null;
+
+        EnchantableItem enchantableItem = new EnchantableItem(UUID.fromString(uuidString));
+
+        enchantableItem.setMaterial(item.getType());
+        enchantableItem.setName(item.getItemMeta().getDisplayName());
+
+        enchantableItem.setCurrentTier(Tier.fromRomanNumeral(enchantableItem.getName()));
+
+
+        for(int i = 0; i < MAX_ENCHANTS_PER_ITEM; i++) {
+            String json = CompMetadata.getMetadata(item,"attribute_" + (i + 1));
+            if (json == null)
+                continue;
+
+            SerializedMap map = SerializedMap.fromJson(json);
+            enchantableItem.getAttributeTierMap().put(
+                    ItemAttribute.fromName(map.getString("Name")),
+                    map.getInteger("Tier"));
+        }
+
+        return enchantableItem;
     }
 
     public static EnchantableItem deserialize(SerializedMap map) {
