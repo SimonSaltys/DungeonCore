@@ -1,12 +1,14 @@
 package dev.tablesalt.dungeon.menu.enchanting;
 
 import dev.tablesalt.dungeon.database.RedisDatabase;
+import dev.tablesalt.dungeon.util.ItemUtil;
 import dev.tablesalt.dungeon.util.PlayerUtil;
 import dev.tablesalt.gamelib.game.utils.SimpleRunnable;
 import dev.tablesalt.gamelib.game.utils.TBSColor;
 import dev.tablesalt.gamelib.players.PlayerCache;
 import lombok.Getter;
 import org.bukkit.Material;
+import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryAction;
@@ -33,6 +35,10 @@ public class EnchantingMenu extends Menu {
 
     private static final int ENCHANT_SLOT = 20;
 
+    public static void openEnchantMenu(Player player) {
+        new EnchantingMenu().displayTo(player);
+    }
+
     private EnchantingMenu() {
         setTitle("&5Eternal Well");
         setSize(9 * 5);
@@ -45,9 +51,10 @@ public class EnchantingMenu extends Menu {
             public void onClickedInMenu(Player player, Menu menu, ClickType click) {
                 PlayerCache cache = PlayerCache.from(player);
 
-                if (!cache.getTagger().getBooleanTagSafe("upgrading")) {
-                    cache.getTagger().setPlayerTag("upgrading", true);
-                    enchantingAnimation.launchWithColor(TBSColor.RED);
+                if (ItemUtil.isEnchantable(getInventory().getItem(ENCHANT_SLOT)))
+                    if (!cache.getTagger().getBooleanTagSafe("upgrading")) {
+                        cache.getTagger().setPlayerTag("upgrading", true);
+                        enchantingAnimation.launchWithColor(TBSColor.RED);
                 }
 
             }
@@ -63,28 +70,40 @@ public class EnchantingMenu extends Menu {
     @Override
     protected boolean isActionAllowed(MenuClickLocation location, int slot, @Nullable ItemStack clicked, @Nullable ItemStack cursor) {
 
-        if (MenuClickLocation.PLAYER_INVENTORY == location && (isEnchantable(clicked) || isEnchantable(cursor)))
-            return true;
 
-        return MenuClickLocation.MENU == location && slot == 20;
+        if (MenuClickLocation.PLAYER_INVENTORY == location)
+          return true;
+
+        return MenuClickLocation.MENU == location && slot == ENCHANT_SLOT;
     }
 
-    public static void openEnchantMenu(Player player) {
-        new EnchantingMenu().displayTo(player);
+    @Override
+    protected void onMenuClick(Player player, int slot, InventoryAction action, ClickType click, ItemStack cursor, ItemStack clicked, boolean cancelled) {
+        if (action == InventoryAction.PLACE_ALL && slot == ENCHANT_SLOT) {
+            getInventory().setItem(ENCHANT_SLOT,cursor);
+
+
+                Common.runLater(1, () -> {
+                  player.setItemOnCursor(ItemCreator.of(CompMaterial.AIR).make());
+                });
+            }
+
     }
+
+    private ItemStack enchantItem(ItemStack item) {
+        return ItemUtil.increaseTier(item);
+    }
+
 
     @Override
     protected void onDisplay(InventoryDrawer drawer) {
         PlayerCache cache = PlayerCache.from(getViewer());
-
 
         ItemStack itemLeftInMenu = cache.getTagger().getPlayerTag(ITEM_STILL_IN_ENCHANTER);
 
         if (itemLeftInMenu != null)
             drawer.setItem(ENCHANT_SLOT,itemLeftInMenu);
     }
-
-
 
     @Override
     public ItemStack getItemAt(int slot) {
@@ -119,22 +138,8 @@ public class EnchantingMenu extends Menu {
             cache.getTagger().setPlayerTag(ITEM_STILL_IN_ENCHANTER, inventory.getItem(ENCHANT_SLOT));
         else
             cache.getTagger().setPlayerTag(ITEM_STILL_IN_ENCHANTER, NO_ITEM);
-
-
-        RedisDatabase.getInstance().saveItems(player);
     }
 
-    private ItemStack enchantItem(ItemStack item) {
-        return ItemCreator.of(item).glow(true).make();
-    }
-
-    private boolean isEnchantable(ItemStack item) {
-        if (item == null)
-            return false;
-
-        return item.getType().equals(Material.LEATHER_CHESTPLATE) ||
-                item.getType().equals(Material.GOLDEN_SWORD) || item.getType().equals(Material.BOW);
-    }
 
     Integer[] positions = {10, 11, 12, 21, 30, 29, 28, 19};
 

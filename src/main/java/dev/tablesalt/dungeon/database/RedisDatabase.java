@@ -1,6 +1,7 @@
 package dev.tablesalt.dungeon.database;
 
 
+import dev.tablesalt.dungeon.DungeonPlugin;
 import dev.tablesalt.dungeon.menu.enchanting.EnchantingMenu;
 import dev.tablesalt.dungeon.util.MessageUtil;
 import dev.tablesalt.dungeon.util.PlayerUtil;
@@ -15,6 +16,7 @@ import org.bukkit.inventory.PlayerInventory;
 import org.mineacademy.fo.Common;
 import org.mineacademy.fo.Valid;
 import org.mineacademy.fo.collection.SerializedMap;
+import org.mineacademy.fo.remain.Remain;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
@@ -33,7 +35,7 @@ public class RedisDatabase  {
 
     private JedisPool pool;
 
-    Jedis jedis;
+    private Jedis jedis;
 
     private RedisDatabase() {
     }
@@ -43,13 +45,31 @@ public class RedisDatabase  {
         poolConfig.setMaxTotal(32);
 
         pool = new JedisPool(poolConfig,"localhost",6379,10000);
+
         jedis = pool.getResource();
 
-       Common.log(isConnected() ? MessageUtil.makeSuccessful("Connected to redis") : MessageUtil.makeError("Could not connect to redis") );
+        //Give sometime to make sure database is connected
+        Common.runLater(80, this::scheduleAsyncSaveTask);
+
+        Common.log(isConnected() ? MessageUtil.makeSuccessful("Connected to redis") : MessageUtil.makeError("Could not connect to redis") );
     }
 
     public boolean isConnected() {
         return pool != null && jedis.isConnected();
+    }
+
+    private void scheduleAsyncSaveTask() {
+        if (!isConnected())
+            return;
+
+        Bukkit.getScheduler().scheduleSyncRepeatingTask(DungeonPlugin.getInstance(), () -> {
+            for (Player player : Remain.getOnlinePlayers())
+               if (!PlayerCache.from(player).getGameIdentifier().hasGame())
+                   saveItems(player);
+
+            Common.log(MessageUtil.makeInfo("Saving inventories of all players currently online."));
+
+        },0,20L * 300);
     }
 
     public void saveItems(Player player) {
@@ -67,7 +87,7 @@ public class RedisDatabase  {
                 "Off_Hand_Contents", BukkitSerialization.itemStackToBase64(inventory.getItemInOffHand()),
                 "Enchanting_Table_Contents", itemLeftInEnchanter != null ? BukkitSerialization.itemStackToBase64(itemLeftInEnchanter) : null);
 
-        jedis.set(PLAYER_ITEMS + player.getUniqueId(), inventoriesMap.toJson());
+        Common.runAsync(() ->  jedis.set(PLAYER_ITEMS + player.getUniqueId(), inventoriesMap.toJson()));
     }
 
     public void loadItems(Player player) throws IOException {
@@ -103,6 +123,8 @@ public class RedisDatabase  {
                 currentInventory.setItem(i + 36, savedArmor[i]);
         }
     }
+
+
 
     public void disable() {
        if (pool != null)
