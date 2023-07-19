@@ -1,22 +1,27 @@
 package dev.tablesalt.dungeon.database;
 
-import dev.tablesalt.dungeon.item.ItemAttribute;
 import dev.tablesalt.dungeon.util.TBSItemUtil;
-import dev.tablesalt.gamelib.players.PlayerCache;
 import lombok.Getter;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-import org.mineacademy.fo.ItemUtil;
+import org.bukkit.inventory.PlayerInventory;
+import org.mineacademy.fo.remain.Remain;
 
+import javax.annotation.Nullable;
 import java.util.*;
 
+/**
+ * Holds information that is useful when
+ * a player is on the server. This information
+ * is highly volatile, and it is recommended to save
+ * often to a database if you want to persist data.
+ */
 public class DungeonCache {
 
     private static final Map<UUID, DungeonCache> cacheMap = new HashMap<>();
     @Getter
     private final UUID uniqueId;
     @Getter
-
     private final String playerName;
 
     private final List<EnchantableItem> enchantableItems = new ArrayList<>();
@@ -26,9 +31,39 @@ public class DungeonCache {
         this.playerName = name;
     }
 
-    public void addEnchantableItem(EnchantableItem item) {
-        if (!enchantableItems.contains(item))
-            enchantableItems.add(item);
+    /**
+     * Removes enchantable items that are no longer
+     * in the players actual inventory as itemstacks.
+     */
+    public void removeOldEnchantableItems(Player player) {
+        PlayerInventory inventory = player.getInventory();
+
+        enchantableItems.removeIf(item -> !inventory.contains(item.compileToItemStack()));
+    }
+
+    /**
+     * Attempts to parse and add the itemstack
+     * to the players cache if not already contained.
+     */
+    public void addEnchantableItem(ItemStack item) {
+        EnchantableItem enchantableItem = EnchantableItem.fromItemStack(item);
+
+        if (enchantableItem != null)
+            if (!enchantableItems.contains(enchantableItem)) {
+                enchantableItems.add(enchantableItem);
+            }
+    }
+
+    /**
+     * Attempts to parse and remove the itemstack
+     * in the players inventory.
+     */
+    public void removeEnchantableItem(ItemStack itemStack) {
+        EnchantableItem enchantableItem = EnchantableItem.fromItemStack(itemStack);
+        if (enchantableItem == null)
+            return;
+
+        enchantableItems.remove(enchantableItem);
     }
 
     /**
@@ -48,11 +83,16 @@ public class DungeonCache {
         return null;
     }
 
+
     public List<EnchantableItem> getEnchantableItems() {
         return Collections.unmodifiableList(enchantableItems);
     }
 
-
+    @Nullable
+    public Player toPlayer() {
+        Player player = Remain.getPlayerByUUID(this.uniqueId);
+        return player != null && player.isOnline() ? player : null;
+    }
 
     /**
      * Return or create new player cache for the given player
@@ -76,4 +116,6 @@ public class DungeonCache {
             return cache;
         }
     }
+
+
 }

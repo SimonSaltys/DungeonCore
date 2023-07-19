@@ -2,15 +2,15 @@ package dev.tablesalt.dungeon.database;
 
 import dev.tablesalt.dungeon.item.ItemAttribute;
 import dev.tablesalt.dungeon.item.impl.Tier;
-import dev.tablesalt.dungeon.util.TBSItemUtil;
+import dev.tablesalt.dungeon.util.PlayerUtil;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.Material;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.mineacademy.fo.Common;
 import org.mineacademy.fo.ItemUtil;
 import org.mineacademy.fo.collection.SerializedMap;
-import org.mineacademy.fo.exception.FoException;
 import org.mineacademy.fo.menu.model.ItemCreator;
 import org.mineacademy.fo.model.ConfigSerializable;
 import org.mineacademy.fo.remain.CompMaterial;
@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
+
  @Getter @Setter
 public class EnchantableItem implements ConfigSerializable {
 
@@ -68,6 +69,15 @@ public class EnchantableItem implements ConfigSerializable {
                  + currentTier + "]";
      }
 
+     @Override
+     public boolean equals(Object obj) {
+         return obj instanceof EnchantableItem && ((EnchantableItem) obj).getUuid().equals(uuid);
+     }
+
+     /**
+      * Attempts to add the attribute and current tier
+      * if not already added
+      */
      public void addAttribute(ItemAttribute attribute, Tier tier) {
         if (attributeTierMap.containsKey(attribute))
             return;
@@ -75,9 +85,13 @@ public class EnchantableItem implements ConfigSerializable {
         attributeTierMap.put(attribute,tier.getAsInteger());
      }
 
+     /**
+      * Compiles the data from this object
+      * into an itemstack that can be used by the player
+      */
      public ItemStack compileToItemStack() {
-        String formattedName = (currentTier != Tier.NONE ? "Tier " + currentTier.getAsRomanNumeral() + " " : "")
-                + ItemUtil.bountifyCapitalized(name);
+        String formattedName = "Mystic " + ItemUtil.bountifyCapitalized(name) + " " +
+                (currentTier != Tier.NONE ? currentTier.getAsRomanNumeral() + " " : "");
 
         List<String> lore = new ArrayList<>();
 
@@ -91,34 +105,42 @@ public class EnchantableItem implements ConfigSerializable {
     }
 
     private ItemStack setNBTOnItem(ItemStack item) {
-        ItemStack nbtTaggedItem;
+        item = CompMetadata.setMetadata(item,"UUID",uuid.toString());
 
-        nbtTaggedItem = CompMetadata.setMetadata(item,"UUID",uuid.toString());
+
+        item = CompMetadata.setMetadata(item,"Tier", currentTier.getAsInteger() + "");
 
         int attributeAdded = 0;
         for (ItemAttribute attribute : attributeTierMap.keySet()) {
             attributeAdded++;
-            nbtTaggedItem = CompMetadata.setMetadata(nbtTaggedItem,"attribute_" + attributeAdded,
+            item = CompMetadata.setMetadata(item,"attribute_" + attributeAdded,
                     SerializedMap.ofArray(
                             "Name",attribute.getName(),
                             "Tier", attributeTierMap.get(attribute)).toJson());
         }
-        return nbtTaggedItem;
+        return item;
     }
 
-
-    public static EnchantableItem getFromItemStack(ItemStack item) {
+     /**
+      * Deserializes the itemstacks nbt data and returns it
+      * as an enchantable item representation.
+      */
+    public static EnchantableItem fromItemStack(ItemStack item) {
         String uuidString = CompMetadata.getMetadata(item,"UUID");
+        String tierString = CompMetadata.getMetadata(item, "Tier");
 
         if (uuidString == null)
             return null;
 
         EnchantableItem enchantableItem = new EnchantableItem(UUID.fromString(uuidString));
 
-        enchantableItem.setMaterial(item.getType());
-        enchantableItem.setName(item.getItemMeta().getDisplayName());
+        if (tierString != null) {
+            int integer = Integer.parseInt(tierString);
+            enchantableItem.setCurrentTier(Tier.fromInteger(integer));
+        }
 
-        enchantableItem.setCurrentTier(Tier.fromRomanNumeral(enchantableItem.getName()));
+        enchantableItem.setMaterial(item.getType());
+        enchantableItem.setName(item.getType().equals(Material.LEATHER_CHESTPLATE) ? "Tunic" : item.getType().toString());
 
 
         for(int i = 0; i < MAX_ENCHANTS_PER_ITEM; i++) {

@@ -7,6 +7,7 @@ import dev.tablesalt.dungeon.item.impl.AttributeTestOne;
 import dev.tablesalt.dungeon.item.impl.Tier;
 import dev.tablesalt.dungeon.menu.enchanting.EnchantingMenu;
 import dev.tablesalt.dungeon.util.PlayerUtil;
+import dev.tablesalt.dungeon.util.TBSItemUtil;
 import dev.tablesalt.gamelib.commands.GameSubCommand;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
@@ -23,19 +24,13 @@ public final class GiveEnchantableItem extends GameSubCommand {
 
     @Override
     protected void onCommand() {
-
-        EnchantingMenu.openEnchantMenu(getPlayer());
         EnchantableItem enchantableItem = new EnchantableItem(
-                "Mystic " + CompMaterial.LEATHER_CHESTPLATE.name(),
+                CompMaterial.LEATHER_CHESTPLATE.name(),
                 Material.LEATHER_CHESTPLATE,
                 new HashMap<>(),
                 Tier.NONE,
                 UUID.randomUUID());
 
         PlayerUtil.giveItem(getPlayer(),enchantableItem.compileToItemStack());
-        DungeonCache.from(getPlayer()).addEnchantableItem(enchantableItem);
-
-
-
     }
 }

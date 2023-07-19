@@ -5,16 +5,15 @@ import dev.tablesalt.dungeon.DungeonPlugin;
 import dev.tablesalt.dungeon.menu.enchanting.EnchantingMenu;
 import dev.tablesalt.dungeon.util.MessageUtil;
 import dev.tablesalt.dungeon.util.PlayerUtil;
+import dev.tablesalt.dungeon.util.TBSItemUtil;
 import dev.tablesalt.gamelib.players.PlayerCache;
 import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.EquipmentSlot;
-import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.mineacademy.fo.Common;
-import org.mineacademy.fo.Valid;
 import org.mineacademy.fo.collection.SerializedMap;
 import org.mineacademy.fo.remain.Remain;
 import redis.clients.jedis.Jedis;
@@ -22,8 +21,6 @@ import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collections;
 
 
 public class RedisDatabase  {
@@ -78,6 +75,7 @@ public class RedisDatabase  {
 
         PlayerInventory inventory = player.getInventory();
         PlayerCache cache = PlayerCache.from(player);
+        DungeonCache dungeonCache = DungeonCache.from(player);
 
         ItemStack itemLeftInEnchanter = cache.getTagger().getPlayerTag(EnchantingMenu.ITEM_STILL_IN_ENCHANTER);
 
@@ -87,12 +85,15 @@ public class RedisDatabase  {
                 "Off_Hand_Contents", BukkitSerialization.itemStackToBase64(inventory.getItemInOffHand()),
                 "Enchanting_Table_Contents", itemLeftInEnchanter != null ? BukkitSerialization.itemStackToBase64(itemLeftInEnchanter) : null);
 
+        dungeonCache.removeOldEnchantableItems(player);
+
         Common.runAsync(() ->  jedis.set(PLAYER_ITEMS + player.getUniqueId(), inventoriesMap.toJson()));
     }
 
     public void loadItems(Player player) throws IOException {
         SerializedMap map = SerializedMap.fromJson(jedis.get(PLAYER_ITEMS + player.getUniqueId()));
         PlayerCache cache = PlayerCache.from(player);
+        DungeonCache dungeonCache = DungeonCache.from(player);
 
         ItemStack itemLeftInEnchanter = cache.getTagger().getPlayerTag(EnchantingMenu.ITEM_STILL_IN_ENCHANTER);
 
@@ -122,8 +123,30 @@ public class RedisDatabase  {
             if (currentArmor == null || !currentArmor.equals(savedArmor[i]))
                 currentInventory.setItem(i + 36, savedArmor[i]);
         }
+
+        loadEnchantableItems(player);
+
+        Common.broadcast("Loaded " + dungeonCache.getEnchantableItems().size() + " enchantable items!");
+
     }
 
+    private void loadEnchantableItems(Player player) {
+        PlayerCache cache = PlayerCache.from(player);
+        DungeonCache dungeonCache = DungeonCache.from(player);
+
+        //load the items that are enchantable
+        for (ItemStack item : player.getInventory().getContents()) {
+            if (item == null)
+                continue;
+            if (TBSItemUtil.isEnchantable(item))
+                dungeonCache.addEnchantableItem(item);
+        }
+
+        ItemStack itemLeftInEnchanter = cache.getTagger().getPlayerTag(EnchantingMenu.ITEM_STILL_IN_ENCHANTER);
+        if (itemLeftInEnchanter != null)
+            dungeonCache.addEnchantableItem(itemLeftInEnchanter);
+
+    }
 
 
     public void disable() {

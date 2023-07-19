@@ -2,6 +2,7 @@ package dev.tablesalt.dungeon.menu.enchanting;
 
 import dev.tablesalt.dungeon.database.DungeonCache;
 import dev.tablesalt.dungeon.database.EnchantableItem;
+import dev.tablesalt.dungeon.item.impl.Tier;
 import dev.tablesalt.dungeon.util.TBSItemUtil;
 import dev.tablesalt.dungeon.util.PlayerUtil;
 import dev.tablesalt.gamelib.game.utils.SimpleRunnable;
@@ -15,7 +16,6 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
 import org.mineacademy.fo.Common;
-import org.mineacademy.fo.ItemUtil;
 import org.mineacademy.fo.menu.Menu;
 import org.mineacademy.fo.menu.button.Button;
 import org.mineacademy.fo.menu.model.InventoryDrawer;
@@ -31,8 +31,6 @@ public class EnchantingMenu extends Menu {
 
     private final EnchantingAnimation enchantingAnimation;
 
-    private final DungeonCache cache;
-
     public static final String ITEM_STILL_IN_ENCHANTER = "enchanted-item-left";
 
     private static final int ENCHANT_SLOT = 20;
@@ -46,7 +44,6 @@ public class EnchantingMenu extends Menu {
         setSize(9 * 5);
         this.basicLoopAnimation = new BasicLoopAnimation();
         this.enchantingAnimation = new EnchantingAnimation();
-        this.cache = DungeonCache.from(getViewer());
 
         basicLoopAnimation.launch();
         enchantButton = new Button() {
@@ -54,12 +51,16 @@ public class EnchantingMenu extends Menu {
             public void onClickedInMenu(Player player, Menu menu, ClickType click) {
                 PlayerCache cache = PlayerCache.from(player);
 
-                if (TBSItemUtil.isEnchantable(player,getInventory().getItem(ENCHANT_SLOT)))
+                ItemStack itemStack = getInventory().getItem(ENCHANT_SLOT);
+                if (itemStack == null)
+                    return;
+                EnchantableItem enchantableItem = EnchantableItem.fromItemStack(itemStack);
+
+                if (enchantableItem != null && !enchantableItem.getCurrentTier().equals(Tier.THREE))
                     if (!cache.getTagger().getBooleanTagSafe("upgrading")) {
                         cache.getTagger().setPlayerTag("upgrading", true);
                         enchantingAnimation.launchWithColor(TBSColor.RED);
                 }
-
             }
 
             @Override
@@ -72,7 +73,8 @@ public class EnchantingMenu extends Menu {
 
     @Override
     protected boolean isActionAllowed(MenuClickLocation location, int slot, @Nullable ItemStack clicked, @Nullable ItemStack cursor) {
-
+        if (enchantingAnimation.isRunning())
+            return false;
 
         if (MenuClickLocation.PLAYER_INVENTORY == location)
           return true;
@@ -170,6 +172,7 @@ public class EnchantingMenu extends Menu {
 
         @Override
         protected void onTickError(Throwable t) {
+            getViewer().closeInventory();
         }
     }
 
@@ -193,14 +196,14 @@ public class EnchantingMenu extends Menu {
             this.color = color;
 
             ItemStack item = getInventory().getItem(ENCHANT_SLOT);
-            if (!TBSItemUtil.isEnchantable(getViewer(),item))
+            if (!TBSItemUtil.isEnchantable(item))
                 return;
 
-            EnchantableItem enchantableItem = cache.getEnchantableItem(item);
+            EnchantableItem enchantableItem = EnchantableItem.fromItemStack(item);
             if (enchantableItem == null)
                 return;
 
-            enchantedItem = TBSItemUtil.enchantItem(enchantableItem);
+            enchantedItem = TBSItemUtil.enchantItem(getViewer(),enchantableItem);
             setItem(ENCHANT_SLOT,NO_ITEM);
 
             launch();
@@ -227,6 +230,7 @@ public class EnchantingMenu extends Menu {
         protected void onEnd() {
             if (enchantedItem == null)
                 Common.throwError(new NullPointerException(), "Enchanted item for " + getViewer().getName() + " is null!");
+
 
 
             setItem(ENCHANT_SLOT, enchantedItem);

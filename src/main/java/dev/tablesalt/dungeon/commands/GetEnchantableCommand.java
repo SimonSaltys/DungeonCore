@@ -1,17 +1,13 @@
 package dev.tablesalt.dungeon.commands;
 
+import dev.tablesalt.dungeon.database.DungeonCache;
 import dev.tablesalt.dungeon.database.EnchantableItem;
-import dev.tablesalt.dungeon.item.ItemAttribute;
-import dev.tablesalt.dungeon.item.impl.AttributeTestOne;
-import dev.tablesalt.dungeon.item.impl.Tier;
+import dev.tablesalt.dungeon.item.impl.Rarity;
+import dev.tablesalt.dungeon.menu.enchanting.EnchantingMenu;
 import dev.tablesalt.gamelib.commands.GameSubCommand;
-import org.bukkit.Material;
-import org.bukkit.command.Command;
 import org.bukkit.inventory.ItemStack;
 import org.mineacademy.fo.Common;
-
-import java.util.HashMap;
-import java.util.UUID;
+import org.mineacademy.fo.annotation.AutoRegister;
 
 public final class GetEnchantableCommand extends GameSubCommand {
     private GetEnchantableCommand() {
@@ -21,14 +17,42 @@ public final class GetEnchantableCommand extends GameSubCommand {
     @Override
     protected void onCommand() {
 
-       ItemStack item = getPlayer().getInventory().getItemInMainHand();
+        EnchantingMenu.openEnchantMenu(getPlayer());
+        int common = 0;
+        int rare = 0;
+        int epic = 0;
+        int mythic = 0;
+       for (int i = 0; i < 30; i++) {
+           Rarity rarity = Rarity.getRandomWeighted();
 
-       EnchantableItem enchantableItem = EnchantableItem.getFromItemStack(item);
+           if (rarity.equals(Rarity.COMMON))
+               common++;
 
-       if (enchantableItem != null)
-           tellSuccess("Valid! " + enchantableItem);
-       else
-           tellError("Invalid.");
+           if (rarity.equals(Rarity.RARE))
+               rare++;
+
+           if (rarity.equals(Rarity.EPIC))
+               epic++;
+
+           if (rarity.equals(Rarity.MYTHIC))
+               mythic++;
+       }
+
+       Common.broadcast("Rolled "
+               + common + " " + Rarity.COMMON.getFormattedName()
+               +  "&d " + rare + " " + Rarity.RARE.getFormattedName()
+               +  " &b" + epic + " " + Rarity.EPIC.getFormattedName()
+               +" &e" + mythic + " " + Rarity.MYTHIC.getFormattedName());
+
+
+//       ItemStack item = getPlayer().getInventory().getItemInMainHand();
+//
+//       EnchantableItem enchantableItem = EnchantableItem.fromItemStack(item);
+//
+//       if (enchantableItem != null)
+//           tellSuccess("Valid! " + enchantableItem);
+//       else
+//           tellError("Invalid.");
 
     }
 }

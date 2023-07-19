@@ -1,21 +1,44 @@
 package dev.tablesalt.dungeon.item.impl;
 
+import dev.tablesalt.dungeon.collection.RandomCollection;
 import lombok.AccessLevel;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.mineacademy.fo.ChatUtil;
+import org.mineacademy.fo.Common;
 import org.mineacademy.fo.remain.CompChatColor;
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
+@Getter
 public enum Rarity {
 
-    COMMON("",80),
-    RARE("&b&lRARE!",20),
-    MYTHIC("&l"+ ChatUtil.generateGradient("MYTHIC!", CompChatColor.YELLOW, CompChatColor.GOLD)
-    ,5);
+    COMMON("",50),
+
+    RARE("&2RARE! ",25),
+
+    EPIC("&c&lEPIC! ",10),
+    MYTHIC("&k!&l"+ ChatUtil.generateGradient("MYTHIC", CompChatColor.YELLOW, CompChatColor.GOLD) + "&k!&r"
+    ,3);
 
     private final String formattedName;
 
     private final int chanceToRoll;
 
-    //How much the enchantment accounts to the overall item
-    private int weight;
+
+    public static Rarity getRandomWeighted() {
+        return getRandomWeighted(null);
+    }
+
+    public static Rarity getRandomWeighted(Rarity excluded) {
+
+        RandomCollection<Rarity> randomCollection = new RandomCollection<>();
+
+        for (Rarity rarity : Rarity.values()) {
+            if (rarity.equals(excluded))
+                continue;
+
+            randomCollection.add(rarity.getChanceToRoll(),rarity);
+        }
+
+        return randomCollection.next();
+    }
 }

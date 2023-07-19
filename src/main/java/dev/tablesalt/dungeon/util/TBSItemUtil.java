@@ -1,18 +1,17 @@
 package dev.tablesalt.dungeon.util;
 
-import dev.tablesalt.dungeon.database.DungeonCache;
 import dev.tablesalt.dungeon.database.EnchantableItem;
-import dev.tablesalt.dungeon.item.impl.AttributeTestOne;
+import dev.tablesalt.dungeon.item.ItemAttribute;
+import dev.tablesalt.dungeon.item.impl.Rarity;
 import dev.tablesalt.dungeon.item.impl.Tier;
 import lombok.experimental.UtilityClass;
-import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.mineacademy.fo.Common;
-import org.mineacademy.fo.ItemUtil;
+import org.mineacademy.fo.RandomUtil;
 import org.mineacademy.fo.remain.CompMetadata;
 
-import java.util.UUID;
+import java.util.*;
 
 @UtilityClass
 public class TBSItemUtil {
@@ -21,7 +20,7 @@ public class TBSItemUtil {
      * on items
      */
     public String makeItemTitle(String title) {
-        return "&9&l" + title;
+        return "&9" + title;
     }
 
     /**
@@ -29,10 +28,53 @@ public class TBSItemUtil {
      * applies a random attribute and
      * increases the tier of other random attributes
      */
-    public ItemStack enchantItem(EnchantableItem item) {
-        item.addAttribute(AttributeTestOne.getInstance(), Tier.TWO);
+    public ItemStack enchantItem(Player player,EnchantableItem item) {
 
+        int currentTier = item.getCurrentTier().getAsInteger();
+
+        if (currentTier < 3) {
+            item.setCurrentTier(Tier.fromInteger(currentTier + 1));
+
+           applyRandomAttribute(item);
+
+
+            if (currentTier == 1)
+                upgradeRandomAttribute(item);
+
+            if (currentTier == 2) {
+                for (int i = 0; i < 3; i++)
+                    upgradeRandomAttribute(item);
+            }
+        }
         return item.compileToItemStack();
+    }
+
+    private void applyRandomAttribute(EnchantableItem item) {
+        Rarity rarity = Rarity.getRandomWeighted();
+
+
+        List<ItemAttribute> attributesToChoose = ItemAttribute.getAttributesOfRarity(rarity);
+        attributesToChoose.removeIf(item.getAttributeTierMap().keySet()::contains);
+
+        //choose and set the randomly selected attribute
+        if (!attributesToChoose.isEmpty()) {
+            ItemAttribute chosenAttribute = RandomUtil.nextItem(attributesToChoose);
+            item.addAttribute(chosenAttribute,Tier.NONE);
+        }
+    }
+
+    private void upgradeRandomAttribute(EnchantableItem item) {
+        List<ItemAttribute> attributes = new ArrayList<>();
+
+        for (ItemAttribute attribute : item.getAttributeTierMap().keySet())
+            if (item.getAttributeTierMap().get(attribute) < 3)
+                attributes.add(attribute);
+
+        ItemAttribute attributeToUpgrade = RandomUtil.nextItem(attributes);
+        Integer tier = item.getAttributeTierMap().get(attributeToUpgrade);
+
+       item.getAttributeTierMap().remove(attributeToUpgrade);
+       item.getAttributeTierMap().put(attributeToUpgrade,tier + 1);
     }
 
     public UUID getItemsUUID(ItemStack item) {
@@ -48,16 +90,11 @@ public class TBSItemUtil {
      * returns true if the item can
      * be enchanted in the enchanting menu
      */
-    public boolean isEnchantable(Player player, ItemStack item) {
-        DungeonCache cache = DungeonCache.from(player);
+    public boolean isEnchantable(ItemStack item) {
+        if (item == null)
+            return false;
 
-        UUID itemsUUID = getItemsUUID(item);
-        if (itemsUUID != null)
-            for (EnchantableItem enchantableItem : cache.getEnchantableItems())
-                 if (enchantableItem.getUuid().equals(itemsUUID))
-                    return true;
-
-
-       return false;
+        EnchantableItem enchantableItem = EnchantableItem.fromItemStack(item);
+        return enchantableItem != null;
     }
 }
