@@ -134,12 +134,12 @@ public class EnchantingMenu extends Menu {
 
             if (enchantingAnimation.getEnchantedItem() != null) {
                 cache.getTagger().setPlayerTag("upgrading", false);
-                cache.getTagger().setPlayerTag(ITEM_STILL_IN_ENCHANTER, enchantingAnimation.getEnchantedItem());
+                saveEnchantedItem();
             }
 
-        } else if(inventory.getItem(ENCHANT_SLOT) != null)
+        } else if(inventory.getItem(ENCHANT_SLOT) != null) {
             cache.getTagger().setPlayerTag(ITEM_STILL_IN_ENCHANTER, inventory.getItem(ENCHANT_SLOT));
-        else
+        } else
             cache.getTagger().setPlayerTag(ITEM_STILL_IN_ENCHANTER, NO_ITEM);
     }
 
@@ -147,29 +147,20 @@ public class EnchantingMenu extends Menu {
     Integer[] positions = {10, 11, 12, 21, 30, 29, 28, 19};
 
     private class BasicLoopAnimation extends SimpleRunnable {
-
         Integer count = 0;
-
         protected BasicLoopAnimation() {
             super(-1, 3, 5);
         }
-
         @Override
         protected void onTick() {
             setGlass(positions[count]);
-
             count++;
-
             if (count > 7)
                 count = 0;
         }
-
-
         @Override
         protected void onEnd() {
-
         }
-
         @Override
         protected void onTickError(Throwable t) {
             getViewer().closeInventory();
@@ -231,8 +222,6 @@ public class EnchantingMenu extends Menu {
             if (enchantedItem == null)
                 Common.throwError(new NullPointerException(), "Enchanted item for " + getViewer().getName() + " is null!");
 
-
-
             setItem(ENCHANT_SLOT, enchantedItem);
             PlayerCache.from(getViewer()).getTagger().setPlayerTag("upgrading", false);
 
@@ -266,6 +255,16 @@ public class EnchantingMenu extends Menu {
 
     protected ItemStack makeGlass(TBSColor color) {
         return ItemCreator.of(CompMaterial.fromMaterial(color.toStainedGlassPane()), " ", "").make();
+    }
+
+    private void saveEnchantedItem() {
+        PlayerCache cache = PlayerCache.from(getViewer());
+
+        if (cache == null)
+            return;
+
+        cache.getTagger().setPlayerTag(ITEM_STILL_IN_ENCHANTER, enchantingAnimation.getEnchantedItem());
+
     }
 
 

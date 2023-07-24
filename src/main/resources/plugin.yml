@@ -3,7 +3,6 @@ version: ${project.version}
 main: ${main.class}
 api-version: 1.13
 
-depend:
 
 libraries:
   - org.openjdk.nashorn:nashorn-core:15.4

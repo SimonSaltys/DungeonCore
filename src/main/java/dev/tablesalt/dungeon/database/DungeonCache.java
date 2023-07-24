@@ -26,10 +26,17 @@ public class DungeonCache {
 
     private final List<EnchantableItem> enchantableItems = new ArrayList<>();
 
+    private int moneyAmount;
+
     private DungeonCache(String name, UUID uniqueId) {
         this.uniqueId = uniqueId;
         this.playerName = name;
     }
+
+
+    /*----------------------------------------------------------------*/
+    /* ENCHANTABLE ITEM METHODS */
+    /*----------------------------------------------------------------*/
 
     /**
      * Removes enchantable items that are no longer
@@ -88,6 +95,30 @@ public class DungeonCache {
         return Collections.unmodifiableList(enchantableItems);
     }
 
+
+
+    /*----------------------------------------------------------------*/
+    /* MONEY METHODS */
+    /*----------------------------------------------------------------*/
+
+
+    public void giveMoney(int amount) {
+
+    }
+
+    public void takeMoney(int amount) {
+
+    }
+
+    public void setMoney(int amount) {
+        this.moneyAmount = amount;
+    }
+
+    public int getMoney() {
+        return moneyAmount;
+    }
+
+
     @Nullable
     public Player toPlayer() {
         Player player = Remain.getPlayerByUUID(this.uniqueId);
@@ -115,6 +146,10 @@ public class DungeonCache {
 
             return cache;
         }
+    }
+
+    public static void purge() {
+        cacheMap.clear();
     }
 
 

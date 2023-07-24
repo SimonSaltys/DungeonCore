@@ -4,6 +4,7 @@ import dev.tablesalt.dungeon.database.DungeonCache;
 import dev.tablesalt.dungeon.database.EnchantableItem;
 import dev.tablesalt.dungeon.database.RedisDatabase;
 import dev.tablesalt.dungeon.util.MessageUtil;
+
 import jdk.jfr.Enabled;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -27,21 +28,14 @@ public class DatabaseListener implements Listener {
     public void onJoin(PlayerJoinEvent event){
         Player player = event.getPlayer();
 
-        try {
-            RedisDatabase.getInstance().loadItems(player);
-        } catch (IOException e) {
-            Common.log(MessageUtil.makeError("Could not load items from redis cache for: " + player.getName() +
-                    ". Is Redis connected? This is a serious issue, would recommend shutting down server to address"));
-
-            e.printStackTrace();
-        }
+        RedisDatabase.getInstance().load(player);
     }
 
     @EventHandler(priority = EventPriority.LOW)
     public void onLeave(PlayerQuitEvent event) {
         Player player = event.getPlayer();
 
-        RedisDatabase.getInstance().saveItems(player);
+        RedisDatabase.getInstance().save(player);
     }
 
     @EventHandler

@@ -27,6 +27,16 @@
     </properties>
 
     <dependencies>
+
+<!--        //todo run build tools (-remapped) -->
+<!--        <dependency>-->
+<!--            <groupId>org.spigotmc</groupId>-->
+<!--            <artifactId>spigot</artifactId>-->
+<!--            <version>1.20.1-R0.1-SNAPSHOT</version>-->
+<!--            <scope>provided</scope>-->
+<!--            <classifier>remapped-mojang</classifier>-->
+<!--        </dependency>-->
+
         <dependency>
             <groupId>${foundation.path}</groupId>
             <artifactId>Foundation</artifactId>
@@ -38,8 +48,6 @@
             <artifactId>gameLib</artifactId>
             <version>0.1-ALPHA</version>
         </dependency>
-
-
 
 
         <dependency>
@@ -54,24 +62,6 @@
             <artifactId>base64coder</artifactId>
             <version>2010-12-19</version>
         </dependency>
-
-
-
-        <!-- https://mvnrepository.com/artifact/biz.source_code/base64coder -->
-
-
-<!--        <dependency>-->
-<!--            <groupId>org.spigotmc</groupId>-->
-<!--            <artifactId>spigot</artifactId>-->
-<!--            <version>1.20.1-R0.1-SNAPSHOT</version>-->
-<!--            <scope>provided</scope>-->
-<!--        </dependency>-->
-
-        <!-- https://mvnrepository.com/artifact/com.microsoft.sqlserver/mssql-jdbc -->
-
-
-
-
     </dependencies>
 
     <repositories>

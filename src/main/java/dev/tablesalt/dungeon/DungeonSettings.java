@@ -1,32 +1,43 @@
 package dev.tablesalt.dungeon;
 
-import org.mineacademy.fo.settings.SimpleSettings;
 
-public class DungeonSettings extends SimpleSettings {
+import lombok.Getter;
+import org.bukkit.Location;
+import org.mineacademy.fo.Common;
+import org.mineacademy.fo.FileUtil;
+import org.mineacademy.fo.settings.YamlConfig;
 
-    public static class Database {
+import java.io.File;
 
-        public static String host;
+public class DungeonSettings extends YamlConfig {
 
-        public static Integer port;
+    @Getter
+    private static final DungeonSettings instance = new DungeonSettings();
 
-        public static String databaseName;
+    @Getter
+    private Location enchantingLocation;
 
-        public static String username;
+    private DungeonSettings() {
+        this.loadConfiguration(NO_DEFAULT, "BasicSettings.yml");
 
-        public static String password;
 
-        private static void init() {
-            setPathPrefix("database");
-
-            host = getString("host");
-            port = getInteger("port");
-            databaseName = getString("database");
-            username = getString("user");
-            password = getString("password");
-        }
     }
 
+    public void setEnchantingLocation(Location location) {
+        enchantingLocation = location;
+        save();
+    }
 
+    @Override
+    protected void onLoad() {
+        super.onLoad();
+        enchantingLocation = getLocation("Enchanting_Location",null);
+    }
 
+    @Override
+    protected void onSave() {
+        set("Enchanting_Location",enchantingLocation);
+
+        super.onSave();
+    }
 }
