@@ -3,7 +3,7 @@ package dev.tablesalt.dungeon.tools;
 import dev.tablesalt.dungeon.game.DungeonGame;
 import dev.tablesalt.dungeon.maps.DungeonMap;
 import dev.tablesalt.dungeon.maps.spawnpoints.LootPoint;
-import dev.tablesalt.dungeon.menu.LootSpawnMenu;
+import dev.tablesalt.dungeon.menu.impl.LootSpawnMenu;
 import dev.tablesalt.dungeon.util.PlayerUtil;
 import dev.tablesalt.gamelib.tools.GameTool;
 import lombok.Getter;

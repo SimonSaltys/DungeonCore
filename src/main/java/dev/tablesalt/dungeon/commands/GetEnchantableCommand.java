@@ -1,13 +1,9 @@
 package dev.tablesalt.dungeon.commands;
 
-import dev.tablesalt.dungeon.database.DungeonCache;
-import dev.tablesalt.dungeon.database.EnchantableItem;
-import dev.tablesalt.dungeon.item.impl.Rarity;
-import dev.tablesalt.dungeon.menu.enchanting.EnchantingMenu;
+import dev.tablesalt.dungeon.item.Rarity;
+import dev.tablesalt.dungeon.menu.impl.EnchantingMenu;
 import dev.tablesalt.gamelib.commands.GameSubCommand;
-import org.bukkit.inventory.ItemStack;
 import org.mineacademy.fo.Common;
-import org.mineacademy.fo.annotation.AutoRegister;
 
 public final class GetEnchantableCommand extends GameSubCommand {
     private GetEnchantableCommand() {

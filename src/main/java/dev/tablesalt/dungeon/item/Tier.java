@@ -1,5 +1,6 @@
-package dev.tablesalt.dungeon.item.impl;
+package dev.tablesalt.dungeon.item;
 
+import dev.tablesalt.gamelib.game.utils.TBSColor;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -12,14 +13,16 @@ import java.util.regex.Pattern;
 @Getter
 public enum Tier {
 
-    NONE(0,"", 2000),
-    ONE(1,"I", 4000),
-    TWO(2,"II", 6000),
-    THREE(3,"III", 8000);
+    NONE(0,"", 2000, TBSColor.GREEN),
+    ONE(1,"I", 4000, TBSColor.AQUA),
+    TWO(2,"II", 6000, TBSColor.YELLOW),
+    THREE(3,"III", 8000, TBSColor.RED);
 
     private final int asInteger;
     private final String asRomanNumeral;
     private final int costToUpgrade;
+
+    private final TBSColor color;
 
     public static Tier fromInteger(int i) {
         for (Tier tier : Tier.values())
@@ -48,6 +51,9 @@ public enum Tier {
         Tier nextTier = Common.getNext(tier,Tier.values(),true);
 
         if (nextTier == NONE)
+            nextTier = ONE;
+
+        if (tier == THREE)
             nextTier = THREE;
 
         return nextTier;

@@ -2,12 +2,11 @@ package dev.tablesalt.dungeon.util;
 
 import dev.tablesalt.dungeon.database.EnchantableItem;
 import dev.tablesalt.dungeon.item.ItemAttribute;
-import dev.tablesalt.dungeon.item.impl.Rarity;
-import dev.tablesalt.dungeon.item.impl.Tier;
+import dev.tablesalt.dungeon.item.Rarity;
+import dev.tablesalt.dungeon.item.Tier;
 import lombok.experimental.UtilityClass;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-import org.mineacademy.fo.Common;
 import org.mineacademy.fo.RandomUtil;
 import org.mineacademy.fo.remain.CompMetadata;
 

@@ -1,31 +1,35 @@
-package dev.tablesalt.dungeon.menu.enchanting;
+package dev.tablesalt.dungeon.menu.impl;
 
 import dev.tablesalt.dungeon.database.DungeonCache;
 import dev.tablesalt.dungeon.database.EnchantableItem;
-import dev.tablesalt.dungeon.item.impl.Tier;
+import dev.tablesalt.dungeon.item.Tier;
+import dev.tablesalt.dungeon.menu.TBSButton;
+import dev.tablesalt.dungeon.menu.TBSMenu;
 import dev.tablesalt.dungeon.util.TBSItemUtil;
 import dev.tablesalt.dungeon.util.PlayerUtil;
+import dev.tablesalt.dungeon.util.sound.TBSSound;
 import dev.tablesalt.gamelib.game.utils.SimpleRunnable;
 import dev.tablesalt.gamelib.game.utils.TBSColor;
 import dev.tablesalt.gamelib.players.PlayerCache;
+import dev.tablesalt.gamelib.players.helpers.PlayerTagger;
 import lombok.Getter;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
+import org.bukkit.event.inventory.DragType;
 import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
 import org.mineacademy.fo.Common;
 import org.mineacademy.fo.menu.Menu;
-import org.mineacademy.fo.menu.button.Button;
 import org.mineacademy.fo.menu.model.InventoryDrawer;
 import org.mineacademy.fo.menu.model.ItemCreator;
 import org.mineacademy.fo.menu.model.MenuClickLocation;
 import org.mineacademy.fo.remain.CompMaterial;
 
-public class EnchantingMenu extends Menu {
+public class EnchantingMenu extends TBSMenu {
 
-    private final Button enchantButton;
+    private TBSButton enchantButton;
 
     private final BasicLoopAnimation basicLoopAnimation;
 
@@ -45,31 +49,15 @@ public class EnchantingMenu extends Menu {
         this.basicLoopAnimation = new BasicLoopAnimation();
         this.enchantingAnimation = new EnchantingAnimation();
 
+        slotsToPersist.add(ENCHANT_SLOT);
+
         basicLoopAnimation.launch();
-        enchantButton = new Button() {
-            @Override
-            public void onClickedInMenu(Player player, Menu menu, ClickType click) {
-                PlayerCache cache = PlayerCache.from(player);
 
-                ItemStack itemStack = getInventory().getItem(ENCHANT_SLOT);
-                if (itemStack == null)
-                    return;
-                EnchantableItem enchantableItem = EnchantableItem.fromItemStack(itemStack);
+        makeEnchantingButton();
 
-                if (enchantableItem != null && !enchantableItem.getCurrentTier().equals(Tier.THREE))
-                    if (!cache.getTagger().getBooleanTagSafe("upgrading")) {
-                        cache.getTagger().setPlayerTag("upgrading", true);
-                        enchantingAnimation.launchWithColor(TBSColor.RED);
-                }
-            }
-
-            @Override
-            public ItemStack getItem() {
-                return ItemCreator.of(CompMaterial.ENCHANTING_TABLE, "&5Eternal Well",
-                        "&7Upgrade: &eTODO", "&7Cost: &6TODO", "", "&eClick to enchant!").make();
-            }
-        };
     }
+
+
 
     @Override
     protected boolean isActionAllowed(MenuClickLocation location, int slot, @Nullable ItemStack clicked, @Nullable ItemStack cursor) {
@@ -85,18 +73,30 @@ public class EnchantingMenu extends Menu {
     @Override
     protected void onMenuClick(Player player, int slot, InventoryAction action, ClickType click, ItemStack cursor, ItemStack clicked, boolean cancelled) {
         if (action == InventoryAction.PLACE_ALL && slot == ENCHANT_SLOT) {
-            getInventory().setItem(ENCHANT_SLOT,cursor);
-
-
-                Common.runLater(1, () -> {
-                  player.setItemOnCursor(ItemCreator.of(CompMaterial.AIR).make());
-                });
+               playerSetItem(cursor,ENCHANT_SLOT);
+               Common.runLater(0, this::restart);
             }
 
+        if (action == InventoryAction.PICKUP_ALL && slot == ENCHANT_SLOT) {
+            Common.runLater(0, this::restart);
+            TBSSound.MenuPickUp.getInstance().playTo(getViewer());
+
+        }
     }
 
+    @Override
+    protected void onMenuDrag(Player player, int slot, DragType type, ItemStack cursor) {
+        if (slot == ENCHANT_SLOT) {
+            playerSetItem(cursor,ENCHANT_SLOT);
+            Common.runLater(0, this::restart);
+            Common.broadcast("DRAGGED");
+        }
+    }
 
-
+    @Override
+    protected void onRestart() {
+        updateEnchantingButton();
+    }
 
     @Override
     protected void onDisplay(InventoryDrawer drawer) {
@@ -104,8 +104,10 @@ public class EnchantingMenu extends Menu {
 
         ItemStack itemLeftInMenu = cache.getTagger().getPlayerTag(ITEM_STILL_IN_ENCHANTER);
 
-        if (itemLeftInMenu != null)
+        if (itemLeftInMenu != null) {
             drawer.setItem(ENCHANT_SLOT,itemLeftInMenu);
+        }
+
     }
 
     @Override
@@ -226,6 +228,7 @@ public class EnchantingMenu extends Menu {
             PlayerCache.from(getViewer()).getTagger().setPlayerTag("upgrading", false);
 
             setAll(TBSColor.WHITE);
+            restart();
             basicLoopAnimation.launch();
         }
 
@@ -267,5 +270,83 @@ public class EnchantingMenu extends Menu {
 
     }
 
+    private void updateEnchantingButton() {
+        ItemStack itemInMenu = getInventory().getItem(ENCHANT_SLOT);
 
+
+        enchantButton.getCreator().clearLore();
+
+        if (itemInMenu == NO_ITEM)
+            enchantButton.getCreator().lore("&7Place a mystic item here", "&7To upgrade it!");
+
+        if (TBSItemUtil.isEnchantable(itemInMenu)) {
+            EnchantableItem enchantableItem = EnchantableItem.fromItemStack(itemInMenu);
+
+            if (enchantableItem.getCurrentTier().getAsInteger() == 3)
+                enchantButton.getCreator().lore("&eMax Level!");
+            else {
+              Tier nextTier = Tier.getNext(enchantableItem.getCurrentTier());
+
+                enchantButton.getCreator().lore("&7Upgrade: " + nextTier.getColor().getChatColor() + nextTier.getAsRomanNumeral(),
+                        "&7Cost: &6" + nextTier.getCostToUpgrade() + "g", "", "&eClick to enchant!");
+
+            }
+        }
+
+
+    }
+
+    private void makeEnchantingButton() {
+        ItemCreator enchantingCreator = ItemCreator.of(CompMaterial.ENCHANTING_TABLE, "&5Eternal Well",
+                "&7Place a mystic item here", "&7To upgrade it!");
+        enchantButton = new TBSButton(enchantingCreator) {
+            @Override
+            public void onClickedInMenu(Player player, Menu menu, ClickType click) {
+
+                ItemStack itemStack = getInventory().getItem(ENCHANT_SLOT);
+                if (itemStack == null)
+                    return;
+
+
+                EnchantableItem enchantableItem = EnchantableItem.fromItemStack(itemStack);
+                attemptUpgrade(player,enchantableItem);
+
+            }
+        };
+    }
+
+    private void attemptUpgrade(Player player, EnchantableItem item) {
+        PlayerCache cache = PlayerCache.from(player);
+        DungeonCache dungeonCache = DungeonCache.from(player);
+
+        if (canUpgrade(player,item)) {
+            Tier tierToUpgrade = Tier.getNext(item.getCurrentTier());
+
+            cache.getTagger().setPlayerTag("upgrading", true);
+            enchantingAnimation.launchWithColor(tierToUpgrade.getColor());
+            dungeonCache.takeMoney(tierToUpgrade.getCostToUpgrade());
+        } else {
+
+            if (item != null && item.getCurrentTier().equals(Tier.THREE)) {
+                animateTitle("&4&lItem is Max Level!");
+                return;
+            }
+
+            animateTitle("&4&lNot Enough Money!");
+
+        }
+    }
+
+    private boolean canUpgrade(Player player, EnchantableItem item) {
+        PlayerTagger tagger = PlayerCache.from(player).getTagger();
+
+        DungeonCache dungeonCache = DungeonCache.from(player);
+
+
+        if (item != null && !item.getCurrentTier().equals(Tier.THREE))
+            if (dungeonCache.getMoney() >= Tier.getNext(item.getCurrentTier()).getCostToUpgrade())
+                return !tagger.getBooleanTagSafe("upgrading");
+
+        return false;
+    }
 }

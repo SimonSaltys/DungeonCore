@@ -1,20 +1,24 @@
 package dev.tablesalt.dungeon.listener;
 
-import dev.tablesalt.dungeon.menu.enchanting.EnchantingMenu;
+import dev.tablesalt.dungeon.game.scoreboard.HubScoreboard;
+import dev.tablesalt.dungeon.menu.impl.EnchantingMenu;
 import dev.tablesalt.dungeon.tools.EnchantingWellTool;
 import dev.tablesalt.dungeon.util.EntityUtil;
 import org.bukkit.block.Block;
-import org.bukkit.block.CommandBlock;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.TextDisplay;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerInteractEvent;
-import org.mineacademy.fo.Common;
+import org.bukkit.event.player.PlayerJoinEvent;
 
 public class OutOfDungeonListener implements Listener {
 
+
+    @EventHandler
+    public void onJoin(PlayerJoinEvent event) {
+        HubScoreboard.displayTo(event.getPlayer());
+    }
 
     @EventHandler
     public void onBlockClick(PlayerInteractEvent event) {

@@ -2,7 +2,7 @@ package dev.tablesalt.dungeon.database;
 
 
 import dev.tablesalt.dungeon.DungeonPlugin;
-import dev.tablesalt.dungeon.menu.enchanting.EnchantingMenu;
+import dev.tablesalt.dungeon.menu.impl.EnchantingMenu;
 import dev.tablesalt.dungeon.util.MessageUtil;
 import dev.tablesalt.dungeon.util.PlayerUtil;
 import dev.tablesalt.dungeon.util.TBSItemUtil;

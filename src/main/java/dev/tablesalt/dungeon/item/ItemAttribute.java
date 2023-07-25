@@ -1,9 +1,6 @@
 package dev.tablesalt.dungeon.item;
 
 import dev.tablesalt.dungeon.DungeonPlugin;
-import dev.tablesalt.dungeon.item.impl.Rarity;
-import dev.tablesalt.dungeon.item.impl.Tier;
-import org.mineacademy.fo.Common;
 import org.mineacademy.fo.ReflectionUtil;
 
 import java.util.ArrayList;

@@ -4,7 +4,7 @@ import dev.tablesalt.dungeon.game.DungeonGame;
 import dev.tablesalt.dungeon.maps.DungeonMap;
 import dev.tablesalt.dungeon.maps.spawnpoints.MonsterPoint;
 import dev.tablesalt.dungeon.maps.spawnpoints.SpawnPoint;
-import dev.tablesalt.dungeon.menu.MonsterSpawnMenu;
+import dev.tablesalt.dungeon.menu.impl.MonsterSpawnMenu;
 import dev.tablesalt.dungeon.util.PlayerUtil;
 import dev.tablesalt.gamelib.tools.GameTool;
 import lombok.Getter;

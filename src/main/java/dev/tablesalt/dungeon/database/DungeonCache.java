@@ -5,6 +5,7 @@ import lombok.Getter;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
+import org.mineacademy.fo.Common;
 import org.mineacademy.fo.remain.Remain;
 
 import javax.annotation.Nullable;
@@ -103,11 +104,14 @@ public class DungeonCache {
 
 
     public void giveMoney(int amount) {
-
+        moneyAmount += amount;
     }
 
     public void takeMoney(int amount) {
+        moneyAmount = moneyAmount - amount;
 
+        if (moneyAmount < 0)
+            moneyAmount = 0;
     }
 
     public void setMoney(int amount) {

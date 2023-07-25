@@ -1,12 +1,10 @@
 package dev.tablesalt.dungeon.database;
 
 import dev.tablesalt.dungeon.item.ItemAttribute;
-import dev.tablesalt.dungeon.item.impl.Tier;
-import dev.tablesalt.dungeon.util.PlayerUtil;
+import dev.tablesalt.dungeon.item.Tier;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.Material;
-import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.mineacademy.fo.Common;
 import org.mineacademy.fo.ItemUtil;
@@ -90,8 +88,8 @@ public class EnchantableItem implements ConfigSerializable {
       * into an itemstack that can be used by the player
       */
      public ItemStack compileToItemStack() {
-        String formattedName = "Mystic " + ItemUtil.bountifyCapitalized(name) + " " +
-                (currentTier != Tier.NONE ? currentTier.getAsRomanNumeral() + " " : "");
+        String formattedName = currentTier.getColor().getChatColor() + "Mystic " + ItemUtil.bountifyCapitalized(name) + " " +
+                (currentTier != Tier.NONE ? "&l" + currentTier.getAsRomanNumeral() + " " : "");
 
         List<String> lore = new ArrayList<>();
 

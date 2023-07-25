@@ -1,7 +1,10 @@
 package dev.tablesalt.dungeon.maps.spawnpoints;
 
 
+import dev.tablesalt.gamelib.game.map.GameMap;
+import dev.tablesalt.gamelib.game.utils.GameUtil;
 import lombok.Getter;
+import lombok.Setter;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -14,45 +17,40 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Stack;
-
+@Setter @Getter
 public class LootPoint extends SpawnPoint {
 
     private final Location location;
-    @Getter
-    private List<ItemStack> loot;
+
+
+    protected double mysticDropChance = 5.0;
+
+    protected int maxMysticDrops = 2;
+
+    protected double goldDropChance = 50.0;
+
+    protected int maxGoldDrops = 10;
+
+    protected int maxTotalDrops = 5;
 
     public LootPoint(Location location) {
         this.location = location;
-        this.loot = new ArrayList<>();
+
     }
 
 
     @Override
     public void spawn() {
-        Stack<ItemStack> lootStack = new Stack<>();
-        lootStack.addAll(loot);
-        Collections.shuffle(lootStack);
+
 
         Block block = location.clone().add(0,1,0).getBlock();
         block.setType(Material.CHEST);
 
        Chest chest = (Chest) block.getState();
-       assignLootRandomly(chest.getInventory(), lootStack);
     }
 
     private void assignLootRandomly(Inventory inventory, Stack<ItemStack> lootStack) {
-        for (int i = 0; i < inventory.getSize(); i++) {
 
-            if (lootStack.isEmpty())
-                return;
-
-            ItemStack item = lootStack.pop();
-
-            if (item == null || item.getType().isAir())
-                inventory.setItem(i, new ItemStack(Material.AIR));
-            else
-                inventory.setItem(i, item);
-        }
     }
 
     @Override
@@ -60,23 +58,32 @@ public class LootPoint extends SpawnPoint {
         return location;
     }
 
+    public void saveMap() {
+        //todo find map based on location
+    }
+
     @Override
     public SerializedMap serialize() {
         return SerializedMap.ofArray(
                     "location", location,
-                    "loot", loot
+                    "Mystic_Drop_Chance", mysticDropChance,
+                    "Max_Mystic_Drops", maxMysticDrops,
+                    "Gold_Drop_Chance", goldDropChance,
+                    "Max_Gold_Drops", maxGoldDrops
+
             );
     }
 
-    public void setLoot(List<ItemStack> lootToSet) {
-       this.loot = lootToSet;
 
-    }
 
     public static LootPoint deserialize(SerializedMap map) {
-        LootPoint spawnPoint = new LootPoint(map.getLocation("location"));
-        spawnPoint.loot = map.getList("loot", ItemStack.class);
+        LootPoint lootPoint = new LootPoint(map.getLocation("location"));
 
-        return spawnPoint;
+        lootPoint.setMysticDropChance(map.getDouble("Mystic_Drop_Chance", 5.0));
+        lootPoint.setMaxMysticDrops(map.getInteger("Max_Mystic_Drops", 0));
+        lootPoint.setGoldDropChance(map.getDouble("Gold_Drop_Chance", 5.0));
+        lootPoint.setMaxGoldDrops(map.getInteger("Max_Gold_Drops", 0));;
+
+        return lootPoint;
     }
 }

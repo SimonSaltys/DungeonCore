@@ -1,4 +1,4 @@
-package dev.tablesalt.dungeon.menu;
+package dev.tablesalt.dungeon.menu.impl;
 
 import dev.tablesalt.dungeon.maps.spawnpoints.MonsterPoint;
 import dev.tablesalt.dungeon.util.MessageUtil;

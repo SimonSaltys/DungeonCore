@@ -1,11 +1,10 @@
-package dev.tablesalt.dungeon.item.impl;
+package dev.tablesalt.dungeon.item;
 
 import dev.tablesalt.dungeon.collection.RandomCollection;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.mineacademy.fo.ChatUtil;
-import org.mineacademy.fo.Common;
 import org.mineacademy.fo.remain.CompChatColor;
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 @Getter

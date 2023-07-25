@@ -1,5 +1,6 @@
 package dev.tablesalt.dungeon.game;
 import dev.tablesalt.dungeon.game.helpers.*;
+import dev.tablesalt.dungeon.game.scoreboard.DungeonScoreboard;
 import dev.tablesalt.dungeon.maps.DungeonMap;
 import dev.tablesalt.dungeon.DungeonPlugin;
 

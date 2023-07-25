@@ -7,6 +7,7 @@ import dev.tablesalt.dungeon.game.DungeonGame;
 import dev.tablesalt.dungeon.item.ItemAttribute;
 import dev.tablesalt.dungeon.listener.DatabaseListener;
 import dev.tablesalt.dungeon.listener.OutOfDungeonListener;
+import dev.tablesalt.dungeon.menu.MenuListener;
 import dev.tablesalt.gamelib.game.types.GameTypeList;
 import dev.tablesalt.gamelib.game.types.Type;
 import org.mineacademy.fo.Common;
@@ -52,5 +53,6 @@ public final class DungeonPlugin extends SimplePlugin {
     private void registerDungeonEvents() {
         registerEvents(new DatabaseListener());
         registerEvents(new OutOfDungeonListener());
+        registerEvents(new MenuListener());
     }
 }
