@@ -103,6 +103,7 @@ public class EnchantableItem implements ConfigSerializable {
     }
 
     private ItemStack setNBTOnItem(ItemStack item) {
+
         item = CompMetadata.setMetadata(item,"UUID",uuid.toString());
 
 

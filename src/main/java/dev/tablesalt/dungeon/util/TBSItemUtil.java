@@ -5,9 +5,11 @@ import dev.tablesalt.dungeon.item.ItemAttribute;
 import dev.tablesalt.dungeon.item.Rarity;
 import dev.tablesalt.dungeon.item.Tier;
 import lombok.experimental.UtilityClass;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.mineacademy.fo.RandomUtil;
+import org.mineacademy.fo.remain.CompMaterial;
 import org.mineacademy.fo.remain.CompMetadata;
 
 import java.util.*;
@@ -20,6 +22,17 @@ public class TBSItemUtil {
      */
     public String makeItemTitle(String title) {
         return "&9" + title;
+    }
+
+
+    public EnchantableItem makeEnchantableArmor() {
+
+       return new EnchantableItem(
+                CompMaterial.LEATHER_CHESTPLATE.name(),
+                Material.LEATHER_CHESTPLATE,
+                new HashMap<>(),
+                Tier.NONE,
+                UUID.randomUUID());
     }
 
     /**

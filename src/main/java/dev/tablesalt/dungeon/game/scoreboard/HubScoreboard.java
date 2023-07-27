@@ -1,6 +1,7 @@
 package dev.tablesalt.dungeon.game.scoreboard;
 
 import dev.tablesalt.dungeon.database.DungeonCache;
+import dev.tablesalt.dungeon.util.ScoreBoardUtil;
 import dev.tablesalt.gamelib.players.PlayerCache;
 import lombok.NonNull;
 import org.bukkit.ChatColor;
@@ -19,7 +20,7 @@ public class HubScoreboard extends SimpleScoreboard {
         this.setUpdateDelayTicks(10);
 
         addRows("Rank: {rank}",
-                        "Money: {money}",
+                        "Gold: {money}",
                         "ect...");
     }
 
@@ -37,7 +38,7 @@ public class HubScoreboard extends SimpleScoreboard {
     }
 
     public static void displayTo(Player player) {
-        new HubScoreboard(player).show(player);
+        ScoreBoardUtil.displayScoreboard(player, new HubScoreboard(player));
     }
 
 }

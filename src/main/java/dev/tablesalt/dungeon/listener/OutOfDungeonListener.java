@@ -4,6 +4,7 @@ import dev.tablesalt.dungeon.game.scoreboard.HubScoreboard;
 import dev.tablesalt.dungeon.menu.impl.EnchantingMenu;
 import dev.tablesalt.dungeon.tools.EnchantingWellTool;
 import dev.tablesalt.dungeon.util.EntityUtil;
+import dev.tablesalt.gamelib.event.PlayerLeaveGameEvent;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.TextDisplay;
@@ -17,6 +18,11 @@ public class OutOfDungeonListener implements Listener {
 
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
+        HubScoreboard.displayTo(event.getPlayer());
+    }
+
+    @EventHandler
+    public void onPlayerLeaveGame(PlayerLeaveGameEvent event) {
         HubScoreboard.displayTo(event.getPlayer());
     }
 

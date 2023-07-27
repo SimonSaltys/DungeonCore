@@ -23,14 +23,14 @@ public final class GiveEnchantableItem extends GameSubCommand {
         cache.giveMoney(1000);
         Common.broadcast("Money " + cache.getMoney());
 
-//
-//        EnchantableItem enchantableItem = new EnchantableItem(
-//                CompMaterial.LEATHER_CHESTPLATE.name(),
-//                Material.LEATHER_CHESTPLATE,
-//                new HashMap<>(),
-//                Tier.NONE,
-//                UUID.randomUUID());
-//
-//        PlayerUtil.giveItem(getPlayer(),enchantableItem.compileToItemStack());
+
+        EnchantableItem enchantableItem = new EnchantableItem(
+                CompMaterial.LEATHER_CHESTPLATE.name(),
+                Material.LEATHER_CHESTPLATE,
+                new HashMap<>(),
+                Tier.NONE,
+                UUID.randomUUID());
+
+        PlayerUtil.giveItem(getPlayer(),enchantableItem.compileToItemStack());
     }
 }

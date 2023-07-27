@@ -4,6 +4,16 @@ import org.mineacademy.fo.settings.SimpleSettings;
 
 public class DungeonStaticSettings extends SimpleSettings {
 
+    public static class Loot {
+        public static Integer moneyPerNugget;
+
+        private static void init() {
+            setPathPrefix("loot");
+
+            moneyPerNugget = getInteger("money_per_nugget",10);
+        }
+    }
+
     public static class Database {
 
         public static String host;

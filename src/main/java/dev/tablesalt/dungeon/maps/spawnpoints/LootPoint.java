@@ -1,55 +1,116 @@
 package dev.tablesalt.dungeon.maps.spawnpoints;
 
 
+import dev.tablesalt.dungeon.DungeonSettings;
+import dev.tablesalt.dungeon.DungeonStaticSettings;
+import dev.tablesalt.dungeon.maps.DungeonMap;
+import dev.tablesalt.dungeon.configitems.LootChance;
+import dev.tablesalt.dungeon.util.TBSItemUtil;
 import dev.tablesalt.gamelib.game.map.GameMap;
-import dev.tablesalt.gamelib.game.utils.GameUtil;
 import lombok.Getter;
-import lombok.Setter;
+import org.apache.commons.lang3.RandomUtils;
+import org.apache.commons.math3.distribution.EnumeratedDistribution;
+import org.apache.commons.math3.util.Pair;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.Chest;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.mineacademy.fo.ChatUtil;
+import org.mineacademy.fo.RandomUtil;
 import org.mineacademy.fo.collection.SerializedMap;
+import org.mineacademy.fo.menu.model.ItemCreator;
+import org.mineacademy.fo.remain.CompChatColor;
+import org.mineacademy.fo.remain.CompMaterial;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.Stack;
-@Setter @Getter
+
+/**
+ * Hold the data to spawn a chest with
+ * randomly provided loot through the LootChance class
+ */
+@Getter
 public class LootPoint extends SpawnPoint {
 
     private final Location location;
 
+    private LootChance lootChance;
 
-    protected double mysticDropChance = 5.0;
-
-    protected int maxMysticDrops = 2;
-
-    protected double goldDropChance = 50.0;
-
-    protected int maxGoldDrops = 10;
-
-    protected int maxTotalDrops = 5;
+    public enum DropType {
+        MYSTIC,
+        GOLD,
+        NO_ITEM,
+        NORMAL_ITEM;
+    }
 
     public LootPoint(Location location) {
         this.location = location;
 
     }
 
+     public void setLootChance(LootChance lootChance) {
+         this.lootChance = lootChance;
+         saveMap();
+     }
 
-    @Override
+     @Override
     public void spawn() {
-
-
         Block block = location.clone().add(0,1,0).getBlock();
         block.setType(Material.CHEST);
 
        Chest chest = (Chest) block.getState();
+       Inventory inventory = chest.getInventory();
+
+       assignLootRandomly(inventory);
     }
 
-    private void assignLootRandomly(Inventory inventory, Stack<ItemStack> lootStack) {
+    private void assignLootRandomly(Inventory inventory) {
+        if (lootChance == null)
+            lootChance = RandomUtil.nextItem(LootChance.getChances());
+
+        final List<Pair<DropType, Double>> itemWeights = new ArrayList<>();
+
+//        itemWeights.add(new Pair<>(LootPoint.DropType.NO_ITEM, 0.9));
+//        itemWeights.add(new Pair<>(LootPoint.DropType.MYSTIC, 0.01));
+//        itemWeights.add(new Pair<>(LootPoint.DropType.GOLD, 0.09));
+
+        itemWeights.add(new Pair<>(LootPoint.DropType.NO_ITEM, 0.9));
+        itemWeights.add(new Pair<>(LootPoint.DropType.MYSTIC, lootChance.getMysticDropChance()));
+        itemWeights.add(new Pair<>(LootPoint.DropType.GOLD, lootChance.getGoldDropChance()));
+
+        EnumeratedDistribution<DropType> distribution = new EnumeratedDistribution<>(itemWeights);
+
+        int mysticsAdded = 0;
+        int goldAdded = 0;
+
+        for (int itemsAdded = 0; itemsAdded < inventory.getSize(); itemsAdded++) {
+
+            if (mysticsAdded + goldAdded >= lootChance.getMaxTotalDrops())
+                return;
+
+            DropType dropType = distribution.sample();
+
+            ItemStack itemToAdd = null;
+
+            if (dropType == DropType.MYSTIC && mysticsAdded < lootChance.getMaxMysticDrops()) {
+                itemToAdd = TBSItemUtil.makeEnchantableArmor().compileToItemStack();
+                mysticsAdded++;
+
+            } else if(dropType == DropType.GOLD && goldAdded < lootChance.getMaxGoldDrops()) {
+                int amount = RandomUtils.nextInt(1, 10);
+                itemToAdd = ItemCreator.of(CompMaterial.GOLD_NUGGET,
+                        ChatUtil.generateGradient("Gold Nugget", CompChatColor.YELLOW,CompChatColor.GOLD))
+                        .amount(amount).lore("","&7Pickup to gain &6" + amount * DungeonStaticSettings.Loot.moneyPerNugget + "g").make();
+                goldAdded++;
+
+            } if (itemToAdd == null)
+                itemToAdd = ItemCreator.of(CompMaterial.AIR).make();
+
+            inventory.setItem(itemsAdded,itemToAdd);
+        }
+
 
     }
 
@@ -59,31 +120,24 @@ public class LootPoint extends SpawnPoint {
     }
 
     public void saveMap() {
-        //todo find map based on location
+       GameMap map = GameMap.findMapFromLocation(location);
+
+       if (map instanceof DungeonMap dungeonMap)
+            dungeonMap.save();
     }
 
     @Override
     public SerializedMap serialize() {
         return SerializedMap.ofArray(
                     "location", location,
-                    "Mystic_Drop_Chance", mysticDropChance,
-                    "Max_Mystic_Drops", maxMysticDrops,
-                    "Gold_Drop_Chance", goldDropChance,
-                    "Max_Gold_Drops", maxGoldDrops
-
-            );
+                    "loot_chance", lootChance);
     }
 
 
+     public static LootPoint deserialize(SerializedMap map) {
+         LootPoint point = new LootPoint(map.getLocation("location"));
+         point.setLootChance(map.get("loot_chance", LootChance.class));
 
-    public static LootPoint deserialize(SerializedMap map) {
-        LootPoint lootPoint = new LootPoint(map.getLocation("location"));
-
-        lootPoint.setMysticDropChance(map.getDouble("Mystic_Drop_Chance", 5.0));
-        lootPoint.setMaxMysticDrops(map.getInteger("Max_Mystic_Drops", 0));
-        lootPoint.setGoldDropChance(map.getDouble("Gold_Drop_Chance", 5.0));
-        lootPoint.setMaxGoldDrops(map.getInteger("Max_Gold_Drops", 0));;
-
-        return lootPoint;
+         return point;
     }
 }

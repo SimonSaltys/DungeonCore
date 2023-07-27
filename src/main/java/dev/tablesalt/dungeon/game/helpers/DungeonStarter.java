@@ -81,7 +81,9 @@ public class DungeonStarter extends Starter {
 
         for (int i = 0; i < lootCount; i++) {
             LootPoint lootPoint = lootSpawnPoints.pickRandom();
-            lootPoint.spawn();
+
+            if (lootPoint != null)
+                lootPoint.spawn();
         }
     }
 }

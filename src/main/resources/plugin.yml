@@ -9,6 +9,7 @@ libraries:
   - org.openjdk.nashorn:nashorn-core:15.4
   - redis.clients:jedis:4.3.0
   - biz.source_code:base64coder:2010-12-19
+  - org.apache.commons:commons-math3:3.6.1
 
 
 authors: [ SimonSaltikov ]

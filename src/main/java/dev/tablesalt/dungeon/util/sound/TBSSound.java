@@ -49,6 +49,39 @@ public class TBSSound {
 	// ------–------–------–------–------–------–------–------–------–------–------–------–----
 	// Game related sounds
 	// ------–------–------–------–------–------–------–------–------–------–------–------–----
+	public final class MoneyPickup implements GameSound {
+		@Getter
+		private static final MoneyPickup instance = new MoneyPickup();
+
+		@Override
+		public void playTo(Player player) {
+			float pitchShift = RandomUtils.nextFloat(1.2F,1.4F);
+
+			CompSound.ENTITY_EXPERIENCE_ORB_PICKUP.play(player,1,pitchShift);
+		}
+	}
+
+	public final class Rewarded implements GameSound {
+		@Getter
+		private static final Rewarded instance = new Rewarded();
+
+		@Override
+		public void playTo(Player player) {
+
+			new SimpleSoundRunnable(4, 3) {
+				float pitchShift = 1.2F;
+
+				@Override
+				protected void onTick() {
+					super.onTick();
+					CompSound.ENTITY_EXPERIENCE_ORB_PICKUP.play(player, 1, pitchShift);
+					pitchShift += 0.3F;
+				}
+			}.launch();
+
+			CompSound.ENTITY_PLAYER_LEVELUP.play(player, 1, 1.2F);
+		}
+	}
 
 	public final class Kill implements GameSound {
 
@@ -150,28 +183,6 @@ public class TBSSound {
 		}
 	}
 
-	public final class Rewarded implements GameSound {
-
-		@Getter
-		private static final Rewarded instance = new Rewarded();
-
-		@Override
-		public void playTo(Player player) {
-
-			new SimpleSoundRunnable(4, 3) {
-				float pitchShift = 1.2F;
-
-				@Override
-				protected void onTick() {
-					super.onTick();
-					CompSound.ENTITY_EXPERIENCE_ORB_PICKUP.play(player, 1, pitchShift);
-					pitchShift += 0.3F;
-				}
-			}.launch();
-
-			CompSound.ENTITY_PLAYER_LEVELUP.play(player, 1, 1.2F);
-		}
-	}
 
 	// ------–------–------–------–------–------–------–------–------–------–------–------–----
 	// Private Access and Utility methods

@@ -110,7 +110,7 @@ public class RedisDatabase {
     private void saveMoney(Player player) {
         DungeonCache cache = DungeonCache.from(player);
 
-        Common.runAsync(() -> jedis.set(PLAYER_MONEY + player.getUniqueId(), cache.getMoney() + ""));
+        Common.runAsync(() -> jedis.set(PLAYER_MONEY + player.getUniqueId(), Double.toString(cache.getMoney())));
     }
 
     private void loadMoney(Player player) {
@@ -119,7 +119,7 @@ public class RedisDatabase {
 
         if (moneyString != null) {
             try {
-                int money = Integer.parseInt(moneyString);
+                double money = Double.parseDouble(moneyString);
                 cache.setMoney(money);
             } catch (NumberFormatException e) {
                 Common.throwError(e, "Could not load money for player " + player.getName());

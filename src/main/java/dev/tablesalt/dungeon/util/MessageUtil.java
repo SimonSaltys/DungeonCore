@@ -18,8 +18,6 @@ public class MessageUtil {
 
     public String makeSuccessful(String message) {return "&a&lSuccess! &r" + message; }
 
-
-
     public String makeClickable(String message, ClickEvent event) {
         TextComponent textComponent = new TextComponent(message);
 

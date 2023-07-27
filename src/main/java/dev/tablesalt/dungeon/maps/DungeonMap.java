@@ -131,6 +131,9 @@ public class DungeonMap extends GameMap {
     }
 
     public boolean extractRegionsValid() {
+        if (extractRegions.isEmpty())
+            return false;
+
         for (ExtractRegion region : extractRegions)
             if (region.getRegion() == null || !region.getRegion().isWhole())
                 return false;

@@ -30,6 +30,9 @@
 #
 # !-----------------------------------------------------------------------------------------------!
 
+loot:
+  money_per_nugget: 10
+
 database:
   host: localhost # host of your database
   port: 1433 # default port for MariaDB and MySQL
@@ -81,4 +84,4 @@ Debug: []
 # Do not change this value, otherwise it will corrupt your plugin installation!
 # NB: Don't forget to keep this up-to-date with the getConfigVersion method in your Settings class. 
 # -------------------------------------------------------------------------------------------------
-Version: 1
+Version: 2

@@ -27,7 +27,7 @@ public class DungeonCache {
 
     private final List<EnchantableItem> enchantableItems = new ArrayList<>();
 
-    private int moneyAmount;
+    private double moneyAmount;
 
     private DungeonCache(String name, UUID uniqueId) {
         this.uniqueId = uniqueId;
@@ -103,7 +103,7 @@ public class DungeonCache {
     /*----------------------------------------------------------------*/
 
 
-    public void giveMoney(int amount) {
+    public void giveMoney(double amount) {
         moneyAmount += amount;
     }
 
@@ -114,11 +114,11 @@ public class DungeonCache {
             moneyAmount = 0;
     }
 
-    public void setMoney(int amount) {
+    public void setMoney(double amount) {
         this.moneyAmount = amount;
     }
 
-    public int getMoney() {
+    public double getMoney() {
         return moneyAmount;
     }
 
