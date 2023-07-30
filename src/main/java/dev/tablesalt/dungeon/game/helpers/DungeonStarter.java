@@ -4,18 +4,17 @@ import dev.tablesalt.dungeon.game.DungeonGame;
 import dev.tablesalt.dungeon.maps.DungeonMap;
 import dev.tablesalt.dungeon.maps.spawnpoints.ExtractRegion;
 import dev.tablesalt.dungeon.maps.spawnpoints.LootPoint;
-import dev.tablesalt.dungeon.util.MessageUtil;
 
 import dev.tablesalt.gamelib.exception.GameException;
 import dev.tablesalt.gamelib.game.enums.GameJoinMode;
 import dev.tablesalt.gamelib.game.helpers.Starter;
-import dev.tablesalt.gamelib.game.map.GameMap;
 import dev.tablesalt.gamelib.game.utils.GameUtil;
+import dev.tablesalt.gamelib.game.utils.MessageUtil;
+import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.mineacademy.fo.Common;
 import org.mineacademy.fo.RandomUtil;
-import org.mineacademy.fo.exception.FoException;
 import org.mineacademy.fo.model.RandomNoRepeatPicker;
 
 import java.util.Collections;
@@ -40,7 +39,8 @@ public class DungeonStarter extends Starter {
 
 
     private void broadcastInfo() {
-        game.getGameBroadcaster().broadcast(MessageUtil.makeInfo("&7The Dungeon Begins! &e&lAdventurers: &r&7" + game.getPlayerGetter().getPlayers(GameJoinMode.PLAYING).size() + "." ));
+        game.getGameBroadcaster().broadcast(MessageUtil.makeInfo("&7The Dungeon Begins! &e&lAdventurers: &r&7<size>."
+        ,Formatter.number("size", game.getPlayerGetter().getPlayers(GameJoinMode.PLAYING).size())));
     }
 
     private void teleportPlayers() {

@@ -13,6 +13,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.mineacademy.fo.Common;
 import org.mineacademy.fo.Valid;
+import org.mineacademy.fo.remain.Remain;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -57,6 +58,17 @@ public class PlayerUtil {
         }
 
         return items;
+    }
+
+    public List<Player> getPlayersNotInGame() {
+        List<Player> players = new ArrayList<>();
+
+        for (Player player : Remain.getOnlinePlayers())
+            if (!PlayerCache.from(player).getGameIdentifier().hasGame())
+                players.add(player);
+
+        return players;
+
     }
 
 

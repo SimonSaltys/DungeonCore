@@ -1,6 +1,7 @@
 package dev.tablesalt.dungeon.menu.impl;
 
 import dev.tablesalt.dungeon.configitems.LootChance;
+import dev.tablesalt.dungeon.item.Rarity;
 import org.bukkit.conversations.ConversationContext;
 import org.bukkit.conversations.Prompt;
 import org.bukkit.entity.Player;
@@ -94,18 +95,16 @@ public class LootChanceMenu extends MenuPagged<LootChance> {
     private class LootChanceConfigMenu extends Menu {
 
          final LootChance chance;
-         final ButtonConversation mysticDropsButton;
+         final ButtonConversation mythicDropsButton;
 
          final ButtonConversation goldDropsButton;
-
-
 
          final ButtonRemove buttonRemove;
 
         private LootChanceConfigMenu(LootChance chance) {
             super(LootChanceMenu.this);
             this.chance = chance;
-            mysticDropsButton = makeMysticConversation();
+            mythicDropsButton = makeMysticConversation();
             goldDropsButton = makeGoldConversation();
 
             this.buttonRemove = new ButtonRemove(LootChanceMenu.this,"LootChance",chance.getName(),
@@ -118,7 +117,7 @@ public class LootChanceMenu extends MenuPagged<LootChance> {
         public ItemStack getItemAt(int slot) {
 
             if (slot == 10)
-                return mysticDropsButton.getItem();
+                return mythicDropsButton.getItem();
 
             if (slot == getCenterSlot())
                 return goldDropsButton.getItem();
@@ -136,18 +135,18 @@ public class LootChanceMenu extends MenuPagged<LootChance> {
             SimpleConversation conversation = new SimpleConversation() {
                 @Override
                 protected Prompt getFirstPrompt() {
-                    return new ConfigurationPrompt("&emystic drop chance %") {
+                    return new ConfigurationPrompt("&e" + Rarity.MYTHIC + " drop chance %") {
                         @Override
                         public void setConfiguring(double input) {
-                            chance.setMysticDropChance(input);
+                            chance.setMythicDropChance(input);
                         }
 
                         @Override
                         public Prompt getNextPrompt() {
-                            return new ConfigurationPrompt("&emax mystic drops") {
+                            return new ConfigurationPrompt("&emax " + Rarity.MYTHIC + " drops") {
                                 @Override
                                 public void setConfiguring(double input) {
-                                    chance.setMaxMysticDrops((int) Math.round(input));
+                                    chance.setMaxMythicDrops((int) Math.round(input));
                                 }
 
                                 @Override
@@ -161,8 +160,8 @@ public class LootChanceMenu extends MenuPagged<LootChance> {
             };
 
             return new ButtonConversation(conversation, CompMaterial.GOLDEN_SWORD, "Mystic Configuration",
-                    "Drop Chance: &e" + chance.getMysticDropChance() + "%",
-                    "Max Drops: &e" + chance.getMaxMysticDrops());
+                    "Drop Chance: &e" + chance.getMythicDropChance() + "%",
+                    "Max Drops: &e" + chance.getMaxMythicDrops());
         }
 
         public ButtonConversation makeGoldConversation() {

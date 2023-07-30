@@ -2,6 +2,7 @@ package dev.tablesalt.dungeon.menu.impl;
 
 import dev.tablesalt.dungeon.database.DungeonCache;
 import dev.tablesalt.dungeon.database.EnchantableItem;
+import dev.tablesalt.dungeon.item.Rarity;
 import dev.tablesalt.dungeon.item.Tier;
 import dev.tablesalt.dungeon.menu.TBSButton;
 import dev.tablesalt.dungeon.menu.TBSMenu;
@@ -189,6 +190,8 @@ public class EnchantingMenu extends TBSMenu {
             this.color = color;
 
             ItemStack item = getInventory().getItem(ENCHANT_SLOT);
+
+
             if (!TBSItemUtil.isEnchantable(item))
                 return;
 
@@ -196,6 +199,7 @@ public class EnchantingMenu extends TBSMenu {
             if (enchantableItem == null)
                 return;
 
+            TBSSound.EnchantingSound.getInstance().playToWithItem(getViewer(),enchantableItem);
             enchantedItem = TBSItemUtil.enchantItem(getViewer(),enchantableItem);
             setItem(ENCHANT_SLOT,NO_ITEM);
 
@@ -277,7 +281,7 @@ public class EnchantingMenu extends TBSMenu {
         enchantButton.getCreator().clearLore();
 
         if (itemInMenu == NO_ITEM)
-            enchantButton.getCreator().lore("&7Place a mystic item here", "&7To upgrade it!");
+            enchantButton.getCreator().lore("&7Place a " + Rarity.MYTHIC + " item here", "&7To upgrade it!");
 
         if (TBSItemUtil.isEnchantable(itemInMenu)) {
             EnchantableItem enchantableItem = EnchantableItem.fromItemStack(itemInMenu);
@@ -298,7 +302,7 @@ public class EnchantingMenu extends TBSMenu {
 
     private void makeEnchantingButton() {
         ItemCreator enchantingCreator = ItemCreator.of(CompMaterial.ENCHANTING_TABLE, "&5Eternal Well",
-                "&7Place a mystic item here", "&7To upgrade it!");
+                "&7Place  a " + Rarity.MYTHIC + " item here", "&7To upgrade it!");
         enchantButton = new TBSButton(enchantingCreator) {
             @Override
             public void onClickedInMenu(Player player, Menu menu, ClickType click) {

@@ -1,6 +1,7 @@
 package dev.tablesalt.dungeon.database;
 
 import dev.tablesalt.dungeon.item.ItemAttribute;
+import dev.tablesalt.dungeon.item.Rarity;
 import dev.tablesalt.dungeon.item.Tier;
 import lombok.Getter;
 import lombok.Setter;
@@ -19,10 +20,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 
- @Getter @Setter
+@Getter
+@Setter
 public class EnchantableItem implements ConfigSerializable {
 
-     public static final Integer MAX_ENCHANTS_PER_ITEM = 3;
+    public static final Integer MAX_ENCHANTS_PER_ITEM = 3;
 
     private String name;
 
@@ -35,7 +37,7 @@ public class EnchantableItem implements ConfigSerializable {
     private final UUID uuid;
 
     public EnchantableItem(UUID uuid) {
-        this("",Material.AIR, new HashMap<>(),Tier.NONE,uuid);
+        this("", Material.AIR, new HashMap<>(), Tier.NONE, uuid);
     }
 
 
@@ -59,73 +61,81 @@ public class EnchantableItem implements ConfigSerializable {
         );
     }
 
-     @Override
-     public String toString() {
-         return "[" + name + ", "
-                 + material + ", "
-                 + Common.convert(attributeTierMap.keySet(),ItemAttribute::getName) + ", "
-                 + currentTier + "]";
-     }
+    @Override
+    public String toString() {
+        return "[" + name + ", "
+                + material + ", "
+                + Common.convert(attributeTierMap.keySet(), ItemAttribute::getName) + ", "
+                + currentTier + "]";
+    }
 
-     @Override
-     public boolean equals(Object obj) {
-         return obj instanceof EnchantableItem && ((EnchantableItem) obj).getUuid().equals(uuid);
-     }
+    @Override
+    public boolean equals(Object obj) {
+        return obj instanceof EnchantableItem && ((EnchantableItem) obj).getUuid().equals(uuid);
+    }
 
-     /**
-      * Attempts to add the attribute and current tier
-      * if not already added
-      */
-     public void addAttribute(ItemAttribute attribute, Tier tier) {
+    /**
+     * Attempts to add the attribute and current tier
+     * if not already added
+     */
+    public void addAttribute(ItemAttribute attribute, Tier tier) {
         if (attributeTierMap.containsKey(attribute))
             return;
 
-        attributeTierMap.put(attribute,tier.getAsInteger());
-     }
+        attributeTierMap.put(attribute, tier.getAsInteger());
+    }
 
-     /**
-      * Compiles the data from this object
-      * into an itemstack that can be used by the player
-      */
-     public ItemStack compileToItemStack() {
-        String formattedName = currentTier.getColor().getChatColor() + "Mystic " + ItemUtil.bountifyCapitalized(name) + " " +
-                (currentTier != Tier.NONE ? "&l" + currentTier.getAsRomanNumeral() + " " : "");
+    /**
+     * Compiles the data from this object
+     * into an itemstack that can be used by the player
+     */
+    public ItemStack compileToItemStack() {
+        String formattedName = getFormattedName();
 
+        ItemStack compiledItem = ItemCreator.of(CompMaterial.fromMaterial(material), formattedName).lore(getLores()).make();
+
+
+        return setNBTOnItem(compiledItem);
+    }
+
+    public List<String> getLores() {
         List<String> lore = new ArrayList<>();
 
         for (ItemAttribute attribute : attributeTierMap.keySet())
             lore.addAll(attribute.getAttributeLore(Tier.fromInteger(attributeTierMap.get(attribute))));
 
-      ItemStack compiledItem = ItemCreator.of(CompMaterial.fromMaterial(material), formattedName).lore(lore).make();
+        return lore;
+    }
 
-
-      return setNBTOnItem(compiledItem);
+    public String getFormattedName() {
+        return currentTier.getColor().getChatColor() + Rarity.MYTHIC.toString() + ItemUtil.bountifyCapitalized(name) + " " +
+                (currentTier != Tier.NONE ? "&l" + currentTier.getAsRomanNumeral() + " " : "");
     }
 
     private ItemStack setNBTOnItem(ItemStack item) {
 
-        item = CompMetadata.setMetadata(item,"UUID",uuid.toString());
+        item = CompMetadata.setMetadata(item, "UUID", uuid.toString());
 
 
-        item = CompMetadata.setMetadata(item,"Tier", currentTier.getAsInteger() + "");
+        item = CompMetadata.setMetadata(item, "Tier", currentTier.getAsInteger() + "");
 
         int attributeAdded = 0;
         for (ItemAttribute attribute : attributeTierMap.keySet()) {
             attributeAdded++;
-            item = CompMetadata.setMetadata(item,"attribute_" + attributeAdded,
+            item = CompMetadata.setMetadata(item, "attribute_" + attributeAdded,
                     SerializedMap.ofArray(
-                            "Name",attribute.getName(),
+                            "Name", attribute.getName(),
                             "Tier", attributeTierMap.get(attribute)).toJson());
         }
         return item;
     }
 
-     /**
-      * Deserializes the itemstacks nbt data and returns it
-      * as an enchantable item representation.
-      */
+    /**
+     * Deserializes the itemstacks nbt data and returns it
+     * as an enchantable item representation.
+     */
     public static EnchantableItem fromItemStack(ItemStack item) {
-        String uuidString = CompMetadata.getMetadata(item,"UUID");
+        String uuidString = CompMetadata.getMetadata(item, "UUID");
         String tierString = CompMetadata.getMetadata(item, "Tier");
 
         if (uuidString == null)
@@ -142,8 +152,8 @@ public class EnchantableItem implements ConfigSerializable {
         enchantableItem.setName(item.getType().equals(Material.LEATHER_CHESTPLATE) ? "Tunic" : item.getType().toString());
 
 
-        for(int i = 0; i < MAX_ENCHANTS_PER_ITEM; i++) {
-            String json = CompMetadata.getMetadata(item,"attribute_" + (i + 1));
+        for (int i = 0; i < MAX_ENCHANTS_PER_ITEM; i++) {
+            String json = CompMetadata.getMetadata(item, "attribute_" + (i + 1));
             if (json == null)
                 continue;
 
@@ -165,6 +175,6 @@ public class EnchantableItem implements ConfigSerializable {
         UUID uuid = map.getUUID("UUID");
 
 
-        return new EnchantableItem(name,material,attributes,currentTier, uuid);
+        return new EnchantableItem(name, material, attributes, currentTier, uuid);
     }
 }

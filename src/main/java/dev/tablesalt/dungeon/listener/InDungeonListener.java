@@ -1,9 +1,7 @@
 package dev.tablesalt.dungeon.listener;
 
-import dev.tablesalt.dungeon.DungeonSettings;
 import dev.tablesalt.dungeon.DungeonStaticSettings;
 import dev.tablesalt.dungeon.database.DungeonCache;
-import dev.tablesalt.dungeon.util.MessageUtil;
 import dev.tablesalt.dungeon.util.sound.TBSSound;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -13,7 +11,6 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
-import org.mineacademy.fo.Common;
 import org.mineacademy.fo.menu.Menu;
 
 public class InDungeonListener implements Listener {

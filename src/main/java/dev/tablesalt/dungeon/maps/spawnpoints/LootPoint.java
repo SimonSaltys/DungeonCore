@@ -1,7 +1,6 @@
 package dev.tablesalt.dungeon.maps.spawnpoints;
 
 
-import dev.tablesalt.dungeon.DungeonSettings;
 import dev.tablesalt.dungeon.DungeonStaticSettings;
 import dev.tablesalt.dungeon.maps.DungeonMap;
 import dev.tablesalt.dungeon.configitems.LootChance;
@@ -39,7 +38,7 @@ public class LootPoint extends SpawnPoint {
     private LootChance lootChance;
 
     public enum DropType {
-        MYSTIC,
+        MYTHIC,
         GOLD,
         NO_ITEM,
         NORMAL_ITEM;
@@ -73,11 +72,11 @@ public class LootPoint extends SpawnPoint {
         final List<Pair<DropType, Double>> itemWeights = new ArrayList<>();
 
 //        itemWeights.add(new Pair<>(LootPoint.DropType.NO_ITEM, 0.9));
-//        itemWeights.add(new Pair<>(LootPoint.DropType.MYSTIC, 0.01));
+//        itemWeights.add(new Pair<>(LootPoint.DropType.MYTHIC, 0.01));
 //        itemWeights.add(new Pair<>(LootPoint.DropType.GOLD, 0.09));
 
         itemWeights.add(new Pair<>(LootPoint.DropType.NO_ITEM, 0.9));
-        itemWeights.add(new Pair<>(LootPoint.DropType.MYSTIC, lootChance.getMysticDropChance()));
+        itemWeights.add(new Pair<>(LootPoint.DropType.MYTHIC, lootChance.getMythicDropChance()));
         itemWeights.add(new Pair<>(LootPoint.DropType.GOLD, lootChance.getGoldDropChance()));
 
         EnumeratedDistribution<DropType> distribution = new EnumeratedDistribution<>(itemWeights);
@@ -94,7 +93,7 @@ public class LootPoint extends SpawnPoint {
 
             ItemStack itemToAdd = null;
 
-            if (dropType == DropType.MYSTIC && mysticsAdded < lootChance.getMaxMysticDrops()) {
+            if (dropType == DropType.MYTHIC && mysticsAdded < lootChance.getMaxMythicDrops()) {
                 itemToAdd = TBSItemUtil.makeEnchantableArmor().compileToItemStack();
                 mysticsAdded++;
 

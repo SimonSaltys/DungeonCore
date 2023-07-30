@@ -20,7 +20,7 @@ public final class GiveEnchantableItem extends GameSubCommand {
     protected void onCommand() {
 
         DungeonCache cache = DungeonCache.from(getPlayer());
-        cache.giveMoney(1000);
+        cache.giveMoney(10000);
         Common.broadcast("Money " + cache.getMoney());
 
 

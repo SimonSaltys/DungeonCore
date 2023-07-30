@@ -17,10 +17,10 @@ public class LootChance extends YamlConfig implements ConfigSerializable {
     private static ConfigItems<LootChance> loadedChances = ConfigItems.fromFolder("chances", LootChance.class);
 
     @Getter
-    private double mysticDropChance;
+    private double mythicDropChance;
     @Getter
 
-    private int maxMysticDrops;
+    private int maxMythicDrops;
     @Getter
 
     private double goldDropChance;
@@ -48,8 +48,8 @@ public class LootChance extends YamlConfig implements ConfigSerializable {
     protected void onLoad() {
         goldDropChance = getDouble("gold_drop_chance",10.0);
         maxGoldDrops = getInteger("max_gold_drops",8);
-        mysticDropChance = getDouble("mystic_drop_chance",5.0);
-        maxMysticDrops = getInteger("max_mystic_drops",2);
+        mythicDropChance = getDouble("mystic_drop_chance",5.0);
+        maxMythicDrops = getInteger("max_mystic_drops",2);
         maxTotalDrops = getInteger("max_total_drops",10);
 
         this.save();
@@ -66,8 +66,8 @@ public class LootChance extends YamlConfig implements ConfigSerializable {
         return SerializedMap.ofArray(
                 "gold_drop_chance", goldDropChance,
                 "max_gold_drops", maxGoldDrops,
-                "mystic_drop_chance", mysticDropChance,
-                "max_mystic_drops", maxMysticDrops,
+                "mystic_drop_chance", mythicDropChance,
+                "max_mystic_drops", maxMythicDrops,
                 "max_total_drops", maxTotalDrops);
     }
 
@@ -121,24 +121,24 @@ public class LootChance extends YamlConfig implements ConfigSerializable {
 
     public ItemStack convertToItem() {
         return ItemCreator.of(CompMaterial.BOOK, name,
-                "&bMythic &7Drop Chance: &6" + mysticDropChance,
-                "&bMax Mythic &7Drops: &6" + maxMysticDrops,
+                "&bMythic &7Drop Chance: &6" + mythicDropChance,
+                "&bMax Mythic &7Drops: &6" + maxMythicDrops,
                 " ",
-                "&eGold Drop &7Chance: &6" + mysticDropChance,
+                "&eGold Drop &7Chance: &6" + mythicDropChance,
                 "&eMax Gold &7Drops: &6" + maxGoldDrops,
                 " ",
                 "&aMax Total &7Drops: &6" + maxTotalDrops).make();
     }
 
 
-    public void setMysticDropChance(double mysticDropChance) {
+    public void setMythicDropChance(double mythicDropChance) {
 
-        this.mysticDropChance = mysticDropChance;
+        this.mythicDropChance = mythicDropChance;
         save();
     }
 
-    public void setMaxMysticDrops(int maxMysticDrops) {
-        this.maxMysticDrops = maxMysticDrops;
+    public void setMaxMythicDrops(int maxMythicDrops) {
+        this.maxMythicDrops = maxMythicDrops;
         save();
     }
 

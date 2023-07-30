@@ -1,8 +1,8 @@
 package dev.tablesalt.dungeon.menu.impl;
 
 import dev.tablesalt.dungeon.maps.spawnpoints.MonsterPoint;
-import dev.tablesalt.dungeon.util.MessageUtil;
 import dev.tablesalt.dungeon.util.PlayerUtil;
+import dev.tablesalt.gamelib.game.utils.MessageUtil;
 import org.bukkit.conversations.ConversationContext;
 import org.bukkit.conversations.Prompt;
 import org.bukkit.entity.EntityType;

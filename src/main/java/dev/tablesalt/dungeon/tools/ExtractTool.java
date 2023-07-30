@@ -2,14 +2,15 @@ package dev.tablesalt.dungeon.tools;
 
 import dev.tablesalt.dungeon.game.DungeonGame;
 import dev.tablesalt.dungeon.maps.DungeonMap;
-import dev.tablesalt.dungeon.util.MessageUtil;
+import dev.tablesalt.gamelib.game.utils.MessageUtil;
 import dev.tablesalt.gamelib.players.PlayerCache;
 import dev.tablesalt.gamelib.tools.GameTool;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import net.md_5.bungee.api.chat.ClickEvent;
-import org.bukkit.Location;
+import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
@@ -19,7 +20,7 @@ import org.mineacademy.fo.menu.model.ItemCreator;
 import org.mineacademy.fo.remain.CompMaterial;
 import org.mineacademy.fo.visual.VisualizedRegion;
 
-import java.util.ArrayList;
+import java.text.Format;
 import java.util.List;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -44,7 +45,7 @@ public final class ExtractTool extends GameTool<DungeonGame> {
         else
             currentRegion.setSecondary(block.getLocation());
 
-        Common.tellNoPrefix(player, MessageUtil.makeInfo("Set " + (isPrimaryClick ? "&6primary" : "&6secondary") + " &rextract point"));
+       player.sendMessage(MessageUtil.makeInfo("Set " + (isPrimaryClick ? "&6primary" : "&6secondary") + " &rextract point"));
 
         map.save();
     }
@@ -59,10 +60,7 @@ public final class ExtractTool extends GameTool<DungeonGame> {
         PlayerCache cache = PlayerCache.from(player);
         VisualizedRegion currentRegion = cache.getTagger().getPlayerTag("current-region");
 
-        if (currentRegion != null && !currentRegion.isWhole()) {
-            Common.tellNoPrefix(player, MessageUtil.makeError("Make sure this region is whole before proceeding"));
-            return null;
-        }
+        if (!validateRegion(currentRegion,player)) return null;
 
         if (map.getExtractRegions().size() < map.getExtractRegionAmount())
             map.addExtractRegion(new VisualizedRegion());
@@ -75,9 +73,22 @@ public final class ExtractTool extends GameTool<DungeonGame> {
            nextRegion = extractRegions.get(0);
 
         cache.getTagger().setPlayerTag("current-region",nextRegion);
-        Common.tellNoPrefix(player, MessageUtil.makeInfo("Now Editing extract region " + (extractRegions.indexOf(nextRegion) + 1)  + "!"));
+
+        player.sendMessage(MessageUtil.makeInfo("Now Editing extract region <region> !",
+                Formatter.number("region", (extractRegions.indexOf(nextRegion) + 1))));
+
         return nextRegion;
     }
+
+    private boolean validateRegion(VisualizedRegion region, Player player) {
+        if (region != null && !region.isWhole()) {
+            player.sendMessage(MessageUtil.makeError("Make sure this region is whole before proceeding"));
+            return false;
+        }
+
+        return true;
+    }
+
 
     @Override
     protected VisualizedRegion getVisualizedRegion(Player player) {

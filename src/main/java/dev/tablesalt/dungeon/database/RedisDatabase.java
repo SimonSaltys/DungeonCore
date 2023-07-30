@@ -3,9 +3,9 @@ package dev.tablesalt.dungeon.database;
 
 import dev.tablesalt.dungeon.DungeonPlugin;
 import dev.tablesalt.dungeon.menu.impl.EnchantingMenu;
-import dev.tablesalt.dungeon.util.MessageUtil;
 import dev.tablesalt.dungeon.util.PlayerUtil;
 import dev.tablesalt.dungeon.util.TBSItemUtil;
+import dev.tablesalt.gamelib.game.utils.MessageUtil;
 import dev.tablesalt.gamelib.players.PlayerCache;
 import lombok.Getter;
 import org.bukkit.Bukkit;
@@ -53,7 +53,8 @@ public class RedisDatabase {
         //Give sometime to make sure database is connected
         Common.runLater(80, this::scheduleAsyncSaveTask);
 
-        Common.log(isConnected() ? MessageUtil.makeSuccessful("Connected to redis") : MessageUtil.makeError("Could not connect to redis"));
+        MessageUtil.sendToConsole(isConnected() ? MessageUtil.makeSuccessful("Connected to redis!")
+                                                : MessageUtil.makeError("Could not connect to redis"));
     }
 
     public boolean isConnected() {
@@ -69,7 +70,7 @@ public class RedisDatabase {
                 if (!PlayerCache.from(player).getGameIdentifier().hasGame())
                     saveItems(player);
 
-            Common.log(MessageUtil.makeInfo("Saving inventories of all players currently online."));
+            MessageUtil.sendToConsole(MessageUtil.makeInfo("Saving inventories of all players currently online."));
 
         }, 0, 20L * 300);
     }
