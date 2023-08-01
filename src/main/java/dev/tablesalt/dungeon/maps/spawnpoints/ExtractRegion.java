@@ -3,7 +3,6 @@ package dev.tablesalt.dungeon.maps.spawnpoints;
 
 import dev.tablesalt.dungeon.game.DungeonGame;
 import dev.tablesalt.gamelib.game.utils.MessageUtil;
-import dev.tablesalt.gamelib.game.utils.SimpleRunnable;
 import dev.tablesalt.gamelib.players.PlayerCache;
 import lombok.Getter;
 import lombok.Setter;
@@ -11,6 +10,7 @@ import org.bukkit.entity.Player;
 import org.mineacademy.fo.Common;
 import org.mineacademy.fo.collection.SerializedMap;
 import org.mineacademy.fo.model.ConfigSerializable;
+import org.mineacademy.fo.model.Countdown;
 import org.mineacademy.fo.model.SimpleTime;
 import org.mineacademy.fo.remain.Remain;
 import org.mineacademy.fo.visual.VisualizedRegion;
@@ -20,12 +20,14 @@ public class ExtractRegion implements ConfigSerializable {
     private VisualizedRegion region;
     @Getter
     private SimpleTime timeToWait;
-    @Getter @Setter
+    @Getter
+    @Setter
     private boolean active;
 
     public ExtractRegion() {
         this(new VisualizedRegion());
     }
+
     public ExtractRegion(VisualizedRegion region) {
         this.region = region;
         this.timeToWait = SimpleTime.fromSeconds(10);
@@ -48,20 +50,20 @@ public class ExtractRegion implements ConfigSerializable {
             return;
 
         cache.getTagger().setPlayerTag("Extracting", true);
-        ExtractionCountdown extractionCountdown = new ExtractionCountdown(cache,game);
+        ExtractionCountdown extractionCountdown = new ExtractionCountdown(cache, game);
         extractionCountdown.launch();
 
     }
 
     public static ExtractRegion deserialize(SerializedMap map) {
-       ExtractRegion point = new ExtractRegion();
-       point.region = map.get("region",VisualizedRegion.class);
-       point.timeToWait = map.get("time",SimpleTime.class);
+        ExtractRegion point = new ExtractRegion();
+        point.region = map.get("region", VisualizedRegion.class);
+        point.timeToWait = map.get("time", SimpleTime.class);
 
-       return point;
+        return point;
     }
 
-    private class ExtractionCountdown extends SimpleRunnable {
+    private class ExtractionCountdown extends Countdown {
 
         private final Player player;
         private final PlayerCache cache;
@@ -82,13 +84,13 @@ public class ExtractRegion implements ConfigSerializable {
                 MessageUtil.clearTitle(player);
                 cancel();
             } else {
-                Remain.sendTitle(player,0,40,0,"&6Extracting in", Common.plural(getTimeLeft(),"seconds"));
+                Remain.sendTitle(player, 0, 40, 0, "&6Extracting in", Common.plural(getTimeLeft(), "seconds"));
             }
         }
 
         @Override
         protected void onEnd() {
-            Remain.sendTitle(player,0,40,0,"&6You Extracted!", "");
+            Remain.sendTitle(player, 0, 40, 0, "&6You Extracted!", "");
             game.getLeaver().leavePlayerBecauseExtracted(player);
         }
     }

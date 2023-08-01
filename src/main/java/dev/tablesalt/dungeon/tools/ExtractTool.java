@@ -74,8 +74,7 @@ public final class ExtractTool extends GameTool<DungeonGame> {
 
         cache.getTagger().setPlayerTag("current-region",nextRegion);
 
-        player.sendMessage(MessageUtil.makeInfo("Now Editing extract region <region> !",
-                Formatter.number("region", (extractRegions.indexOf(nextRegion) + 1))));
+        player.sendMessage(MessageUtil.makeInfo("Now Editing extract region " + (extractRegions.indexOf(nextRegion) + 1) + "!"));
 
         return nextRegion;
     }

@@ -4,13 +4,11 @@ import dev.tablesalt.dungeon.game.DungeonGame;
 import dev.tablesalt.dungeon.maps.DungeonMap;
 import dev.tablesalt.dungeon.maps.spawnpoints.ExtractRegion;
 import dev.tablesalt.dungeon.maps.spawnpoints.LootPoint;
-
 import dev.tablesalt.gamelib.exception.GameException;
 import dev.tablesalt.gamelib.game.enums.GameJoinMode;
 import dev.tablesalt.gamelib.game.helpers.Starter;
 import dev.tablesalt.gamelib.game.utils.GameUtil;
 import dev.tablesalt.gamelib.game.utils.MessageUtil;
-import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.mineacademy.fo.Common;
@@ -22,6 +20,7 @@ import java.util.List;
 
 public class DungeonStarter extends Starter {
     private final DungeonGame game;
+
     public DungeonStarter(DungeonGame game) {
         super(game);
 
@@ -39,8 +38,8 @@ public class DungeonStarter extends Starter {
 
 
     private void broadcastInfo() {
-        game.getGameBroadcaster().broadcast(MessageUtil.makeInfo("&7The Dungeon Begins! &e&lAdventurers: &r&7<size>."
-        ,Formatter.number("size", game.getPlayerGetter().getPlayers(GameJoinMode.PLAYING).size())));
+        game.getGameBroadcaster().broadcast(MessageUtil.makeInfo("&7The Dungeon Begins! &e&lAdventurers: &r&7"
+                + game.getPlayerGetter().getPlayers(GameJoinMode.PLAYING).size() + "."));
     }
 
     private void teleportPlayers() {
@@ -64,10 +63,10 @@ public class DungeonStarter extends Starter {
         Collections.shuffle(regions);
 
         if (regions.size() < map.getExtractRegionsToActivate())
-            Common.throwError(new GameException(),"Trying to activate " + map.getExtractRegionsToActivate()
+            Common.throwError(new GameException(), "Trying to activate " + map.getExtractRegionsToActivate()
                     + " and there are only " + regions.size() + " available");
 
-        for(int i = 0; i < map.getExtractRegionsToActivate(); i++)
+        for (int i = 0; i < map.getExtractRegionsToActivate(); i++)
             regions.get(i).setActive(true);
 
     }
@@ -77,7 +76,7 @@ public class DungeonStarter extends Starter {
         RandomNoRepeatPicker<LootPoint> lootSpawnPoints = RandomNoRepeatPicker.newPicker(LootPoint.class);
         lootSpawnPoints.setItems(map.getLootPoints());
 
-        int lootCount = RandomUtil.nextBetween(map.getMinLootSpawns(),map.getMaxLootSpawns());
+        int lootCount = RandomUtil.nextBetween(map.getMinLootSpawns(), map.getMaxLootSpawns());
 
         for (int i = 0; i < lootCount; i++) {
             LootPoint lootPoint = lootSpawnPoints.pickRandom();

@@ -1,14 +1,16 @@
 package dev.tablesalt.dungeon.game.helpers;
 
+import dev.tablesalt.dungeon.DungeonSettings;
 import dev.tablesalt.dungeon.game.DungeonGame;
 import dev.tablesalt.dungeon.maps.DungeonMap;
 import dev.tablesalt.dungeon.maps.spawnpoints.ExtractRegion;
+import dev.tablesalt.dungeon.util.DungeonLeaveReason;
 import dev.tablesalt.gamelib.game.helpers.PlayerLeaver;
-import dev.tablesalt.gamelib.game.map.GameMap;
 import org.bukkit.entity.Player;
 
 public class DungeonLeaver extends PlayerLeaver {
     private final DungeonGame game;
+
     public DungeonLeaver(DungeonGame game) {
         super(game);
 
@@ -16,15 +18,19 @@ public class DungeonLeaver extends PlayerLeaver {
     }
 
     public void leavePlayerBecauseExtracted(Player player) {
+        leavePlayer(player, DungeonLeaveReason.EXTRACTED);
+        player.teleport(DungeonSettings.getInstance().getEnchantingLocation().clone().add(-5, 0, 0));
+
 
     }
 
     public void leavePlayerBecauseDied(Player player) {
+        //todo drop items and leave their dead body behind using nms?
     }
 
     @Override
     protected void onGameLeave(Player player) {
-       hideParticles(player);
+        hideParticles(player);
     }
 
     private void hideParticles(Player player) {
@@ -34,4 +40,6 @@ public class DungeonLeaver extends PlayerLeaver {
             if (region.getRegion().canSeeParticles(player))
                 region.getRegion().hideParticles(player);
     }
+
+
 }

@@ -2,18 +2,26 @@ package dev.tablesalt.dungeon.menu.impl;
 
 import dev.tablesalt.dungeon.database.DungeonCache;
 import dev.tablesalt.dungeon.database.EnchantableItem;
+import dev.tablesalt.dungeon.item.ItemAttribute;
 import dev.tablesalt.dungeon.item.Rarity;
 import dev.tablesalt.dungeon.item.Tier;
 import dev.tablesalt.dungeon.menu.TBSButton;
 import dev.tablesalt.dungeon.menu.TBSMenu;
-import dev.tablesalt.dungeon.util.TBSItemUtil;
 import dev.tablesalt.dungeon.util.PlayerUtil;
+import dev.tablesalt.dungeon.util.TBSItemUtil;
 import dev.tablesalt.dungeon.util.sound.TBSSound;
+import dev.tablesalt.gamelib.game.utils.MessageUtil;
 import dev.tablesalt.gamelib.game.utils.SimpleRunnable;
 import dev.tablesalt.gamelib.game.utils.TBSColor;
 import dev.tablesalt.gamelib.players.PlayerCache;
 import dev.tablesalt.gamelib.players.helpers.PlayerTagger;
 import lombok.Getter;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.TextComponent;
+import net.kyori.adventure.text.event.HoverEvent;
+import net.kyori.adventure.text.format.Style;
+import net.kyori.adventure.text.format.TextColor;
+import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.DragType;
@@ -27,6 +35,9 @@ import org.mineacademy.fo.menu.model.InventoryDrawer;
 import org.mineacademy.fo.menu.model.ItemCreator;
 import org.mineacademy.fo.menu.model.MenuClickLocation;
 import org.mineacademy.fo.remain.CompMaterial;
+import org.mineacademy.fo.remain.CompSound;
+
+import java.util.List;
 
 public class EnchantingMenu extends TBSMenu {
 
@@ -59,14 +70,13 @@ public class EnchantingMenu extends TBSMenu {
     }
 
 
-
     @Override
     protected boolean isActionAllowed(MenuClickLocation location, int slot, @Nullable ItemStack clicked, @Nullable ItemStack cursor) {
         if (enchantingAnimation.isRunning())
             return false;
 
         if (MenuClickLocation.PLAYER_INVENTORY == location)
-          return true;
+            return true;
 
         return MenuClickLocation.MENU == location && slot == ENCHANT_SLOT;
     }
@@ -74,9 +84,9 @@ public class EnchantingMenu extends TBSMenu {
     @Override
     protected void onMenuClick(Player player, int slot, InventoryAction action, ClickType click, ItemStack cursor, ItemStack clicked, boolean cancelled) {
         if (action == InventoryAction.PLACE_ALL && slot == ENCHANT_SLOT) {
-               playerSetItem(cursor,ENCHANT_SLOT);
-               Common.runLater(0, this::restart);
-            }
+            playerSetItem(cursor, ENCHANT_SLOT);
+            Common.runLater(0, this::restart);
+        }
 
         if (action == InventoryAction.PICKUP_ALL && slot == ENCHANT_SLOT) {
             Common.runLater(0, this::restart);
@@ -88,7 +98,7 @@ public class EnchantingMenu extends TBSMenu {
     @Override
     protected void onMenuDrag(Player player, int slot, DragType type, ItemStack cursor) {
         if (slot == ENCHANT_SLOT) {
-            playerSetItem(cursor,ENCHANT_SLOT);
+            playerSetItem(cursor, ENCHANT_SLOT);
             Common.runLater(0, this::restart);
             Common.broadcast("DRAGGED");
         }
@@ -106,7 +116,7 @@ public class EnchantingMenu extends TBSMenu {
         ItemStack itemLeftInMenu = cache.getTagger().getPlayerTag(ITEM_STILL_IN_ENCHANTER);
 
         if (itemLeftInMenu != null) {
-            drawer.setItem(ENCHANT_SLOT,itemLeftInMenu);
+            drawer.setItem(ENCHANT_SLOT, itemLeftInMenu);
         }
 
     }
@@ -140,10 +150,12 @@ public class EnchantingMenu extends TBSMenu {
                 saveEnchantedItem();
             }
 
-        } else if(inventory.getItem(ENCHANT_SLOT) != null) {
+        } else if (inventory.getItem(ENCHANT_SLOT) != null) {
             cache.getTagger().setPlayerTag(ITEM_STILL_IN_ENCHANTER, inventory.getItem(ENCHANT_SLOT));
         } else
             cache.getTagger().setPlayerTag(ITEM_STILL_IN_ENCHANTER, NO_ITEM);
+
+
     }
 
 
@@ -151,9 +163,11 @@ public class EnchantingMenu extends TBSMenu {
 
     private class BasicLoopAnimation extends SimpleRunnable {
         Integer count = 0;
+
         protected BasicLoopAnimation() {
             super(-1, 3, 5);
         }
+
         @Override
         protected void onTick() {
             setGlass(positions[count]);
@@ -161,12 +175,14 @@ public class EnchantingMenu extends TBSMenu {
             if (count > 7)
                 count = 0;
         }
+
         @Override
         protected void onEnd() {
         }
+
         @Override
         protected void onTickError(Throwable t) {
-            getViewer().closeInventory();
+            cancel();
         }
     }
 
@@ -199,9 +215,12 @@ public class EnchantingMenu extends TBSMenu {
             if (enchantableItem == null)
                 return;
 
-            TBSSound.EnchantingSound.getInstance().playToWithItem(getViewer(),enchantableItem);
-            enchantedItem = TBSItemUtil.enchantItem(getViewer(),enchantableItem);
-            setItem(ENCHANT_SLOT,NO_ITEM);
+
+            enchantedItem = TBSItemUtil.enchantItem(getViewer(), enchantableItem);
+
+            EnchantingSound.getInstance().playToWithItem(getViewer(), enchantableItem);
+
+            setItem(ENCHANT_SLOT, NO_ITEM);
 
             launch();
         }
@@ -219,8 +238,6 @@ public class EnchantingMenu extends TBSMenu {
                 count = 0;
                 end();
             }
-
-
         }
 
         @Override
@@ -238,7 +255,9 @@ public class EnchantingMenu extends TBSMenu {
 
         @Override
         protected void onTickError(Throwable t) {
-            PlayerUtil.giveItem(getViewer(),enchantedItem);
+
+            PlayerUtil.giveItem(getViewer(), enchantedItem);
+            cancel();
         }
     }
 
@@ -289,7 +308,7 @@ public class EnchantingMenu extends TBSMenu {
             if (enchantableItem.getCurrentTier().getAsInteger() == 3)
                 enchantButton.getCreator().lore("&eMax Level!");
             else {
-              Tier nextTier = Tier.getNext(enchantableItem.getCurrentTier());
+                Tier nextTier = Tier.getNext(enchantableItem.getCurrentTier());
 
                 enchantButton.getCreator().lore("&7Upgrade: " + nextTier.getColor().getChatColor() + nextTier.getAsRomanNumeral(),
                         "&7Cost: &6" + nextTier.getCostToUpgrade() + "g", "", "&eClick to enchant!");
@@ -313,7 +332,7 @@ public class EnchantingMenu extends TBSMenu {
 
 
                 EnchantableItem enchantableItem = EnchantableItem.fromItemStack(itemStack);
-                attemptUpgrade(player,enchantableItem);
+                attemptUpgrade(player, enchantableItem);
 
             }
         };
@@ -323,7 +342,7 @@ public class EnchantingMenu extends TBSMenu {
         PlayerCache cache = PlayerCache.from(player);
         DungeonCache dungeonCache = DungeonCache.from(player);
 
-        if (canUpgrade(player,item)) {
+        if (canUpgrade(player, item)) {
             Tier tierToUpgrade = Tier.getNext(item.getCurrentTier());
 
             cache.getTagger().setPlayerTag("upgrading", true);
@@ -352,5 +371,112 @@ public class EnchantingMenu extends TBSMenu {
                 return !tagger.getBooleanTagSafe("upgrading");
 
         return false;
+    }
+
+    private static final class EnchantingSound {
+
+        @Getter
+        private static final EnchantingSound instance = new EnchantingSound();
+
+        public void playToWithItem(Player player, EnchantableItem itemEnchanted) {
+            new EnchantingSoundRunnable(player, itemEnchanted).launch();
+        }
+
+
+        private static class EnchantingSoundRunnable extends TBSSound.SimpleSoundRunnable {
+
+            final float[] repeats = new float[]{0.4F, 0.6F, 0.8F, 1.0F, 1.2F, 1.4F};
+            float pitchShift = repeats[0];
+
+            int count = 0;
+
+            float repeat = 0.0F;
+
+            private final Player player;
+
+            private final EnchantableItem item;
+
+
+            public EnchantingSoundRunnable(Player player, EnchantableItem item) {
+                super(30, 2, 0);
+
+                this.player = player;
+                this.item = item;
+            }
+
+
+            @Override
+            protected void onTick() {
+
+                if (Menu.getMenu(player) == null)
+                    end();
+
+                if (count >= repeats.length) {
+                    count = 0;
+                    repeat += 0.2F;
+                }
+
+                pitchShift = repeats[Math.max(count, 0)];
+                pitchShift += repeat;
+
+                CompSound.NOTE_STICKS.play(player, 1, pitchShift);
+
+                if (getCounter() % 2 == 0)
+                    CompSound.ITEM_PICKUP.play(player, 1, pitchShift);
+
+
+                count++;
+                super.onTick();
+            }
+
+            @Override
+            protected void onEnd() {
+                ItemAttribute mostRecentAdded = item.getLastAdded();
+
+                if (mostRecentAdded == null) return;
+
+                if (mostRecentAdded.getRarity() == Rarity.EPIC || mostRecentAdded.getRarity() == Rarity.MYTHIC) {
+                    TextComponent component = makeTextComponent();
+                    MessageUtil.forAllPlayersNotInGame(receiver -> receiver.sendMessage(component));
+
+                    TBSSound.GoodItemEnchanted.getInstance().playTo(player);
+                }
+
+            }
+
+            private TextComponent makeTextComponent() {
+                TextColor mainColor = item.getCurrentTier().getColor().getTextColor();
+
+                return Component.text(Common.colorize(MessageUtil.makeInfo(" &7" + player.getName() + " just rolled a cool ")))
+
+                        .append(Component.text()
+                                .content(Rarity.MYTHIC + " " + item.getName() + " ").color(mainColor)
+                                .hoverEvent(HoverEvent.showText(Component.text().content(Common.colorize(loreToString()))))
+                                .append(Component.text(item.getCurrentTier().getAsRomanNumeral(), Style.style(mainColor, TextDecoration.BOLD))).build());
+
+            }
+
+            private String loreToString() {
+                StringBuilder builder = new StringBuilder();
+
+                builder.append("&7" + player.getName() + "'s " +
+                        item.getCurrentTier().getColor().getChatColor()
+                        + Rarity.MYTHIC + " " + item.getName() + "&l " + item.getCurrentTier().getAsRomanNumeral()
+                        + "\n");
+
+                List<String> lores = item.getLores();
+
+                for (int i = 0; i < lores.size(); i++) {
+                    builder.append(lores.get(i));
+
+                    if (i != lores.size() - 1)
+                        builder.append("\n");
+
+                }
+                
+                return builder.toString();
+            }
+
+        }
     }
 }

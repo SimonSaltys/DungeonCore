@@ -32,6 +32,8 @@ public class EnchantableItem implements ConfigSerializable {
 
     private HashMap<ItemAttribute, Integer> attributeTierMap;
 
+    private ItemAttribute lastAdded;
+
     private Tier currentTier;
 
     private final UUID uuid;
@@ -83,6 +85,7 @@ public class EnchantableItem implements ConfigSerializable {
             return;
 
         attributeTierMap.put(attribute, tier.getAsInteger());
+        lastAdded = attribute;
     }
 
     /**
@@ -108,7 +111,7 @@ public class EnchantableItem implements ConfigSerializable {
     }
 
     public String getFormattedName() {
-        return currentTier.getColor().getChatColor() + Rarity.MYTHIC.toString() + ItemUtil.bountifyCapitalized(name) + " " +
+        return currentTier.getColor().getChatColor() + Rarity.MYTHIC.toString() + " " + ItemUtil.bountifyCapitalized(name) + " " +
                 (currentTier != Tier.NONE ? "&l" + currentTier.getAsRomanNumeral() + " " : "");
     }
 

@@ -53,7 +53,7 @@ public class RedisDatabase {
         //Give sometime to make sure database is connected
         Common.runLater(80, this::scheduleAsyncSaveTask);
 
-        MessageUtil.sendToConsole(isConnected() ? MessageUtil.makeSuccessful("Connected to redis!")
+        Common.log(isConnected() ? MessageUtil.makeSuccessful("Connected to redis!")
                                                 : MessageUtil.makeError("Could not connect to redis"));
     }
 
@@ -70,7 +70,7 @@ public class RedisDatabase {
                 if (!PlayerCache.from(player).getGameIdentifier().hasGame())
                     saveItems(player);
 
-            MessageUtil.sendToConsole(MessageUtil.makeInfo("Saving inventories of all players currently online."));
+            Common.log(MessageUtil.makeInfo("Saving inventories of all players currently online."));
 
         }, 0, 20L * 300);
     }
@@ -150,7 +150,12 @@ public class RedisDatabase {
     }
 
     private void loadItems(Player player) throws IOException {
-        SerializedMap map = SerializedMap.fromJson(jedis.get(PLAYER_ITEMS + player.getUniqueId()));
+        String itemString = jedis.get(PLAYER_ITEMS + player.getUniqueId());
+
+        if (itemString == null)
+            return;
+
+        SerializedMap map = SerializedMap.fromJson(itemString);
         PlayerCache cache = PlayerCache.from(player);
         DungeonCache dungeonCache = DungeonCache.from(player);
 

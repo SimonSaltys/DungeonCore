@@ -8,23 +8,23 @@ import lombok.Getter;
 
 import java.util.List;
 
-public final class AttributeTestOne extends ItemAttribute {
+public final class AttributeTestFour extends ItemAttribute {
 
     @Getter
-    private static final AttributeTestOne instance = new AttributeTestOne();
+    private static final AttributeTestFour instance = new AttributeTestFour();
 
     @Getter
     private final Rarity rarity;
 
-    private AttributeTestOne() {
+    private AttributeTestFour() {
         super();
 
-        this.rarity = Rarity.COMMON;
+        this.rarity = Rarity.RARE;
     }
 
     @Override
     public String getName() {
-        return "Attribute One";
+        return "Attribute Four";
     }
 
     @Override

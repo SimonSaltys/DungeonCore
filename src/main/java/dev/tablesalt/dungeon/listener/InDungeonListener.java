@@ -2,7 +2,9 @@ package dev.tablesalt.dungeon.listener;
 
 import dev.tablesalt.dungeon.DungeonStaticSettings;
 import dev.tablesalt.dungeon.database.DungeonCache;
+import dev.tablesalt.dungeon.util.DungeonLeaveReason;
 import dev.tablesalt.dungeon.util.sound.TBSSound;
+import dev.tablesalt.gamelib.event.PlayerLeaveGameEvent;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -11,6 +13,7 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.mineacademy.fo.PlayerUtil;
 import org.mineacademy.fo.menu.Menu;
 
 public class InDungeonListener implements Listener {
@@ -37,7 +40,13 @@ public class InDungeonListener implements Listener {
             cache.giveMoney(amount * DungeonStaticSettings.Loot.moneyPerNugget);
             TBSSound.MoneyPickup.getInstance().playTo(player);
 
-            inventory.setItem(event.getSlot(),null);
+            inventory.setItem(event.getSlot(), null);
         }
+    }
+
+    @EventHandler
+    public void onGameLeave(PlayerLeaveGameEvent event) {
+        if (!event.getLeaveMessage().equals(DungeonLeaveReason.EXTRACTED))
+            PlayerUtil.normalize(event.getPlayer(), true);
     }
 }

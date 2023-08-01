@@ -63,16 +63,31 @@ public class TBSItemUtil {
 
     private void applyRandomAttribute(EnchantableItem item) {
         Rarity rarity = Rarity.getRandomWeighted();
-
-
-        List<ItemAttribute> attributesToChoose = ItemAttribute.getAttributesOfRarity(rarity);
-        attributesToChoose.removeIf(item.getAttributeTierMap().keySet()::contains);
+        List<ItemAttribute> attributesToChoose = getAttributesToChoose(rarity,item);
 
         //choose and set the randomly selected attribute
         if (!attributesToChoose.isEmpty()) {
             ItemAttribute chosenAttribute = RandomUtil.nextItem(attributesToChoose);
             item.addAttribute(chosenAttribute,Tier.NONE);
+        } else {
+            //could not find anymore attributes of this rarity, choosing a different rarity
+            Rarity nextRarity = Rarity.getRandomWeighted(rarity);
+            attributesToChoose = getAttributesToChoose(nextRarity,item);
+
+            //will never be empty, just checking for safety
+            if (!attributesToChoose.isEmpty()) {
+                ItemAttribute chosenAttribute = RandomUtil.nextItem(attributesToChoose);
+                item.addAttribute(chosenAttribute,Tier.NONE);
+            }
+
         }
+    }
+
+    private List<ItemAttribute> getAttributesToChoose(Rarity rarity, EnchantableItem item) {
+        List<ItemAttribute> attributesToChoose = ItemAttribute.getAttributesOfRarity(rarity);
+        attributesToChoose.removeIf(item.getAttributeTierMap().keySet()::contains);
+
+        return attributesToChoose;
     }
 
     private void upgradeRandomAttribute(EnchantableItem item) {
@@ -81,6 +96,8 @@ public class TBSItemUtil {
         for (ItemAttribute attribute : item.getAttributeTierMap().keySet())
             if (item.getAttributeTierMap().get(attribute) < 3)
                 attributes.add(attribute);
+
+        if (attributes.isEmpty()) return;
 
         ItemAttribute attributeToUpgrade = RandomUtil.nextItem(attributes);
         Integer tier = item.getAttributeTierMap().get(attributeToUpgrade);

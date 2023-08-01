@@ -20,7 +20,7 @@ public enum Rarity {
 
     RARE("&2RARE! ",25),
 
-    EPIC("&c&lEPIC! ",200),
+    EPIC("&c&lEPIC! ",10),
     MYTHIC("&k!&l"+ ChatUtil.generateGradient("MYTHIC", CompChatColor.YELLOW, CompChatColor.GOLD) + "&k!&r"
     ,3);
 
