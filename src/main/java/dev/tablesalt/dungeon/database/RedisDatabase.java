@@ -46,7 +46,7 @@ public class RedisDatabase {
         JedisPoolConfig poolConfig = new JedisPoolConfig();
         poolConfig.setMaxTotal(32);
 
-        pool = new JedisPool(poolConfig, "localhost", 6379, 10000);
+        pool = new JedisPool(poolConfig, "localhost", 6379, 20000);
 
         jedis = pool.getResource();
 
@@ -54,7 +54,7 @@ public class RedisDatabase {
         Common.runLater(80, this::scheduleAsyncSaveTask);
 
         Common.log(isConnected() ? MessageUtil.makeSuccessful("Connected to redis!")
-                                                : MessageUtil.makeError("Could not connect to redis"));
+                : MessageUtil.makeError("Could not connect to redis"));
     }
 
     public boolean isConnected() {
@@ -164,7 +164,7 @@ public class RedisDatabase {
         ItemStack[] savedArmor = BukkitSerialization.itemStackArrayFromBase64(map.get("Armor_Contents", String.class));
         ItemStack savedOffHand = BukkitSerialization.itemStackFromBase64(map.get("Off_Hand_Contents", String.class));
 
-       loadItemLeftInEnchanter(cache,map);
+        loadItemLeftInEnchanter(cache, map);
 
         //load main inventory
         for (int i = 0; i < 36; i++)
@@ -191,7 +191,7 @@ public class RedisDatabase {
     }
 
     private void loadItemLeftInEnchanter(PlayerCache cache, SerializedMap map) throws IOException {
-        String itemLeftString = map.get("Enchanting_Table_Contents",  String.class);
+        String itemLeftString = map.get("Enchanting_Table_Contents", String.class);
 
         if (itemLeftString == null)
             return;
@@ -199,7 +199,7 @@ public class RedisDatabase {
         ItemStack itemLeftInEnchanter = BukkitSerialization.itemStackFromBase64(itemLeftString);
 
         if (itemLeftInEnchanter != null)
-            cache.getTagger().setPlayerTag(EnchantingMenu.ITEM_STILL_IN_ENCHANTER,itemLeftInEnchanter);
+            cache.getTagger().setPlayerTag(EnchantingMenu.ITEM_STILL_IN_ENCHANTER, itemLeftInEnchanter);
     }
 
     private void loadEnchantableItems(Player player) {

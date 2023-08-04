@@ -19,13 +19,13 @@ public class DungeonLeaver extends PlayerLeaver {
 
     public void leavePlayerBecauseExtracted(Player player) {
         leavePlayer(player, DungeonLeaveReason.EXTRACTED);
-        player.teleport(DungeonSettings.getInstance().getEnchantingLocation().clone().add(-5, 0, 0));
-
-
+        teleportToHub(player);
     }
 
     public void leavePlayerBecauseDied(Player player) {
         //todo drop items and leave their dead body behind using nms?
+        leavePlayer(player, DungeonLeaveReason.DIED);
+        teleportToHub(player);
     }
 
     @Override
@@ -39,6 +39,10 @@ public class DungeonLeaver extends PlayerLeaver {
         for (ExtractRegion region : map.getExtractRegions())
             if (region.getRegion().canSeeParticles(player))
                 region.getRegion().hideParticles(player);
+    }
+
+    private void teleportToHub(Player player) {
+        player.teleport(DungeonSettings.getInstance().getEnchantingLocation().clone().add(-5, 0, 0));
     }
 
 

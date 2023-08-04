@@ -1,9 +1,9 @@
 package dev.tablesalt.dungeon.game;
+
+import dev.tablesalt.dungeon.DungeonPlugin;
 import dev.tablesalt.dungeon.game.helpers.*;
 import dev.tablesalt.dungeon.game.scoreboard.DungeonScoreboard;
 import dev.tablesalt.dungeon.maps.DungeonMap;
-import dev.tablesalt.dungeon.DungeonPlugin;
-
 import dev.tablesalt.gamelib.game.helpers.*;
 import dev.tablesalt.gamelib.game.map.GameMap;
 import dev.tablesalt.gamelib.game.types.Type;
@@ -18,6 +18,7 @@ public class DungeonGame extends Game {
     public Type<GameMap> getGameMapType() {
         return new Type<>("dungeon_map", DungeonMap.class);
     }
+
     @Override
     public Plugin getOwningPlugin() {
         return DungeonPlugin.getInstance();
@@ -28,7 +29,9 @@ public class DungeonGame extends Game {
     /*----------------------------------------------------------------*/
 
     @Override
-    protected MapRotator compileMapRotator() { return new DungeonMapRotator(this);}
+    protected MapRotator compileMapRotator() {
+        return new DungeonMapRotator(this);
+    }
 
     @Override
     protected DungeonScoreboard compileScoreboard() {
@@ -60,7 +63,14 @@ public class DungeonGame extends Game {
         return new DungeonJoiner(this);
     }
 
-    public DungeonMapRotator getMapRotator() { return (DungeonMapRotator) super.getMapRotator(); }
+    @Override
+    protected GameEvents compileGameEvents() {
+        return new DungeonEvents(this);
+    }
+
+    public DungeonMapRotator getMapRotator() {
+        return (DungeonMapRotator) super.getMapRotator();
+    }
 
 
     /*----------------------------------------------------------------*/
@@ -84,6 +94,7 @@ public class DungeonGame extends Game {
     public DungeonHeartbeat getHeartbeat() {
         return (DungeonHeartbeat) super.getHeartbeat();
     }
+
     public DungeonLeaver getLeaver() {
         return (DungeonLeaver) super.getPlayerLeaver();
     }

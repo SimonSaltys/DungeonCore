@@ -20,6 +20,8 @@
 
         <foundation.version>6.4.2</foundation.version>
 
+        <remapped.version>1.20.1-R0.1-SNAPSHOT</remapped.version>
+
         <foundation.path>com.github.kangarko</foundation.path>
 
 
@@ -27,23 +29,20 @@
     </properties>
 
     <dependencies>
-
-<!--        //todo run build tools (-remapped) -->
-<!--        <dependency>-->
-<!--            <groupId>org.spigotmc</groupId>-->
-<!--            <artifactId>spigot</artifactId>-->
-<!--            <version>1.20.1-R0.1-SNAPSHOT</version>-->
-<!--            <scope>provided</scope>-->
-<!--            <classifier>remapped-mojang</classifier>-->
-<!--        </dependency>-->
-
-
         <dependency>
             <groupId>io.papermc.paper</groupId>
             <artifactId>paper-api</artifactId>
             <version>1.20.1-R0.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>org.spigotmc</groupId>
+            <artifactId>spigot</artifactId>
+            <version>${remapped.version}</version>
+            <scope>provided</scope>
+            <classifier>remapped-mojang</classifier>
+        </dependency>
+
 
         <dependency>
             <groupId>net.kyori</groupId>
@@ -58,7 +57,6 @@
         </dependency>
 
 
-
         <dependency>
             <groupId>${foundation.path}</groupId>
             <artifactId>Foundation</artifactId>
@@ -71,12 +69,16 @@
             <version>0.1-ALPHA</version>
         </dependency>
 
-
-
         <dependency>
             <groupId>redis.clients</groupId>
             <artifactId>jedis</artifactId>
             <version>4.3.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.comphenix.protocol</groupId>
+            <artifactId>ProtocolLib</artifactId>
+            <version>4.8.0</version>
         </dependency>
 
         <!-- https://mvnrepository.com/artifact/biz.source_code/base64coder -->
@@ -101,10 +103,13 @@
         </dependency>
 
 
-
     </dependencies>
 
     <repositories>
+        <repository>
+            <id>dmulloy2-repo</id>
+            <url>https://repo.dmulloy2.net/repository/public/</url>
+        </repository>
         <repository>
             <id>papermc-repo</id>
             <url>https://repo.papermc.io/repository/maven-public/</url>
@@ -120,10 +125,11 @@
             <url>https://jitpack.io</url>
         </repository>
 
-            <repository>
-                <id>sonatype-oss-snapshots1</id>
-                <url>https://s01.oss.sonatype.org/content/repositories/snapshots/</url>
-            </repository>
+        <repository>
+            <id>sonatype-oss-snapshots1</id>
+            <url>https://s01.oss.sonatype.org/content/repositories/snapshots/
+            </url>
+        </repository>
 
     </repositories>
 
@@ -135,7 +141,9 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
                 <configuration>
-                    <outputDirectory>C:\Users\simon\Desktop\Main\Minecraft Plugins\Development Server\plugins</outputDirectory>
+                    <outputDirectory>
+                        C:\Users\simon\Desktop\Main\MinecraftPlugins\DevelopmentServer\plugins
+                    </outputDirectory>
                 </configuration>
                 <!-- Change version to the latest one from
                      https://mvnrepository.com/artifact/org.apache.maven.plugins/maven-jar-plugin -->
@@ -169,7 +177,8 @@
                     </execution>
                 </executions>
                 <configuration>
-                    <createDependencyReducedPom>false</createDependencyReducedPom>
+                    <createDependencyReducedPom>false
+                    </createDependencyReducedPom>
                     <artifactSet>
                         <includes>
                             <include>dev.tablesalt:gameLib*</include>
@@ -178,11 +187,62 @@
                     </artifactSet>
                     <relocations>
                         <relocation>
-                            <pattern>org.mineacademy.${project.artifactId}.fo</pattern>
-                            <shadedPattern>${project.groupId}.${project.artifactId}.lib</shadedPattern>
+                            <pattern>org.mineacademy.${project.artifactId}.fo
+                            </pattern>
+                            <shadedPattern>
+                                ${project.groupId}.${project.artifactId}.lib
+                            </shadedPattern>
                         </relocation>
                     </relocations>
                 </configuration>
+            </plugin>
+
+
+            <plugin>
+                <groupId>net.md-5</groupId>
+                <artifactId>specialsource-maven-plugin</artifactId>
+                <!-- Get the latest version from https://mvnrepository.com/artifact/net.md-5/specialsource-maven-plugin -->
+                <version>1.2.5</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>remap</goal>
+                        </goals>
+                        <id>remap-obf</id>
+                        <configuration>
+                            <srgIn>
+                                org.spigotmc:minecraft-server:${remapped.version}:txt:maps-mojang
+                            </srgIn>
+                            <reverse>true</reverse>
+                            <remappedDependencies>
+                                org.spigotmc:spigot:${remapped.version}:jar:remapped-mojang
+                            </remappedDependencies>
+                            <remappedArtifactAttached>true
+                            </remappedArtifactAttached>
+                            <remappedClassifierName>remapped-obf
+                            </remappedClassifierName>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>remap</goal>
+                        </goals>
+                        <id>remap-spigot</id>
+                        <configuration>
+                            <inputFile>
+                                ${project.build.directory}/${project.artifactId}-${project.version}-remapped-obf.jar
+                            </inputFile>
+                            <srgIn>
+                                org.spigotmc:minecraft-server:${remapped.version}:csrg:maps-spigot
+                            </srgIn>
+                            <remappedDependencies>
+                                org.spigotmc:spigot:${remapped.version}:jar:remapped-obf
+                            </remappedDependencies>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
         <resources>
