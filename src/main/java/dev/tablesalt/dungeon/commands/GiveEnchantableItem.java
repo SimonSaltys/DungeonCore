@@ -1,6 +1,6 @@
 package dev.tablesalt.dungeon.commands;
 
-import dev.tablesalt.dungeon.nms.NMSCorpse_v1_20;
+import dev.tablesalt.dungeon.nms.PlayerCorpse;
 import dev.tablesalt.gamelib.commands.GameSubCommand;
 
 public final class GiveEnchantableItem extends GameSubCommand {
@@ -11,7 +11,7 @@ public final class GiveEnchantableItem extends GameSubCommand {
     @Override
     protected void onCommand() {
 
-        NMSCorpse_v1_20 nmsCorpseV120 = new NMSCorpse_v1_20(getPlayer());
+        PlayerCorpse nmsCorpseV120 = new PlayerCorpse(getPlayer());
         nmsCorpseV120.makeCorpse();
 
 //        DungeonCache cache = DungeonCache.from(getPlayer());

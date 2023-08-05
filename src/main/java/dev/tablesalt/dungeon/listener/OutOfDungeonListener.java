@@ -1,8 +1,8 @@
 package dev.tablesalt.dungeon.listener;
 
+import dev.tablesalt.dungeon.database.Keys;
 import dev.tablesalt.dungeon.game.scoreboard.HubScoreboard;
 import dev.tablesalt.dungeon.menu.impl.EnchantingMenu;
-import dev.tablesalt.dungeon.tools.EnchantingWellTool;
 import dev.tablesalt.dungeon.util.EntityUtil;
 import dev.tablesalt.gamelib.event.PlayerLeaveGameEvent;
 import org.bukkit.block.Block;
@@ -37,10 +37,9 @@ public class OutOfDungeonListener implements Listener {
     }
 
     private boolean isBlockEnchantingWell(Block block) {
-       TextDisplay display = EntityUtil.getClosestTextDisplay(block.getLocation().clone().add(0.5,1,0.5),0.5);
+        TextDisplay display = EntityUtil.getClosestTextDisplay(block.getLocation().clone().add(0.5, 1, 0.5), 0.5);
 
-
-        return display != null && display.getCustomName() != null && display.getCustomName().equals(EnchantingWellTool.DISPLAY_NAME);
+        return display != null && display.getCustomName() != null && display.getCustomName().equals(Keys.DISPLAY_NAME);
     }
 
 
