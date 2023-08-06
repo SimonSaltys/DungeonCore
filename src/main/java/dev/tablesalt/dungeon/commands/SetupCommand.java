@@ -24,8 +24,8 @@ public final class SetupCommand extends GameSubCommand {
 
         player.getInventory().setItem(EquipmentSlot.OFF_HAND, ItemCreator.of(CompMaterial.SHIELD).make());
 
-        player.getInventory().addItem(ItemCreator.of(CompMaterial.GREEN_CONCRETE).amount(64).make());
-
+        for (int i = 0; i < 9; i++)
+            player.getInventory().setItem(i, ItemCreator.of(CompMaterial.RED_WOOL).make());
 
     }
 }

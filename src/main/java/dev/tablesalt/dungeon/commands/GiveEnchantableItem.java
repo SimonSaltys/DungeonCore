@@ -10,10 +10,8 @@ public final class GiveEnchantableItem extends GameSubCommand {
 
     @Override
     protected void onCommand() {
-
-        PlayerCorpse nmsCorpseV120 = new PlayerCorpse(getPlayer());
-        nmsCorpseV120.makeCorpse();
-
+        new PlayerCorpse(getPlayer()).makeCorpse();
+//
 //        DungeonCache cache = DungeonCache.from(getPlayer());
 //        cache.giveMoney(10000);
 //        Common.broadcast("Money " + cache.getMoney());
@@ -26,6 +24,6 @@ public final class GiveEnchantableItem extends GameSubCommand {
 //                Tier.NONE,
 //                UUID.randomUUID());
 //
-//        PlayerUtil.giveItem(getPlayer(),enchantableItem.compileToItemStack());
+//        PlayerUtil.giveItem(getPlayer(), enchantableItem.compileToItemStack());
     }
 }

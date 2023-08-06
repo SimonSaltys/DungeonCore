@@ -2,8 +2,12 @@ package dev.tablesalt.dungeon.nms;
 
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
+import com.mojang.datafixers.util.Pair;
 import dev.tablesalt.dungeon.database.Keys;
+import dev.tablesalt.dungeon.menu.TBSMenu;
 import dev.tablesalt.dungeon.util.EntityUtil;
+import dev.tablesalt.dungeon.util.TBSItemUtil;
+import dev.tablesalt.gamelib.game.utils.MessageUtil;
 import lombok.Getter;
 import net.minecraft.network.protocol.game.*;
 import net.minecraft.network.syncher.EntityDataAccessor;
@@ -15,6 +19,7 @@ import net.minecraft.world.entity.Pose;
 import net.minecraft.world.scores.PlayerTeam;
 import net.minecraft.world.scores.Scoreboard;
 import net.minecraft.world.scores.Team;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.RandomUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -23,37 +28,58 @@ import org.bukkit.craftbukkit.v1_20_R1.entity.CraftPlayer;
 import org.bukkit.craftbukkit.v1_20_R1.inventory.CraftItemStack;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.TextDisplay;
+import org.bukkit.inventory.EquipmentSlot;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.jetbrains.annotations.Nullable;
+import org.mineacademy.fo.Common;
+import org.mineacademy.fo.menu.model.InventoryDrawer;
+import org.mineacademy.fo.menu.model.ItemCreator;
+import org.mineacademy.fo.menu.model.MenuClickLocation;
+import org.mineacademy.fo.model.Triple;
+import org.mineacademy.fo.remain.CompMaterial;
 import org.mineacademy.fo.remain.CompMetadata;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 public class PlayerCorpse {
 
     private static final List<PlayerCorpse> allCorpses = new ArrayList<>();
 
     @Getter
-    private final Player player;
+    protected final Player player;
 
-    private ServerPlayer NMSCorpse;
-
-    @Getter
-    private ItemStack[] items;
+    protected ServerPlayer NMSCorpse;
 
     @Getter
-    private ItemStack[] armor;
+    protected final ItemStack[] mainContent = new ItemStack[CorpseMenu.MAIN_CONTENTS.getLength()];
 
     @Getter
-    private ItemStack offHand;
+    protected final ItemStack[] armor = new ItemStack[CorpseMenu.ARMOR_SLOTS.getLength()];
 
     @Getter
-    private TextDisplay nameTag;
+    protected TextDisplay nameTag;
+
+    protected CorpseMenu lootableMenu;
+
+    private final byte headRotation;
+
+    private final byte bodyRotation;
 
     public PlayerCorpse(Player player) {
         this.player = player;
+        lootableMenu = new CorpseMenu();
+
+        //randomness and basic math to give the body some character
+        this.headRotation = (byte) (RandomUtils.nextBoolean() ? ((RandomUtils.nextFloat(0F, 80F) * 256f) / 360f)
+                : ((RandomUtils.nextFloat(280F, 360F) * 256f) / 360f));
+
+        this.bodyRotation = (byte) ((player.getLocation().getY()) - 1.7 - player.getLocation().getY() * 32);
+
+        //loot contents for the menu, we are deep copying here because we don't want references to the original itemstacks
+        deepCopy(player.getInventory().getStorageContents(), mainContent);
+        deepCopy(player.getInventory().getArmorContents(), armor);
+        ArrayUtils.add(armor, player.getInventory().getItemInOffHand());
     }
 
     /**
@@ -64,51 +90,43 @@ public class PlayerCorpse {
         ServerPlayer serverPlayer = craftPlayer.getHandle();
 
         ServerPlayer corpse = new ServerPlayer(serverPlayer.getServer(), serverPlayer.serverLevel().getLevel(), makeGameProfile(craftPlayer));
+        this.NMSCorpse = corpse;
 
-        setSkinOverlay(corpse);
+        setSkinOverlay();
 
         Location locationOnGround = getGroundLocation().add(0, 1, 0);
         corpse.setPos(locationOnGround.getX(), locationOnGround.getY(), locationOnGround.getZ());
         corpse.setPose(Pose.SLEEPING);
 
         PlayerTeam team = addToTeam(corpse);
-        items = player.getInventory().getStorageContents();
-        armor = player.getInventory().getArmorContents();
-        offHand = player.getInventory().getItemInOffHand();
 
-        sendPackets(corpse, team);
+        sendPackets(team);
+        updateArmorOnBody();
 
-        this.nameTag = EntityUtil.createTextDisplay(locationOnGround, Keys.DEAD_BODY_NAME + player.getName());
+        this.nameTag = EntityUtil.createTextDisplay(locationOnGround, " Name here");
         nameTag.getTransformation().getScale().set(1.0);
         CompMetadata.setMetadata(nameTag, Keys.DEAD_BODY_NAME, player.getName());
 
-        this.NMSCorpse = corpse;
         allCorpses.add(this);
-
     }
 
-//    public ItemStack[] getItems() {
-//        ItemStack[] items = new ItemStack[36];
-//        Inventory inventory = NMSCorpse.getInventory();
-//
-//        for (int i = 0; i < items.length; i++)
-//            items[i] = CraftItemStack.asBukkitCopy(inventory.getItem(i));
-//
-//        return items;
-//    }
+    public void displayLootTo(Player player) {
+        lootableMenu.displayOnlyTo(player);
+    }
 
-//    public ItemStack[] getArmorContents() {
-//        ItemStack[] armor = new ItemStack[3];
-//
-//        Iterator<net.minecraft.world.item.ItemStack> itr = NMSCorpse.getArmorSlots().iterator();
-//
-//        int count = 0;
-//        while (itr.hasNext()) {
-//            armor[count] = CraftItemStack.asBukkitCopy(itr.next());
-//        }
-//
-//        return armor;
-//    }
+    public void updateArmorOnBody() {
+        List<Pair<net.minecraft.world.entity.EquipmentSlot, net.minecraft.world.item.ItemStack>> updatedArmor = Arrays.asList(
+                new Pair<>(net.minecraft.world.entity.EquipmentSlot.HEAD, getArmorToDisplay(EquipmentSlot.HEAD)),
+                new Pair<>(net.minecraft.world.entity.EquipmentSlot.CHEST, getArmorToDisplay(EquipmentSlot.CHEST)),
+                new Pair<>(net.minecraft.world.entity.EquipmentSlot.LEGS, getArmorToDisplay(EquipmentSlot.LEGS)),
+                new Pair<>(net.minecraft.world.entity.EquipmentSlot.FEET, getArmorToDisplay(EquipmentSlot.FEET))
+        );
+
+        for (Player on : Bukkit.getOnlinePlayers()) {
+            ServerPlayerConnection connection = ((CraftPlayer) on).getHandle().connection;
+            connection.send(new ClientboundSetEquipmentPacket(NMSCorpse.getId(), updatedArmor));
+        }
+    }
 
     public static void removeAllCorpses() {
 
@@ -134,12 +152,23 @@ public class PlayerCorpse {
     /* PRIVATE HELPER METHODS */
     /*----------------------------------------------------------------*/
 
+    private void deepCopy(ItemStack[] from, ItemStack[] to) {
+        int length = Math.min(from.length, to.length); // Use the smaller length to prevent out of bounds
+
+        for (int i = 0; i < length; i++) {
+            if (from[i] == null)
+                continue;
+
+            to[i] = from[i].clone();
+        }
+    }
+
     private GameProfile makeGameProfile(CraftPlayer player) {
         ServerPlayer craftPlayer = player.getHandle();
 
         //making textures
         Property textures = (Property) craftPlayer.getGameProfile().getProperties().get("textures").toArray()[0];
-        GameProfile gameProfile = new GameProfile(UUID.randomUUID(), player.getName() + "body");
+        GameProfile gameProfile = new GameProfile(UUID.randomUUID(), "body" + RandomUtils.nextInt(0, 100));
         gameProfile.getProperties().put("textures", new Property("textures", textures.getValue(), textures.getSignature()));
         return gameProfile;
     }
@@ -160,20 +189,12 @@ public class PlayerCorpse {
         return location;
     }
 
-    private void setInventory(Player player, ServerPlayer corpse) {
-        for (int i = 0; i < player.getInventory().getSize(); i++)
-            corpse.getInventory().setItem(i, CraftItemStack.asNMSCopy(player.getInventory().getItem(i)));
-
-        for (int i = 0; i < player.getInventory().getArmorContents().length; i++)
-            corpse.getInventory().getArmorContents().add(CraftItemStack.asNMSCopy(player.getInventory().getArmorContents()[i]));
-    }
-
     /**
      * Sets the 3d parts of the minecraft players skin
      * to the corpse
      */
-    private void setSkinOverlay(ServerPlayer corpse) {
-        SynchedEntityData data = corpse.getEntityData();
+    private void setSkinOverlay() {
+        SynchedEntityData data = NMSCorpse.getEntityData();
         byte bitmask = (byte) (0x01 | 0x04 | 0x08 | 0x10 | 0x20 | 0x40);
         data.set(new EntityDataAccessor<>(17, EntityDataSerializers.BYTE), bitmask);
     }
@@ -194,32 +215,36 @@ public class PlayerCorpse {
      * sends all relevant packets to all players
      * which will show them the corpse
      */
-    private void sendPackets(ServerPlayer corpse, PlayerTeam team) {
+    private void sendPackets(PlayerTeam team) {
         //send packets
         for (Player on : Bukkit.getOnlinePlayers()) {
             ServerPlayerConnection connection = ((CraftPlayer) on).getHandle().connection;
 
             //showing the corpse
-            connection.send(new ClientboundPlayerInfoUpdatePacket(ClientboundPlayerInfoUpdatePacket.Action.ADD_PLAYER, corpse));
-            connection.send(new ClientboundAddPlayerPacket(corpse));
-            connection.send(new ClientboundSetEntityDataPacket(corpse.getId(), corpse.getEntityData().getNonDefaultValues()));
+            connection.send(new ClientboundPlayerInfoUpdatePacket(ClientboundPlayerInfoUpdatePacket.Action.ADD_PLAYER, NMSCorpse));
+            connection.send(new ClientboundAddPlayerPacket(NMSCorpse));
+            connection.send(new ClientboundSetEntityDataPacket(NMSCorpse.getId(), NMSCorpse.getEntityData().getNonDefaultValues()));
 
             //adding the team to hide the name tag
             connection.send(ClientboundSetPlayerTeamPacket.createRemovePacket(team));
             connection.send(ClientboundSetPlayerTeamPacket.createAddOrModifyPacket(team, true));
 
             //rotating the corpse randomly
-            connection.send(new ClientboundMoveEntityPacket.Rot(corpse.getId(),
-                    (byte) ((player.getLocation().getY()) - 1.7 - player.getLocation().getY() * 32),
+            connection.send(new ClientboundMoveEntityPacket.Rot(NMSCorpse.getId(),
+                    bodyRotation,
                     (byte) 0,
                     false));
 
             //rotating the corpses head randomly
-            byte headPosition = (byte) (RandomUtils.nextBoolean() ? ((RandomUtils.nextFloat(0F, 80F) * 256f) / 360f)
-                    : ((RandomUtils.nextFloat(280F, 360F) * 256f) / 360f));
-            connection.send(new ClientboundRotateHeadPacket(corpse, headPosition));
+            connection.send(new ClientboundRotateHeadPacket(NMSCorpse, headRotation));
         }
     }
+
+
+    private net.minecraft.world.item.ItemStack getArmorToDisplay(EquipmentSlot slot) {
+        return CraftItemStack.asNMSCopy(TBSItemUtil.ArmorSlotMapper.getInstance().getItemStackTypeInArmor(armor, slot));
+    }
+
 
     private static void removeCorpse(PlayerCorpse corpseRemove) {
         for (Player online : Bukkit.getOnlinePlayers())
@@ -241,4 +266,99 @@ public class PlayerCorpse {
         return NMSCorpse;
     }
 
+    protected class CorpseMenu extends TBSMenu {
+
+        private static final CompMaterial fillerMaterial = CompMaterial.WHITE_STAINED_GLASS_PANE;
+
+        protected static SlotPair ARMOR_SLOTS = new SlotPair(0, 8, 8);
+
+        protected static SlotPair MAIN_CONTENTS = new SlotPair(9, 35, 36);
+
+        protected static SlotPair HOTBAR = new SlotPair(45, 53, 8);
+
+        private CorpseMenu() {
+            setSize(9 * 6);
+            setTitle(Keys.DEAD_BODY_NAME + player.getName());
+        }
+
+        protected void displayOnlyTo(Player possibleViewer) {
+            if (getViewer() == null)
+                displayTo(possibleViewer);
+            else
+                Common.tellNoPrefix(possibleViewer, MessageUtil.makeError(getViewer().getName()
+                        + " is currently looting the body of " + player.getName()));
+        }
+
+        @Override
+        protected void onDisplay(InventoryDrawer drawer) {
+            for (int i = ARMOR_SLOTS.getStartingSlot(); i < ARMOR_SLOTS.getLength(); i++) {
+                drawer.setItem(i, armor[i - ARMOR_SLOTS.getStartingSlot()]);
+            }
+
+            for (int i = MAIN_CONTENTS.getStartingSlot(); i < MAIN_CONTENTS.getLength(); i++) {
+                drawer.setItem(i, mainContent[i]);
+            }
+
+            //separator for hotbar
+            for (int i = 36; i <= 44; i++) {
+                drawer.setItem(i, ItemCreator.of(fillerMaterial, " ").make());
+            }
+
+            for (int i = HOTBAR.getStartingSlot(); i < ARMOR_SLOTS.getLength(); i++) {
+                drawer.setItem(i, mainContent[i - HOTBAR.getStartingSlot()]);
+            }
+        }
+
+
+        @Override
+        protected boolean isActionAllowed(MenuClickLocation location, int slot, @Nullable ItemStack clicked, @Nullable ItemStack cursor) {
+            return clicked == null || clicked.getType() != fillerMaterial.toMaterial();
+        }
+
+        @Override
+        protected void onMenuClose(Player player, Inventory inventory) {
+            for (int i = ARMOR_SLOTS.getStartingSlot(); i < ARMOR_SLOTS.getLength(); i++) {
+                armor[i] = inventory.getItem(i);
+            }
+
+            for (int i = MAIN_CONTENTS.getStartingSlot(); i < MAIN_CONTENTS.getLength(); i++) {
+                mainContent[i] = inventory.getItem(i);
+            }
+
+            for (int i = HOTBAR.getStartingSlot(); i < ARMOR_SLOTS.getLength(); i++) {
+                mainContent[i] = inventory.getItem(i);
+            }
+
+            lootableMenu = newInstance();
+            updateArmorOnBody();
+        }
+
+        @Override
+        public CorpseMenu newInstance() {
+            return new CorpseMenu();
+        }
+
+        protected static class SlotPair {
+
+            private final Triple<Integer, Integer, Integer> triple;
+
+            public SlotPair(Integer startingSlot, Integer finalSlot, Integer length) {
+                triple = new Triple<>(startingSlot, finalSlot, length);
+            }
+
+
+            public final Integer getStartingSlot() {
+                return triple.getFirst();
+            }
+
+            public final Integer getFinalSlot() {
+                return triple.getSecond();
+            }
+
+            public final Integer getLength() {
+                return triple.getThird();
+            }
+        }
+
+    }
 }

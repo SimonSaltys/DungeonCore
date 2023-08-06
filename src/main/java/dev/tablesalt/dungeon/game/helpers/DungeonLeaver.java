@@ -23,7 +23,6 @@ public class DungeonLeaver extends PlayerLeaver {
     }
 
     public void leavePlayerBecauseDied(Player player) {
-        //todo drop items and leave their dead body behind using nms?
         leavePlayer(player, DungeonLeaveReason.DIED);
         teleportToHub(player);
     }

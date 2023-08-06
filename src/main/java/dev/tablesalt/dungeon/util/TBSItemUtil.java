@@ -4,11 +4,14 @@ import dev.tablesalt.dungeon.database.EnchantableItem;
 import dev.tablesalt.dungeon.item.ItemAttribute;
 import dev.tablesalt.dungeon.item.Rarity;
 import dev.tablesalt.dungeon.item.Tier;
+import lombok.Getter;
 import lombok.experimental.UtilityClass;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.mineacademy.fo.RandomUtil;
+import org.mineacademy.fo.menu.model.ItemCreator;
 import org.mineacademy.fo.remain.CompMaterial;
 import org.mineacademy.fo.remain.CompMetadata;
 
@@ -27,7 +30,7 @@ public class TBSItemUtil {
 
     public EnchantableItem makeEnchantableArmor() {
 
-       return new EnchantableItem(
+        return new EnchantableItem(
                 CompMaterial.LEATHER_CHESTPLATE.name(),
                 Material.LEATHER_CHESTPLATE,
                 new HashMap<>(),
@@ -40,14 +43,14 @@ public class TBSItemUtil {
      * applies a random attribute and
      * increases the tier of other random attributes
      */
-    public ItemStack enchantItem(Player player,EnchantableItem item) {
+    public ItemStack enchantItem(Player player, EnchantableItem item) {
 
         int currentTier = item.getCurrentTier().getAsInteger();
 
         if (currentTier < 3) {
             item.setCurrentTier(Tier.fromInteger(currentTier + 1));
 
-           applyRandomAttribute(item);
+            applyRandomAttribute(item);
 
 
             if (currentTier == 1)
@@ -63,21 +66,21 @@ public class TBSItemUtil {
 
     private void applyRandomAttribute(EnchantableItem item) {
         Rarity rarity = Rarity.getRandomWeighted();
-        List<ItemAttribute> attributesToChoose = getAttributesToChoose(rarity,item);
+        List<ItemAttribute> attributesToChoose = getAttributesToChoose(rarity, item);
 
         //choose and set the randomly selected attribute
         if (!attributesToChoose.isEmpty()) {
             ItemAttribute chosenAttribute = RandomUtil.nextItem(attributesToChoose);
-            item.addAttribute(chosenAttribute,Tier.NONE);
+            item.addAttribute(chosenAttribute, Tier.NONE);
         } else {
             //could not find anymore attributes of this rarity, choosing a different rarity
             Rarity nextRarity = Rarity.getRandomWeighted(rarity);
-            attributesToChoose = getAttributesToChoose(nextRarity,item);
+            attributesToChoose = getAttributesToChoose(nextRarity, item);
 
             //will never be empty, just checking for safety
             if (!attributesToChoose.isEmpty()) {
                 ItemAttribute chosenAttribute = RandomUtil.nextItem(attributesToChoose);
-                item.addAttribute(chosenAttribute,Tier.NONE);
+                item.addAttribute(chosenAttribute, Tier.NONE);
             }
 
         }
@@ -102,12 +105,12 @@ public class TBSItemUtil {
         ItemAttribute attributeToUpgrade = RandomUtil.nextItem(attributes);
         Integer tier = item.getAttributeTierMap().get(attributeToUpgrade);
 
-       item.getAttributeTierMap().remove(attributeToUpgrade);
-       item.getAttributeTierMap().put(attributeToUpgrade,tier + 1);
+        item.getAttributeTierMap().remove(attributeToUpgrade);
+        item.getAttributeTierMap().put(attributeToUpgrade, tier + 1);
     }
 
     public UUID getItemsUUID(ItemStack item) {
-        String uuidString = CompMetadata.getMetadata(item,"UUID");
+        String uuidString = CompMetadata.getMetadata(item, "UUID");
 
         if (uuidString == null)
             return null;
@@ -125,5 +128,33 @@ public class TBSItemUtil {
 
         EnchantableItem enchantableItem = EnchantableItem.fromItemStack(item);
         return enchantableItem != null;
+    }
+
+    public final class ArmorSlotMapper {
+        private static final Map<EquipmentSlot, String> slotToArmor = new HashMap<>();
+
+        @Getter
+        private static final ArmorSlotMapper instance = new ArmorSlotMapper();
+
+        private ArmorSlotMapper() {
+            slotToArmor.put(EquipmentSlot.HEAD, "HELMET");
+            slotToArmor.put(EquipmentSlot.CHEST, "CHESTPLATE");
+            slotToArmor.put(EquipmentSlot.LEGS, "LEGGINGS");
+            slotToArmor.put(EquipmentSlot.FEET, "BOOTS");
+        }
+
+        public ItemStack getItemStackTypeInArmor(ItemStack[] itemsToCheck, EquipmentSlot slot) {
+            for (ItemStack item : itemsToCheck) {
+                if (item == null)
+                    continue;
+
+                String itemName = item.getType().name();
+                String slotName = slotToArmor.get(slot);
+                if (itemName.contains(slotName)) {
+                    return item;
+                }
+            }
+            return ItemCreator.of(CompMaterial.AIR).make();
+        }
     }
 }

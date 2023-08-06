@@ -3,7 +3,6 @@ package dev.tablesalt.dungeon.listener;
 import dev.tablesalt.dungeon.DungeonStaticSettings;
 import dev.tablesalt.dungeon.database.DungeonCache;
 import dev.tablesalt.dungeon.database.Keys;
-import dev.tablesalt.dungeon.menu.impl.CorpseMenu;
 import dev.tablesalt.dungeon.nms.PlayerCorpse;
 import dev.tablesalt.dungeon.util.DungeonLeaveReason;
 import dev.tablesalt.dungeon.util.EntityUtil;
@@ -16,9 +15,11 @@ import org.bukkit.entity.Player;
 import org.bukkit.entity.TextDisplay;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.mineacademy.fo.PlayerUtil;
@@ -60,23 +61,26 @@ public class InDungeonListener implements Listener {
         if (!checkInGame(player))
             return;
 
-        if (event.getClickedBlock() == null || event.getClickedBlock().getType() == Material.AIR || event.getAction().isLeftClick())
-            return;
+        //make this event only fire on right click as opposed to both right and left
+        if (event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK && event.getHand() != EquipmentSlot.OFF_HAND) {
+            //make sure they are clicking a block
+            if (event.getClickedBlock() == null || event.getClickedBlock().getType() == Material.AIR)
+                return;
 
-        Block block = event.getClickedBlock();
+            Block block = event.getClickedBlock();
+            TextDisplay display = EntityUtil.getClosestTextDisplay(block.getLocation(), 2);
 
-        TextDisplay display = EntityUtil.getClosestTextDisplay(block.getLocation(), 2);
+            if (display == null || !CompMetadata.hasMetadata(display, Keys.DEAD_BODY_NAME))
+                return;
 
+            PlayerCorpse corpseToLoot = PlayerCorpse.getFromPlayerName(CompMetadata.getMetadata(display, Keys.DEAD_BODY_NAME));
 
-        if (display == null || !CompMetadata.hasMetadata(display, Keys.DEAD_BODY_NAME))
-            return;
+            if (corpseToLoot == null)
+                return;
 
-        PlayerCorpse corpseToLoot = PlayerCorpse.getFromPlayerName(CompMetadata.getMetadata(display, Keys.DEAD_BODY_NAME));
+            corpseToLoot.displayLootTo(player);
+        }
 
-        if (corpseToLoot == null)
-            return;
-
-        CorpseMenu.openCorpseMenu(player, corpseToLoot);
     }
 
     @EventHandler
