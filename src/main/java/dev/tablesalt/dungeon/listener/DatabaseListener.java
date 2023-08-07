@@ -1,8 +1,7 @@
 package dev.tablesalt.dungeon.listener;
 
 import dev.tablesalt.dungeon.database.DungeonCache;
-import dev.tablesalt.dungeon.database.RedisDatabase;
-
+import dev.tablesalt.dungeon.database.MariaDatabase;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -16,17 +15,19 @@ public class DatabaseListener implements Listener {
 
 
     @EventHandler(priority = EventPriority.LOW)
-    public void onJoin(PlayerJoinEvent event){
+    public void onJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
 
-        RedisDatabase.getInstance().load(player);
+        MariaDatabase.getInstance().loadCache(player, cache -> {
+        });
     }
 
     @EventHandler(priority = EventPriority.LOW)
     public void onLeave(PlayerQuitEvent event) {
         Player player = event.getPlayer();
 
-        RedisDatabase.getInstance().save(player);
+        MariaDatabase.getInstance().saveCache(player, cache -> {
+        });
     }
 
     @EventHandler
@@ -34,6 +35,7 @@ public class DatabaseListener implements Listener {
         DungeonCache cache = DungeonCache.from(event.getPlayer());
         cache.removeEnchantableItem(event.getItemDrop().getItemStack());
     }
+
     @EventHandler
     public void onItemPickedUp(EntityPickupItemEvent event) {
         if (!(event.getEntity() instanceof Player player))

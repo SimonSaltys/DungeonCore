@@ -23,10 +23,10 @@ import redis.clients.jedis.JedisPoolConfig;
 import java.io.IOException;
 
 
-public class RedisDatabase {
+public class RedisCache implements Database {
 
     @Getter
-    private static final RedisDatabase instance = new RedisDatabase();
+    private static final RedisCache instance = new RedisCache();
 
     private static final String PLAYER_ITEMS = "Player_Inventories:";
 
@@ -36,7 +36,7 @@ public class RedisDatabase {
 
     private Jedis jedis;
 
-    private RedisDatabase() {
+    private RedisCache() {
     }
 
     public void connect() {
@@ -77,13 +77,13 @@ public class RedisDatabase {
 
     public void saveForAll() {
         for (Player player : Remain.getOnlinePlayers())
-            RedisDatabase.getInstance().save(player);
+            RedisCache.getInstance().save(player);
 
     }
 
     public void loadForAll() {
         for (Player player : Remain.getOnlinePlayers()) {
-            RedisDatabase.getInstance().load(player);
+            RedisCache.getInstance().load(player);
         }
     }
 
@@ -118,15 +118,17 @@ public class RedisDatabase {
         DungeonCache cache = DungeonCache.from(player);
         String moneyString = jedis.get(PLAYER_MONEY + player.getUniqueId());
 
-        if (moneyString != null) {
-            try {
-                double money = Double.parseDouble(moneyString);
-                cache.setMoney(money);
-            } catch (NumberFormatException e) {
-                Common.throwError(e, "Could not load money for player " + player.getName());
-            }
-        } else
-            cache.setMoney(0);
+        Common.broadcast(moneyString);
+
+//        if (moneyString != null) {
+//            try {
+//                double money = Double.parseDouble(moneyString);
+//                cache.setMoney(money);
+//            } catch (NumberFormatException e) {
+//                Common.throwError(e, "Could not load money for player " + player.getName());
+//            }
+//        } else
+//            cache.setMoney(0);
     }
 
 

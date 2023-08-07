@@ -12,52 +12,53 @@ import java.util.List;
  */
 public abstract class ItemAttribute {
 
-   /**
-    * Holds all registered item attributes
-    * <p>
-    * Attributes are registered automatically
-    */
-   private static final List<ItemAttribute> registeredAttributes = new ArrayList<>();
+    /**
+     * Holds all registered item attributes
+     * <p>
+     * Attributes are registered automatically
+     */
+    private static final List<ItemAttribute> registeredAttributes = new ArrayList<>();
 
-   public ItemAttribute() {
-   }
+    public ItemAttribute() {
+    }
 
-   public abstract String getName();
+    public abstract String getName();
 
-   public abstract Rarity getRarity();
+    public abstract Rarity getRarity();
 
-  public abstract List<String> getAttributeLore(Tier tier);
-
-
-   public static List<ItemAttribute> getRegisteredAttributes() {
-      return Collections.unmodifiableList(registeredAttributes);
-   }
-
-   public static List<ItemAttribute> getAttributesOfRarity(Rarity rarity) {
-       List<ItemAttribute> attributeList = new ArrayList<>();
+    public abstract List<String> getAttributeLore(Tier tier);
 
 
-       for (ItemAttribute attribute : registeredAttributes)
-           if (attribute.getRarity().equals(rarity))
-               attributeList.add(attribute);
+    public static List<ItemAttribute> getRegisteredAttributes() {
+        return Collections.unmodifiableList(registeredAttributes);
+    }
 
-       return attributeList;
-   }
+    public static List<ItemAttribute> getAttributesOfRarity(Rarity rarity) {
+        List<ItemAttribute> attributeList = new ArrayList<>();
 
-   public static ItemAttribute fromName(String name) {
-       for (ItemAttribute attribute : getRegisteredAttributes())
-           if (attribute.getName().equals(name))
-               return attribute;
-       return null;
-   }
+
+        for (ItemAttribute attribute : registeredAttributes)
+            if (attribute.getRarity().equals(rarity))
+                attributeList.add(attribute);
+
+        return attributeList;
+    }
+
+    public static ItemAttribute fromName(String name) {
+        for (ItemAttribute attribute : getRegisteredAttributes())
+            if (attribute.getName().equals(name))
+                return attribute;
+        return null;
+    }
 
     public static void registerAttributes() {
-       registeredAttributes.clear();
+        registeredAttributes.clear();
         // Auto-register all sub commands
         for (final Class<? extends ItemAttribute> clazz : ReflectionUtil.getClasses(DungeonPlugin.getInstance(), ItemAttribute.class)) {
             ItemAttribute kit = ReflectionUtil.instantiate(clazz);
             registeredAttributes.add(kit);
         }
     }
+
 
 }

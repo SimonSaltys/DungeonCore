@@ -1,5 +1,6 @@
 package dev.tablesalt.dungeon.util;
 
+import dev.tablesalt.dungeon.database.DungeonCache;
 import dev.tablesalt.dungeon.database.EnchantableItem;
 import dev.tablesalt.dungeon.item.ItemAttribute;
 import dev.tablesalt.dungeon.item.Rarity;
@@ -44,6 +45,7 @@ public class TBSItemUtil {
      * increases the tier of other random attributes
      */
     public ItemStack enchantItem(Player player, EnchantableItem item) {
+        DungeonCache cache = DungeonCache.from(player);
 
         int currentTier = item.getCurrentTier().getAsInteger();
 
@@ -61,6 +63,9 @@ public class TBSItemUtil {
                     upgradeRandomAttribute(item);
             }
         }
+
+        cache.updateEnchantableItem(item);
+
         return item.compileToItemStack();
     }
 
@@ -117,6 +122,7 @@ public class TBSItemUtil {
 
         return UUID.fromString(uuidString);
     }
+
 
     /**
      * returns true if the item can

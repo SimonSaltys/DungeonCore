@@ -3,9 +3,11 @@ package dev.tablesalt.dungeon.database;
 import dev.tablesalt.dungeon.item.ItemAttribute;
 import dev.tablesalt.dungeon.item.Rarity;
 import dev.tablesalt.dungeon.item.Tier;
+import dev.tablesalt.dungeon.util.TBSItemUtil;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.Material;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.mineacademy.fo.Common;
 import org.mineacademy.fo.ItemUtil;
@@ -15,10 +17,7 @@ import org.mineacademy.fo.model.ConfigSerializable;
 import org.mineacademy.fo.remain.CompMaterial;
 import org.mineacademy.fo.remain.CompMetadata;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 @Getter
 @Setter
@@ -30,7 +29,7 @@ public class EnchantableItem implements ConfigSerializable {
 
     private Material material;
 
-    private HashMap<ItemAttribute, Integer> attributeTierMap;
+    private Map<ItemAttribute, Integer> attributeTierMap;
 
     private ItemAttribute lastAdded;
 
@@ -43,7 +42,7 @@ public class EnchantableItem implements ConfigSerializable {
     }
 
 
-    public EnchantableItem(String name, Material material, HashMap<ItemAttribute, Integer> attributeTierMap, Tier tier, UUID uuid) {
+    public EnchantableItem(String name, Material material, Map<ItemAttribute, Integer> attributeTierMap, Tier tier, UUID uuid) {
         this.name = name;
         this.material = material;
         this.attributeTierMap = attributeTierMap;
@@ -57,10 +56,22 @@ public class EnchantableItem implements ConfigSerializable {
         return SerializedMap.ofArray(
                 "Name", name,
                 "Material", material,
-                "Attributes", attributeTierMap,
+                "Attributes", serializeAttributeTierMap(),
                 "Tier", currentTier,
                 "UUID", uuid
         );
+    }
+
+    private Map<String, Integer> serializeAttributeTierMap() {
+        Map<String, Integer> serializedMap = new HashMap<>();
+
+
+        // Transform ItemAttribute keys into strings and populate the new map
+        for (Map.Entry<ItemAttribute, Integer> entry : attributeTierMap.entrySet()) {
+            serializedMap.put(entry.getKey().getName(), entry.getValue());
+        }
+
+        return serializedMap;
     }
 
     @Override
@@ -77,6 +88,36 @@ public class EnchantableItem implements ConfigSerializable {
     }
 
     /**
+     * Returns the slot number of this item in
+     * the specified players inventory
+     * returns Null if the item is not found.
+     */
+    public Integer getSlotInInventory(Player player) {
+        DungeonCache cache = DungeonCache.from(player);
+
+        if (cache.getEnchantableItems().contains(this)) {
+            ItemStack[] contents = player.getInventory().getContents();
+
+            for (int i = 0; i < contents.length; i++) {
+                ItemStack checkedItem = contents[i];
+
+                if (checkedItem == null)
+                    continue;
+
+                UUID checkedUUID = TBSItemUtil.getItemsUUID(checkedItem);
+
+                if (checkedUUID == null || !checkedUUID.equals(uuid))
+                    continue;
+
+                return i;
+            }
+        }
+
+        return null;
+
+    }
+
+    /**
      * Attempts to add the attribute and current tier
      * if not already added
      */
@@ -87,6 +128,7 @@ public class EnchantableItem implements ConfigSerializable {
         attributeTierMap.put(attribute, tier.getAsInteger());
         lastAdded = attribute;
     }
+
 
     /**
      * Compiles the data from this object
@@ -133,6 +175,12 @@ public class EnchantableItem implements ConfigSerializable {
         return item;
     }
 
+
+    /*----------------------------------------------------------------*/
+    /* STATIC ACCESS */
+    /*----------------------------------------------------------------*/
+
+
     /**
      * Deserializes the itemstacks nbt data and returns it
      * as an enchantable item representation.
@@ -173,11 +221,25 @@ public class EnchantableItem implements ConfigSerializable {
 
         String name = map.getString("Name");
         Material material = map.getMaterial("Material").toMaterial();
-        HashMap<ItemAttribute, Integer> attributes = map.getMap("Attributes", ItemAttribute.class, Integer.class);
         Tier currentTier = map.get("Tier", Tier.class);
         UUID uuid = map.getUUID("UUID");
-
+        Map<ItemAttribute, Integer> attributes = nameToItemMap(map.getMap("Attributes", String.class, Integer.class));
 
         return new EnchantableItem(name, material, attributes, currentTier, uuid);
+    }
+
+    public static Map<ItemAttribute, Integer> nameToItemMap(HashMap<String, Integer> attributes) {
+
+        return Common.convert(attributes, new Common.MapToMapConverter<>() {
+            @Override
+            public ItemAttribute convertKey(String key) {
+                return ItemAttribute.fromName(key);
+            }
+
+            @Override
+            public Integer convertValue(Integer value) {
+                return value;
+            }
+        });
     }
 }

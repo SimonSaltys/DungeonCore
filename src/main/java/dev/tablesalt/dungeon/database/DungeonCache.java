@@ -5,7 +5,6 @@ import lombok.Getter;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
-import org.mineacademy.fo.Common;
 import org.mineacademy.fo.remain.Remain;
 
 import javax.annotation.Nullable;
@@ -32,6 +31,7 @@ public class DungeonCache {
     private DungeonCache(String name, UUID uniqueId) {
         this.uniqueId = uniqueId;
         this.playerName = name;
+
     }
 
 
@@ -49,6 +49,13 @@ public class DungeonCache {
         enchantableItems.removeIf(item -> !inventory.contains(item.compileToItemStack()));
     }
 
+    public void addEnchantableItem(EnchantableItem item) {
+        if (item != null)
+            if (!enchantableItems.contains(item)) {
+                enchantableItems.add(item);
+            }
+    }
+
     /**
      * Attempts to parse and add the itemstack
      * to the players cache if not already contained.
@@ -60,6 +67,11 @@ public class DungeonCache {
             if (!enchantableItems.contains(enchantableItem)) {
                 enchantableItems.add(enchantableItem);
             }
+    }
+
+    public void updateEnchantableItem(EnchantableItem item) {
+        enchantableItems.remove(item);
+        enchantableItems.add(item);
     }
 
     /**
