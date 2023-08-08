@@ -1,6 +1,5 @@
 package dev.tablesalt.dungeon.database;
 
-import dev.tablesalt.dungeon.util.TBSItemUtil;
 import lombok.Getter;
 import org.apache.commons.math3.util.Pair;
 import org.bukkit.entity.Player;
@@ -23,7 +22,7 @@ public class MariaDatabase extends SimpleDatabase implements Database {
     @Getter
     private static final MariaDatabase instance = new MariaDatabase();
 
-    private static final EnchantableItem NO_ITEM = null;
+    public static final EnchantableItem NO_ITEM = null;
 
 
     private MariaDatabase() {
@@ -58,18 +57,18 @@ public class MariaDatabase extends SimpleDatabase implements Database {
 
                 ResultSet resultSet = this.query("SELECT * FROM {table} WHERE UUID='" + player.getUniqueId() + "'");
 
-                if (!resultSet.next()) {
+                if (resultSet == null || !resultSet.next()) {
                     //we want this on the main thread
                     Common.runLater(() -> callThisWhenDataLoaded.accept(DungeonCache.from(player)));
+                } else {
+
+                    UUID uuid = UUID.fromString(resultSet.getString("UUID"));
+                    String name = resultSet.getString("Name");
+                    SerializedMap itemsMap = SerializedMap.fromJson(resultSet.getString("Enchantable_Items"));
+
+                    loadItemsFromMap(player, itemsMap);
                 }
-
-                UUID uuid = UUID.fromString(resultSet.getString("UUID"));
-                String name = resultSet.getString("Name");
-                SerializedMap itemsMap = SerializedMap.fromJson(resultSet.getString("Enchantable_Items"));
-
-                loadItemsFromMap(player, itemsMap);
-
-
+                
             } catch (Throwable t) {
                 Common.error(t, "Unable to load player data for " + player.getName());
             }
@@ -79,7 +78,6 @@ public class MariaDatabase extends SimpleDatabase implements Database {
     public void saveCache(Player player, Consumer<DungeonCache> callThisWhenDataSaved) {
         Valid.checkSync("Please call loadCache on the main thread.");
         DungeonCache cache = DungeonCache.from(player);
-
 
         Common.runAsync(() -> {
             try {
@@ -106,25 +104,27 @@ public class MariaDatabase extends SimpleDatabase implements Database {
             EnchantableItem enchantableItem = pair.getItem();
             cache.addEnchantableItem(enchantableItem);
 
-            Common.broadcast("Loading " + enchantableItem.getName());
-
             ItemStack compiledItem = enchantableItem.compileToItemStack();
 
-            //if the player is missing the item add it back to their inventory
-            for (ItemStack checkingItem : player.getInventory().getContents()) {
-                if (checkingItem == null)
-                    continue;
-
-                UUID checkedUUID = TBSItemUtil.getItemsUUID(checkingItem);
-
-                if (checkedUUID == null || checkedUUID.equals(enchantableItem.getUuid()))
-                    continue;
-
-                player.getInventory().setItem(pair.getSlot(), compiledItem);
-                Common.broadcast("Player is missing this item... adding it at" + pair.getSlot());
+            //is there an item that is supposed to be loaded in the enchanter?
+            if (pair.getSlot() == Keys.ENCHANTING_MENU_SLOT) {
+                cache.setItemInEnchanter(pair.getItem());
+                continue;
             }
 
-            Common.broadcast(" ");
+            //set the item in the players inventory if they don't have it, this will be useful when they switch servers
+            boolean found = false;
+            if (pair.getSlot() > 0 && pair.getSlot() < 41)
+                for (ItemStack itemStack : player.getInventory().getContents()) {
+                    if (itemStack != null && itemStack.equals(compiledItem)) {
+                        found = true;
+                        break;
+                    }
+                }
+
+            if (!found) {
+                player.getInventory().setItem(pair.getSlot(), compiledItem);
+            }
         }
     }
 
@@ -155,7 +155,7 @@ public class MariaDatabase extends SimpleDatabase implements Database {
             return pair.getFirst();
         }
 
-        public Integer getSlot() {
+        public int getSlot() {
             return pair.getSecond();
         }
 

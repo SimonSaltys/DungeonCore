@@ -113,6 +113,10 @@ public class EnchantableItem implements ConfigSerializable {
             }
         }
 
+        if (cache.getItemInEnchanter() != null)
+            return Keys.ENCHANTING_MENU_SLOT;
+
+
         return null;
 
     }

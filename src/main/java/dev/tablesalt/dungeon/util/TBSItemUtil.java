@@ -136,6 +136,7 @@ public class TBSItemUtil {
         return enchantableItem != null;
     }
 
+
     public final class ArmorSlotMapper {
         private static final Map<EquipmentSlot, String> slotToArmor = new HashMap<>();
 

@@ -2,6 +2,7 @@ package dev.tablesalt.dungeon.menu.impl;
 
 import dev.tablesalt.dungeon.database.DungeonCache;
 import dev.tablesalt.dungeon.database.EnchantableItem;
+import dev.tablesalt.dungeon.database.MariaDatabase;
 import dev.tablesalt.dungeon.item.ItemAttribute;
 import dev.tablesalt.dungeon.item.Rarity;
 import dev.tablesalt.dungeon.item.Tier;
@@ -47,8 +48,6 @@ public class EnchantingMenu extends TBSMenu {
 
     private final EnchantingAnimation enchantingAnimation;
 
-    public static final String ITEM_STILL_IN_ENCHANTER = "enchanted-item-left";
-
     private static final int ENCHANT_SLOT = 20;
 
     public static void openEnchantMenu(Player player) {
@@ -68,6 +67,11 @@ public class EnchantingMenu extends TBSMenu {
         makeEnchantingButton();
 
     }
+
+
+    /*----------------------------------------------------------------*/
+    /* MENU LOGIC */
+    /*----------------------------------------------------------------*/
 
 
     @Override
@@ -100,7 +104,6 @@ public class EnchantingMenu extends TBSMenu {
         if (slot == ENCHANT_SLOT) {
             playerSetItem(cursor, ENCHANT_SLOT);
             Common.runLater(0, this::restart);
-            Common.broadcast("DRAGGED");
         }
     }
 
@@ -111,12 +114,12 @@ public class EnchantingMenu extends TBSMenu {
 
     @Override
     protected void onDisplay(InventoryDrawer drawer) {
-        PlayerCache cache = PlayerCache.from(getViewer());
+        DungeonCache cache = DungeonCache.from(getViewer());
 
-        ItemStack itemLeftInMenu = cache.getTagger().getPlayerTag(ITEM_STILL_IN_ENCHANTER);
+        EnchantableItem itemLeftInMenu = cache.getItemInEnchanter();
 
         if (itemLeftInMenu != null) {
-            drawer.setItem(ENCHANT_SLOT, itemLeftInMenu);
+            drawer.setItem(ENCHANT_SLOT, itemLeftInMenu.compileToItemStack());
         }
 
     }
@@ -138,6 +141,7 @@ public class EnchantingMenu extends TBSMenu {
     @Override
     protected void onMenuClose(Player player, Inventory inventory) {
         PlayerCache cache = PlayerCache.from(player);
+        DungeonCache dungeonCache = DungeonCache.from(player);
 
         if (basicLoopAnimation.isRunning())
             basicLoopAnimation.cancel();
@@ -151,14 +155,23 @@ public class EnchantingMenu extends TBSMenu {
             }
 
         } else if (inventory.getItem(ENCHANT_SLOT) != null) {
-            cache.getTagger().setPlayerTag(ITEM_STILL_IN_ENCHANTER, inventory.getItem(ENCHANT_SLOT));
+            dungeonCache.setItemInEnchanter(EnchantableItem.fromItemStack(inventory.getItem(ENCHANT_SLOT)));
         } else
-            cache.getTagger().setPlayerTag(ITEM_STILL_IN_ENCHANTER, NO_ITEM);
+            dungeonCache.setItemInEnchanter(MariaDatabase.NO_ITEM);
 
 
     }
 
 
+    /*----------------------------------------------------------------*/
+    /* ANIMATIONS */
+    /*----------------------------------------------------------------*/
+
+
+    /**
+     * The idle animation where we
+     * wait for a player to put in an item
+     */
     Integer[] positions = {10, 11, 12, 21, 30, 29, 28, 19};
 
     private class BasicLoopAnimation extends SimpleRunnable {
@@ -187,6 +200,10 @@ public class EnchantingMenu extends TBSMenu {
     }
 
 
+    /**
+     * The animation that starts when
+     * the player successfully starts to enchant an item
+     */
     private class EnchantingAnimation extends SimpleRunnable {
 
         int count = 0;
@@ -261,6 +278,11 @@ public class EnchantingMenu extends TBSMenu {
         }
     }
 
+
+    /*----------------------------------------------------------------*/
+    /* HELPER METHODS */
+    /*----------------------------------------------------------------*/
+
     protected void setGlass(Integer slot) {
         Inventory inventory = getInventory();
 
@@ -284,12 +306,12 @@ public class EnchantingMenu extends TBSMenu {
     }
 
     private void saveEnchantedItem() {
-        PlayerCache cache = PlayerCache.from(getViewer());
+        DungeonCache cache = DungeonCache.from(getViewer());
 
         if (cache == null)
             return;
 
-        cache.getTagger().setPlayerTag(ITEM_STILL_IN_ENCHANTER, enchantingAnimation.getEnchantedItem());
+        cache.setItemInEnchanter(EnchantableItem.fromItemStack(enchantingAnimation.getEnchantedItem()));
 
     }
 
@@ -473,7 +495,7 @@ public class EnchantingMenu extends TBSMenu {
                         builder.append("\n");
 
                 }
-                
+
                 return builder.toString();
             }
 

@@ -102,7 +102,20 @@ public class TBSSound {
 
         @Override
         public void playTo(Player player) {
-            CompSound.NOTE_PLING.play(player, 1, 10);
+            CompSound.VILLAGER_DEATH.play(player, 1, 0.9F);
+
+
+            new SimpleSoundRunnable(3, 5) {
+                float pitchShift = 0.9F;
+
+                @Override
+                protected void onTick() {
+                    super.onTick();
+                    CompSound.ENTITY_PLAYER_ATTACK_CRIT.play(player, 1, pitchShift);
+                    pitchShift += 0.2F;
+                }
+            }.launch();
+
         }
     }
 

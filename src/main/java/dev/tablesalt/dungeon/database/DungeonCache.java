@@ -2,6 +2,7 @@ package dev.tablesalt.dungeon.database;
 
 import dev.tablesalt.dungeon.util.TBSItemUtil;
 import lombok.Getter;
+import lombok.Setter;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
@@ -25,6 +26,10 @@ public class DungeonCache {
     private final String playerName;
 
     private final List<EnchantableItem> enchantableItems = new ArrayList<>();
+
+    @Getter
+    @Setter
+    private EnchantableItem itemInEnchanter;
 
     private double moneyAmount;
 

@@ -9,5 +9,7 @@ public class Keys {
 
     public static final String DEAD_BODY_NAME = "Body Of ";
 
+    public static final int ENCHANTING_MENU_SLOT = 41;
+
 
 }
