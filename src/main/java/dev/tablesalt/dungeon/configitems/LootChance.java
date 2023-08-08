@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.Objects;
 
 public class LootChance extends YamlConfig implements ConfigSerializable {
-    private static ConfigItems<LootChance> loadedChances = ConfigItems.fromFolder("chances", LootChance.class);
+    private static final ConfigItems<LootChance> loadedChances = ConfigItems.fromFolder("chances", LootChance.class);
 
     @Getter
     private double mythicDropChance;
@@ -39,18 +39,18 @@ public class LootChance extends YamlConfig implements ConfigSerializable {
 
         setHeader(Common.configLine(),
                 "Please use provided in game commands to edit these values.",
-                  Common.configLine());
+                Common.configLine());
 
-        loadConfiguration(NO_DEFAULT,"chances/" + name + ".yml");
+        loadConfiguration(NO_DEFAULT, "chances/" + name + ".yml");
     }
 
     @Override
     protected void onLoad() {
-        goldDropChance = getDouble("gold_drop_chance",10.0);
-        maxGoldDrops = getInteger("max_gold_drops",8);
-        mythicDropChance = getDouble("mystic_drop_chance",5.0);
-        maxMythicDrops = getInteger("max_mystic_drops",2);
-        maxTotalDrops = getInteger("max_total_drops",10);
+        goldDropChance = getDouble("gold_drop_chance", 10.0);
+        maxGoldDrops = getInteger("max_gold_drops", 8);
+        mythicDropChance = getDouble("mystic_drop_chance", 5.0);
+        maxMythicDrops = getInteger("max_mystic_drops", 2);
+        maxTotalDrops = getInteger("max_total_drops", 10);
 
         this.save();
     }

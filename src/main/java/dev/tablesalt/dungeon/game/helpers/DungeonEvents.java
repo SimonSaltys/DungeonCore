@@ -4,12 +4,14 @@ import dev.tablesalt.dungeon.game.DungeonGame;
 import dev.tablesalt.dungeon.nms.PlayerCorpse;
 import dev.tablesalt.dungeon.util.sound.TBSSound;
 import dev.tablesalt.gamelib.game.helpers.GameEvents;
+import dev.tablesalt.gamelib.game.utils.GameUtil;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
+import org.mineacademy.fo.PlayerUtil;
 
 public class DungeonEvents extends GameEvents {
     public DungeonEvents(DungeonGame game) {
@@ -20,7 +22,8 @@ public class DungeonEvents extends GameEvents {
     @Override
     protected void onDeath(Player player, EntityDamageEvent event) {
         new PlayerCorpse(player).makeCorpse();
-        getGame().getLeaver().leavePlayerBecauseDied(player);
+        GameUtil.teleport(player, game.getMapRotator().getCurrentMap().getLobbyRegion().getCenter());
+        PlayerUtil.normalize(player, true);
     }
 
     @Override
@@ -30,7 +33,10 @@ public class DungeonEvents extends GameEvents {
 
     @Override
     protected void onPvP(Player attacker, Player victim, EntityDamageByEntityEvent event) {
+    }
 
+    @Override
+    protected void onDamaged(Player victim, EntityDamageEvent event) {
     }
 
     @Override

@@ -1,5 +1,6 @@
 package dev.tablesalt.dungeon.database;
 
+import dev.tablesalt.dungeon.util.TBSItemUtil;
 import lombok.Getter;
 import org.apache.commons.math3.util.Pair;
 import org.bukkit.entity.Player;
@@ -14,7 +15,6 @@ import org.mineacademy.fo.model.ConfigSerializable;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 import java.util.function.Consumer;
 
 public class MariaDatabase extends SimpleDatabase implements Database {
@@ -44,6 +44,7 @@ public class MariaDatabase extends SimpleDatabase implements Database {
                 .addNotNull("UUID", "VARCHAR(64)")
                 .add("Name", "TEXT")
                 .add("Enchantable_Items", "LONGTEXT")
+                .add("Normal_Items", "LONGTEXT")
                 .add("Updated", "DATETIME")
                 .setPrimaryColumn("UUID")
         );
@@ -61,14 +62,13 @@ public class MariaDatabase extends SimpleDatabase implements Database {
                     //we want this on the main thread
                     Common.runLater(() -> callThisWhenDataLoaded.accept(DungeonCache.from(player)));
                 } else {
+                    SerializedMap enchantedItemMap = SerializedMap.fromJson(resultSet.getString("Enchantable_Items"));
+                    SerializedMap normalItemMap = SerializedMap.fromJson(resultSet.getString("Normal_Items"));
 
-                    UUID uuid = UUID.fromString(resultSet.getString("UUID"));
-                    String name = resultSet.getString("Name");
-                    SerializedMap itemsMap = SerializedMap.fromJson(resultSet.getString("Enchantable_Items"));
-
-                    loadItemsFromMap(player, itemsMap);
+                    loadItemsFromMap(player, enchantedItemMap);
+                    loadItemsFromMap(player, normalItemMap);
                 }
-                
+
             } catch (Throwable t) {
                 Common.error(t, "Unable to load player data for " + player.getName());
             }
@@ -85,7 +85,8 @@ public class MariaDatabase extends SimpleDatabase implements Database {
                         "UUID", player.getUniqueId(),
                         "Name", player.getName(),
                         "Updated", TimeUtil.toSQLTimestamp(),
-                        "Enchantable_Items", playerItemsToMap(player).toJson()
+                        "Enchantable_Items", enchantableItemsToMap(player).toJson(),
+                        "Normal_Items", normalItemsToMap(player).toJson()
                 ));
                 Common.runLater(() -> callThisWhenDataSaved.accept(cache));
 
@@ -101,34 +102,27 @@ public class MariaDatabase extends SimpleDatabase implements Database {
 
         for (ItemSlotPair pair : itemsAtSlotList) {
             //add the item to the local plugin cache
-            EnchantableItem enchantableItem = pair.getItem();
-            cache.addEnchantableItem(enchantableItem);
+            EnchantableItem enchantableItem = pair.getEnchantableItem();
 
-            ItemStack compiledItem = enchantableItem.compileToItemStack();
+            ItemStack compiledItem;
+            if (enchantableItem == null)
+                compiledItem = pair.getNormalItem();
+            else {
+                compiledItem = enchantableItem.compileToItemStack();
+                cache.addEnchantableItem(enchantableItem);
+            }
 
             //is there an item that is supposed to be loaded in the enchanter?
             if (pair.getSlot() == Keys.ENCHANTING_MENU_SLOT) {
-                cache.setItemInEnchanter(pair.getItem());
+                cache.setItemInEnchanter(pair.getEnchantableItem());
                 continue;
             }
 
-            //set the item in the players inventory if they don't have it, this will be useful when they switch servers
-            boolean found = false;
-            if (pair.getSlot() > 0 && pair.getSlot() < 41)
-                for (ItemStack itemStack : player.getInventory().getContents()) {
-                    if (itemStack != null && itemStack.equals(compiledItem)) {
-                        found = true;
-                        break;
-                    }
-                }
-
-            if (!found) {
-                player.getInventory().setItem(pair.getSlot(), compiledItem);
-            }
+            player.getInventory().setItem(pair.getSlot(), compiledItem);
         }
     }
 
-    private SerializedMap playerItemsToMap(Player player) {
+    private SerializedMap enchantableItemsToMap(Player player) {
         DungeonCache cache = DungeonCache.from(player);
         List<ItemSlotPair> itemsAtSlotList = new ArrayList<>();
 
@@ -143,32 +137,79 @@ public class MariaDatabase extends SimpleDatabase implements Database {
         return SerializedMap.ofArray("Saved_Items", itemsAtSlotList);
     }
 
+    private SerializedMap normalItemsToMap(Player player) {
+        List<ItemSlotPair> itemsAtSlotList = new ArrayList<>();
 
-    private static class ItemSlotPair implements ConfigSerializable {
-        private final Pair<EnchantableItem, Integer> pair;
+        ItemStack[] inventory = player.getInventory().getContents();
 
-        public ItemSlotPair(EnchantableItem item, Integer slot) {
-            pair = new Pair<>(item, slot);
+        for (int i = 0; i < inventory.length; i++) {
+            if (inventory[i] == null || TBSItemUtil.isEnchantable(inventory[i]))
+                continue;
+
+            itemsAtSlotList.add(new ItemSlotPair(inventory[i], i));
         }
 
-        public EnchantableItem getItem() {
-            return pair.getFirst();
+        return SerializedMap.ofArray("Saved_Items", itemsAtSlotList);
+    }
+
+
+    private static class ItemSlotPair implements ConfigSerializable {
+        private Pair<EnchantableItem, Integer> enchantablePair;
+
+        private Pair<ItemStack, Integer> normalItemPair;
+
+        public ItemSlotPair(EnchantableItem item, Integer slot) {
+            enchantablePair = new Pair<>(item, slot);
+        }
+
+        public ItemSlotPair(ItemStack stack, Integer slot) {
+            normalItemPair = new Pair<>(stack, slot);
+        }
+
+        public EnchantableItem getEnchantableItem() {
+            if (enchantablePair == null)
+                return null;
+
+            return enchantablePair.getFirst();
+        }
+
+        public ItemStack getNormalItem() {
+            if (normalItemPair == null)
+                return null;
+
+            return normalItemPair.getFirst();
         }
 
         public int getSlot() {
-            return pair.getSecond();
+            if (enchantablePair == null)
+                return normalItemPair.getSecond();
+            else
+                return enchantablePair.getSecond();
         }
 
         @Override
         public SerializedMap serialize() {
             return SerializedMap.ofArray(
-                    "Item", getItem(),
+                    "Item", enchantablePair == null ? getNormalItem() : getEnchantableItem(),
                     "Slot", getSlot()
             );
         }
 
         public static ItemSlotPair deserialize(SerializedMap map) {
-            return new ItemSlotPair(map.get("Item", EnchantableItem.class), map.getInteger("Slot"));
+            String unparsedData = map.getString("Item");
+            if (unparsedData == null)
+                return null;
+
+            ItemStack deserializedItem = null;
+            if (unparsedData.contains("type"))
+                deserializedItem = map.getItemStack("Item");
+
+            if (deserializedItem == null)
+                return new ItemSlotPair(map.get("Item", EnchantableItem.class), map.getInteger("Slot"));
+            else
+                return new ItemSlotPair(deserializedItem, map.getInteger("Slot"));
+
+
         }
 
     }

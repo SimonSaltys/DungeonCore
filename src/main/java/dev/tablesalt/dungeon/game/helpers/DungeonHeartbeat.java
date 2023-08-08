@@ -5,17 +5,15 @@ import dev.tablesalt.dungeon.maps.DungeonMap;
 import dev.tablesalt.dungeon.maps.spawnpoints.ExtractRegion;
 import dev.tablesalt.dungeon.maps.spawnpoints.MonsterPoint;
 import dev.tablesalt.gamelib.game.helpers.GameHeartbeat;
-import org.bukkit.command.Command;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
-import org.mineacademy.fo.Common;
-import org.mineacademy.fo.model.Countdown;
 import org.mineacademy.fo.remain.Remain;
 import org.mineacademy.fo.visual.VisualizedRegion;
 
 public class DungeonHeartbeat extends GameHeartbeat {
 
     private final DungeonGame game;
+
     public DungeonHeartbeat(DungeonGame game) {
         super(game);
         this.game = game;
@@ -29,13 +27,11 @@ public class DungeonHeartbeat extends GameHeartbeat {
     protected void onTickFast() {
         tickMobSpawnPoints();
         tickExtractLocations();
-
     }
 
     @Override
     protected void onEnd() {
         super.onEnd();
-
         game.getStopper().stop();
     }
 
@@ -52,7 +48,7 @@ public class DungeonHeartbeat extends GameHeartbeat {
             if (!extractRegion.isActive())
                 return;
 
-            for (Entity entity : Remain.getNearbyEntities(region.getCenter(),20))
+            for (Entity entity : Remain.getNearbyEntities(region.getCenter(), 20))
                 if (entity instanceof Player player) {
                     if (region.isWithin(player.getLocation()))
                         extractRegion.startExtractionFor(player);
@@ -62,6 +58,7 @@ public class DungeonHeartbeat extends GameHeartbeat {
                 }
         }
     }
+
     private void tickMobSpawnPoints() {
         DungeonMap map = game.getMapRotator().getCurrentMap();
 
@@ -69,7 +66,7 @@ public class DungeonHeartbeat extends GameHeartbeat {
             return;
 
         for (MonsterPoint point : map.getMonsterPoints())
-            for(Entity entity : Remain.getNearbyEntities(point.getLocation(),point.getTriggerRadius()))
+            for (Entity entity : Remain.getNearbyEntities(point.getLocation(), point.getTriggerRadius()))
                 if (entity instanceof Player)
                     point.spawn();
     }

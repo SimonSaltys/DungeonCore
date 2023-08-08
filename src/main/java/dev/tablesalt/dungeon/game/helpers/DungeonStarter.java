@@ -3,7 +3,7 @@ package dev.tablesalt.dungeon.game.helpers;
 import dev.tablesalt.dungeon.game.DungeonGame;
 import dev.tablesalt.dungeon.maps.DungeonMap;
 import dev.tablesalt.dungeon.maps.spawnpoints.ExtractRegion;
-import dev.tablesalt.dungeon.maps.spawnpoints.LootPoint;
+import dev.tablesalt.dungeon.util.DungeonUtil;
 import dev.tablesalt.gamelib.exception.GameException;
 import dev.tablesalt.gamelib.game.enums.GameJoinMode;
 import dev.tablesalt.gamelib.game.helpers.Starter;
@@ -12,7 +12,6 @@ import dev.tablesalt.gamelib.game.utils.MessageUtil;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.mineacademy.fo.Common;
-import org.mineacademy.fo.RandomUtil;
 import org.mineacademy.fo.model.RandomNoRepeatPicker;
 
 import java.util.Collections;
@@ -31,9 +30,9 @@ public class DungeonStarter extends Starter {
     protected void onGameStart() {
         broadcastInfo();
         activateExtractLocations();
-        spawnLoot();
+        DungeonUtil.spawnLoot(game);
 
-        teleportPlayers();
+//        teleportPlayers();
     }
 
 
@@ -68,21 +67,7 @@ public class DungeonStarter extends Starter {
 
         for (int i = 0; i < map.getExtractRegionsToActivate(); i++)
             regions.get(i).setActive(true);
-
     }
 
-    private void spawnLoot() {
-        DungeonMap map = game.getMapRotator().getCurrentMap();
-        RandomNoRepeatPicker<LootPoint> lootSpawnPoints = RandomNoRepeatPicker.newPicker(LootPoint.class);
-        lootSpawnPoints.setItems(map.getLootPoints());
 
-        int lootCount = RandomUtil.nextBetween(map.getMinLootSpawns(), map.getMaxLootSpawns());
-
-        for (int i = 0; i < lootCount; i++) {
-            LootPoint lootPoint = lootSpawnPoints.pickRandom();
-
-            if (lootPoint != null)
-                lootPoint.spawn();
-        }
-    }
 }
