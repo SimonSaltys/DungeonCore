@@ -48,6 +48,7 @@ public class EnchantableItem implements ConfigSerializable {
         this.attributeTierMap = attributeTierMap;
         this.currentTier = tier;
 
+
         this.uuid = uuid;
     }
 
@@ -154,6 +155,14 @@ public class EnchantableItem implements ConfigSerializable {
             lore.addAll(attribute.getAttributeLore(Tier.fromInteger(attributeTierMap.get(attribute))));
 
         return lore;
+    }
+
+    public Tier getTierFor(ItemAttribute attribute) {
+
+        if (attributeTierMap.containsKey(attribute))
+            return Tier.fromInteger(attributeTierMap.get(attribute));
+
+        return Tier.NONE;
     }
 
     public String getFormattedName() {

@@ -25,7 +25,16 @@ public final class GetEnchantableCommand extends GameSubCommand {
                 Tier.NONE,
                 UUID.randomUUID());
 
+        EnchantableItem other = new EnchantableItem(
+                CompMaterial.GOLDEN_SWORD.name(),
+                Material.GOLDEN_SWORD,
+                new HashMap<>(),
+                Tier.NONE,
+                UUID.randomUUID());
+
         PlayerUtil.giveItem(getPlayer(), enchantableItem.compileToItemStack());
+        PlayerUtil.giveItem(getPlayer(), other.compileToItemStack());
+
 
     }
 }

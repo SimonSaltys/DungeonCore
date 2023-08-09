@@ -1,11 +1,13 @@
 package dev.tablesalt.dungeon.database;
 
+import dev.tablesalt.dungeon.event.PlayerGainGoldEvent;
 import dev.tablesalt.dungeon.util.TBSItemUtil;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
+import org.mineacademy.fo.Common;
 import org.mineacademy.fo.remain.Remain;
 
 import javax.annotation.Nullable;
@@ -31,7 +33,8 @@ public class DungeonCache {
     @Setter
     private EnchantableItem itemInEnchanter;
 
-    private double moneyAmount;
+    public double moneyAmount;
+
 
     private DungeonCache(String name, UUID uniqueId) {
         this.uniqueId = uniqueId;
@@ -122,6 +125,7 @@ public class DungeonCache {
 
     public void giveMoney(double amount) {
         moneyAmount += amount;
+        Common.callEvent(new PlayerGainGoldEvent(toPlayer(), amount));
     }
 
     public void takeMoney(int amount) {
@@ -129,10 +133,6 @@ public class DungeonCache {
 
         if (moneyAmount < 0)
             moneyAmount = 0;
-    }
-
-    public void setMoney(double amount) {
-        this.moneyAmount = amount;
     }
 
     public double getMoney() {

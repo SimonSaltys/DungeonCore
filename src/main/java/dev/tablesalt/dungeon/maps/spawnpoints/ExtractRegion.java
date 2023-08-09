@@ -2,6 +2,7 @@ package dev.tablesalt.dungeon.maps.spawnpoints;
 
 
 import dev.tablesalt.dungeon.game.DungeonGame;
+import dev.tablesalt.dungeon.util.DungeonUtil;
 import dev.tablesalt.gamelib.game.utils.MessageUtil;
 import dev.tablesalt.gamelib.players.PlayerCache;
 import lombok.Getter;
@@ -91,7 +92,8 @@ public class ExtractRegion implements ConfigSerializable {
         @Override
         protected void onEnd() {
             Remain.sendTitle(player, 0, 40, 0, "&6You Extracted!", "");
-            game.getLeaver().leavePlayerBecauseExtracted(player);
+            DungeonUtil.teleportToLobby(player, game);
+            cache.getTagger().setPlayerTag("Extracting", false);
         }
     }
 }

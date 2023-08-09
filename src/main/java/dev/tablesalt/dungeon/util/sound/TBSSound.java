@@ -53,8 +53,8 @@ public class TBSSound {
 
         @Override
         public void playTo(Player player) {
-            CompSound.ENDERDRAGON_GROWL.play(player, 1, 1.2F);
-            CompSound.LEVEL_UP.play(player, 1, 1.2F);
+            Rewarded.getInstance().playTo(player);
+            MoneyPickup.getInstance().playTo(player);
         }
     }
 

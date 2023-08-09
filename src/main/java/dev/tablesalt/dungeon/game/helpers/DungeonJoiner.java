@@ -1,6 +1,7 @@
 package dev.tablesalt.dungeon.game.helpers;
 
 import dev.tablesalt.dungeon.game.DungeonGame;
+import dev.tablesalt.dungeon.util.DungeonUtil;
 import dev.tablesalt.gamelib.game.helpers.PlayerJoiner;
 import org.bukkit.entity.Player;
 
@@ -16,6 +17,7 @@ public class DungeonJoiner extends PlayerJoiner {
 
     @Override
     protected boolean cleanPlayerOnJoin() {
+
         return false;
     }
 
@@ -26,6 +28,6 @@ public class DungeonJoiner extends PlayerJoiner {
 
     @Override
     protected void onGameJoin(Player player) {
-
+        DungeonUtil.teleportToLobby(player, game);
     }
 }

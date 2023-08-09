@@ -33,6 +33,9 @@
 loot:
   money_per_nugget: 10
 
+game:
+  time_until_stop: 15 minutes
+
 database:
   host: localhost # host of your database
   port: 1433 # default port for MariaDB and MySQL
@@ -53,7 +56,7 @@ Location_Format: "{world} [{x}, {y}, {z}]"
 # * THE FIRST ALIAS IS THE MAIN LABEL, YOU CAN CHANGE IT BUT DO NOT REMOVE IT. *
 # * EXAMPLE: [boss, b] will trigger your main command from "/boss" or "/b" * 
 # -------------------------------------------------------------------------------------------------
-Command_Aliases: [dungeon]
+Command_Aliases: [ dungeon ]
 
 # -------------------------------------------------------------------------------------------------
 # What language should we use for messages? If it exists, the language file will be copied 
@@ -78,7 +81,7 @@ Log_Lag_Over_Milis: 100
 # List of section names that will print informative messages about this plugin's features.
 # The Debugger class utilizes this key and will only print messages for sections enabled below.
 # -------------------------------------------------------------------------------------------------
-Debug: []
+Debug: [ ]
 
 # -------------------------------------------------------------------------------------------------
 # Do not change this value, otherwise it will corrupt your plugin installation!

@@ -6,10 +6,12 @@ import dev.tablesalt.dungeon.database.DungeonCache;
 import dev.tablesalt.dungeon.database.MariaDatabase;
 import dev.tablesalt.dungeon.game.DungeonGame;
 import dev.tablesalt.dungeon.item.ItemAttribute;
+import dev.tablesalt.dungeon.listener.AttributeListener;
 import dev.tablesalt.dungeon.listener.DatabaseListener;
 import dev.tablesalt.dungeon.listener.InDungeonListener;
 import dev.tablesalt.dungeon.listener.OutOfDungeonListener;
 import dev.tablesalt.dungeon.menu.MenuListener;
+import dev.tablesalt.gamelib.game.helpers.Game;
 import dev.tablesalt.gamelib.game.helpers.GameListener;
 import dev.tablesalt.gamelib.game.types.GameTypeList;
 import dev.tablesalt.gamelib.game.types.Type;
@@ -27,13 +29,15 @@ public final class DungeonPlugin extends SimplePlugin {
     protected void onReloadablesStart() {
         initialization();
 
-
         DungeonSettings.getInstance().onLoad();
     }
 
     @Override
     public void onPluginStop() {
+
         DungeonCache.purge();
+        for (Game game : Game.getGames())
+            game.getStopper().stop();
     }
 
     /**
@@ -56,5 +60,6 @@ public final class DungeonPlugin extends SimplePlugin {
         registerEvents(new InDungeonListener());
         registerEvents(new MenuListener());
         registerEvents(new GameListener());
+        registerEvents(new AttributeListener());
     }
 }

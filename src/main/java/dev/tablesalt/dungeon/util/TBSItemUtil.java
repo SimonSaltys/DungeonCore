@@ -11,6 +11,7 @@ import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
+import org.mineacademy.fo.Common;
 import org.mineacademy.fo.RandomUtil;
 import org.mineacademy.fo.menu.model.ItemCreator;
 import org.mineacademy.fo.remain.CompMaterial;
@@ -95,6 +96,13 @@ public class TBSItemUtil {
         List<ItemAttribute> attributesToChoose = ItemAttribute.getAttributesOfRarity(rarity);
         attributesToChoose.removeIf(item.getAttributeTierMap().keySet()::contains);
 
+        //remove the armor attributes if the item is a weapon
+        Common.broadcast(isArmor(item.getMaterial()) + " item is armor?");
+
+        if (isArmor(item.getMaterial()))
+            attributesToChoose.removeIf(attribute -> !attribute.isForArmor());
+
+
         return attributesToChoose;
     }
 
@@ -134,6 +142,17 @@ public class TBSItemUtil {
 
         EnchantableItem enchantableItem = EnchantableItem.fromItemStack(item);
         return enchantableItem != null;
+    }
+
+    public boolean isArmor(Material material) {
+        String itemMaterialName = material.name();
+        String[] armorTypes = new String[]{"HELMET", "CHESTPLATE", "LEGGINGS", "BOOTS", "TUNIC"};
+
+        for (String name : armorTypes)
+            if (itemMaterialName.contains(name))
+                return true;
+
+        return false;
     }
 
 

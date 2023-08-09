@@ -36,7 +36,6 @@ import org.mineacademy.fo.Common;
 import org.mineacademy.fo.menu.model.InventoryDrawer;
 import org.mineacademy.fo.menu.model.ItemCreator;
 import org.mineacademy.fo.menu.model.MenuClickLocation;
-import org.mineacademy.fo.model.Triple;
 import org.mineacademy.fo.remain.CompMaterial;
 import org.mineacademy.fo.remain.CompMetadata;
 
@@ -52,10 +51,10 @@ public class PlayerCorpse {
     protected ServerPlayer NMSCorpse;
 
     @Getter
-    protected final ItemStack[] mainContent = new ItemStack[CorpseMenu.MAIN_CONTENTS.getLength()];
+    protected final ItemStack[] mainContent = new ItemStack[56];
 
     @Getter
-    protected final ItemStack[] armor = new ItemStack[CorpseMenu.ARMOR_SLOTS.getLength()];
+    protected final ItemStack[] armor = new ItemStack[10];
 
     @Getter
     protected TextDisplay nameTag;
@@ -80,6 +79,7 @@ public class PlayerCorpse {
         deepCopy(player.getInventory().getStorageContents(), mainContent);
         deepCopy(player.getInventory().getArmorContents(), armor);
         ArrayUtils.add(armor, player.getInventory().getItemInOffHand());
+        allCorpses.add(this);
     }
 
     /**
@@ -106,8 +106,6 @@ public class PlayerCorpse {
         this.nameTag = EntityUtil.createTextDisplay(locationOnGround, " Name here");
         nameTag.getTransformation().getScale().set(1.0);
         CompMetadata.setMetadata(nameTag, Keys.DEAD_BODY_NAME, player.getName());
-
-        allCorpses.add(this);
     }
 
     public void displayLootTo(Player player) {
@@ -133,10 +131,28 @@ public class PlayerCorpse {
         Iterator<PlayerCorpse> itr = allCorpses.listIterator();
         while (itr.hasNext()) {
             PlayerCorpse corpse = itr.next();
-            removeCorpse(corpse);
+            removeCorpseFromList(corpse, false);
             itr.remove();
         }
 
+    }
+
+    /**
+     * passing in boolean flag here, so we don't get
+     * a concurrent modification error.
+     */
+    private static void removeCorpseFromList(PlayerCorpse playerCorpse, boolean removeFromList) {
+        if (removeFromList)
+            allCorpses.remove(playerCorpse);
+
+        for (Player online : Bukkit.getOnlinePlayers())
+            sendRemovePackets(online, playerCorpse.getNMSCorpse());
+
+        playerCorpse.getNameTag().remove();
+    }
+
+    public static void removeCorpse(PlayerCorpse corpseRemove) {
+        removeCorpseFromList(corpseRemove, true);
     }
 
     public static PlayerCorpse getFromPlayerName(String name) {
@@ -246,14 +262,6 @@ public class PlayerCorpse {
     }
 
 
-    private static void removeCorpse(PlayerCorpse corpseRemove) {
-        for (Player online : Bukkit.getOnlinePlayers())
-            sendRemovePackets(online, corpseRemove.getNMSCorpse());
-
-        corpseRemove.getNameTag().remove();
-    }
-
-
     private static void sendRemovePackets(Player player, ServerPlayer corpse) {
         CraftPlayer craftPlayer = ((CraftPlayer) player);
         ServerPlayerConnection connection = craftPlayer.getHandle().connection;
@@ -270,11 +278,11 @@ public class PlayerCorpse {
 
         private static final CompMaterial fillerMaterial = CompMaterial.WHITE_STAINED_GLASS_PANE;
 
-        protected static SlotPair ARMOR_SLOTS = new SlotPair(0, 8, 8);
+        protected static final SlotPair ARMOR_SLOTS = new SlotPair(0, 9);
 
-        protected static SlotPair MAIN_CONTENTS = new SlotPair(9, 35, 36);
+        protected static final SlotPair MAIN_CONTENTS = new SlotPair(9, 36);
 
-        protected static SlotPair HOTBAR = new SlotPair(45, 53, 8);
+        protected static final SlotPair HOTBAR = new SlotPair(45, 54);
 
         private CorpseMenu() {
             setSize(9 * 6);
@@ -291,11 +299,11 @@ public class PlayerCorpse {
 
         @Override
         protected void onDisplay(InventoryDrawer drawer) {
-            for (int i = ARMOR_SLOTS.getStartingSlot(); i < ARMOR_SLOTS.getLength(); i++) {
+            for (int i = ARMOR_SLOTS.getStartingSlot(); i < ARMOR_SLOTS.getFinalSlot(); i++) {
                 drawer.setItem(i, armor[i - ARMOR_SLOTS.getStartingSlot()]);
             }
 
-            for (int i = MAIN_CONTENTS.getStartingSlot(); i < MAIN_CONTENTS.getLength(); i++) {
+            for (int i = MAIN_CONTENTS.getStartingSlot(); i < MAIN_CONTENTS.getFinalSlot(); i++) {
                 drawer.setItem(i, mainContent[i]);
             }
 
@@ -304,7 +312,8 @@ public class PlayerCorpse {
                 drawer.setItem(i, ItemCreator.of(fillerMaterial, " ").make());
             }
 
-            for (int i = HOTBAR.getStartingSlot(); i < ARMOR_SLOTS.getLength(); i++) {
+            for (int i = HOTBAR.getStartingSlot(); i < HOTBAR.getFinalSlot(); i++) {
+
                 drawer.setItem(i, mainContent[i - HOTBAR.getStartingSlot()]);
             }
         }
@@ -317,15 +326,15 @@ public class PlayerCorpse {
 
         @Override
         protected void onMenuClose(Player player, Inventory inventory) {
-            for (int i = ARMOR_SLOTS.getStartingSlot(); i < ARMOR_SLOTS.getLength(); i++) {
+            for (int i = ARMOR_SLOTS.getStartingSlot(); i < ARMOR_SLOTS.getFinalSlot(); i++) {
                 armor[i] = inventory.getItem(i);
             }
 
-            for (int i = MAIN_CONTENTS.getStartingSlot(); i < MAIN_CONTENTS.getLength(); i++) {
+            for (int i = MAIN_CONTENTS.getStartingSlot(); i < MAIN_CONTENTS.getFinalSlot(); i++) {
                 mainContent[i] = inventory.getItem(i);
             }
 
-            for (int i = HOTBAR.getStartingSlot(); i < ARMOR_SLOTS.getLength(); i++) {
+            for (int i = HOTBAR.getStartingSlot(); i < HOTBAR.getFinalSlot(); i++) {
                 mainContent[i] = inventory.getItem(i);
             }
 
@@ -340,24 +349,21 @@ public class PlayerCorpse {
 
         protected static class SlotPair {
 
-            private final Triple<Integer, Integer, Integer> triple;
+            private final Pair<Integer, Integer> pair;
 
-            public SlotPair(Integer startingSlot, Integer finalSlot, Integer length) {
-                triple = new Triple<>(startingSlot, finalSlot, length);
+            public SlotPair(Integer startingSlot, Integer finalSlot) {
+                pair = new Pair<>(startingSlot, finalSlot);
             }
 
 
             public final Integer getStartingSlot() {
-                return triple.getFirst();
+                return pair.getFirst();
             }
 
             public final Integer getFinalSlot() {
-                return triple.getSecond();
+                return pair.getSecond();
             }
 
-            public final Integer getLength() {
-                return triple.getThird();
-            }
         }
 
     }

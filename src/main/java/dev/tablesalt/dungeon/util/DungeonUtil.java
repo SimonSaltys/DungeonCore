@@ -4,9 +4,12 @@ import dev.tablesalt.dungeon.game.DungeonGame;
 import dev.tablesalt.dungeon.maps.DungeonMap;
 import dev.tablesalt.dungeon.maps.spawnpoints.LootPoint;
 import dev.tablesalt.dungeon.maps.spawnpoints.MonsterPoint;
+import dev.tablesalt.gamelib.game.utils.GameUtil;
 import lombok.experimental.UtilityClass;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
+import org.bukkit.entity.Player;
 import org.mineacademy.fo.RandomUtil;
 import org.mineacademy.fo.model.RandomNoRepeatPicker;
 
@@ -27,6 +30,11 @@ public class DungeonUtil {
             if (lootPoint != null)
                 lootPoint.spawn();
         }
+    }
+
+    public void teleportToLobby(Player player, DungeonGame game) {
+        Location location = RandomUtil.nextItem(game.getMapRotator().getCurrentMap().getPlayerSpawnPoints().getLocations());
+        GameUtil.teleport(player, location);
     }
 
 

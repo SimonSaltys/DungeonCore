@@ -1,9 +1,11 @@
 package dev.tablesalt.dungeon.game.helpers;
 
+import dev.tablesalt.dungeon.DungeonStaticSettings;
 import dev.tablesalt.dungeon.game.DungeonGame;
 import dev.tablesalt.dungeon.maps.DungeonMap;
 import dev.tablesalt.dungeon.maps.spawnpoints.ExtractRegion;
 import dev.tablesalt.dungeon.maps.spawnpoints.MonsterPoint;
+import dev.tablesalt.dungeon.util.DungeonUtil;
 import dev.tablesalt.gamelib.game.helpers.GameHeartbeat;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
@@ -14,13 +16,35 @@ public class DungeonHeartbeat extends GameHeartbeat {
 
     private final DungeonGame game;
 
+    private static final int TEN_MINUTES = 600;
+
+    private static final int FIVE_MINUTES = 300;
+
+    private int secondsPassed = 0;
+
     public DungeonHeartbeat(DungeonGame game) {
-        super(game);
+        super(game, DungeonStaticSettings.GameConfig.timeUntilStop);
         this.game = game;
     }
 
     @Override
     protected void onTick() {
+
+        if (secondsPassed >= FIVE_MINUTES) {
+            DungeonUtil.despawnLoot(game);
+            DungeonUtil.spawnLoot(game);
+            secondsPassed = 0;
+        }
+
+        if (getTimeLeft() == TEN_MINUTES) {
+            game.getGameBroadcaster().broadcastInfo("Instance is closing in &610 minutes!");
+        }
+
+        if (getTimeLeft() == FIVE_MINUTES) {
+            game.getGameBroadcaster().broadcastInfo("Instance is closing in &65 minutes!");
+        }
+
+        secondsPassed++;
     }
 
     @Override

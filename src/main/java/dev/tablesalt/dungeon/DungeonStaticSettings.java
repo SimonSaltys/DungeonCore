@@ -1,5 +1,6 @@
 package dev.tablesalt.dungeon;
 
+import org.mineacademy.fo.model.SimpleTime;
 import org.mineacademy.fo.settings.SimpleSettings;
 
 public class DungeonStaticSettings extends SimpleSettings {
@@ -10,7 +11,19 @@ public class DungeonStaticSettings extends SimpleSettings {
         private static void init() {
             setPathPrefix("loot");
 
-            moneyPerNugget = getInteger("money_per_nugget",10);
+            moneyPerNugget = getInteger("money_per_nugget", 10);
+        }
+    }
+
+    public static class GameConfig {
+        public static SimpleTime timeUntilStop;
+
+        private static void init() {
+            setPathPrefix("game");
+
+            timeUntilStop = getTime("time_until_stop");
+            if (timeUntilStop == null)
+                timeUntilStop = SimpleTime.from("10 minutes");
         }
     }
 
@@ -36,7 +49,6 @@ public class DungeonStaticSettings extends SimpleSettings {
             password = getString("password");
         }
     }
-
 
 
 }
