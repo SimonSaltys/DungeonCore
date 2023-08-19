@@ -13,6 +13,7 @@ import org.mineacademy.fo.database.SimpleDatabase;
 import org.mineacademy.fo.model.ConfigSerializable;
 
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
@@ -26,7 +27,7 @@ public class MariaDatabase extends SimpleDatabase implements Database {
 
 
     private MariaDatabase() {
-        this.addVariable("table", "Enchantable_Items");
+
     }
 
     public void connect() {
@@ -35,11 +36,15 @@ public class MariaDatabase extends SimpleDatabase implements Database {
         String password = "password";
 
         connect(jdbcUrl, username, password);
+
+        Common.runLaterAsync(() -> {
+            makeEnchantableTable();
+            makePlayerDataTable();
+        });
     }
 
-    @Override
-    protected void onConnected() {
-        Common.broadcast("Connected");
+    private void makeEnchantableTable() {
+        this.addVariable("table", "Enchantable_Items");
         createTable(TableCreator.of("{table}")
                 .addNotNull("UUID", "VARCHAR(64)")
                 .add("Name", "TEXT")
@@ -50,24 +55,34 @@ public class MariaDatabase extends SimpleDatabase implements Database {
         );
     }
 
+    private void makePlayerDataTable() {
+        this.addVariable("player_data", "Player_Data");
+        createTable(TableCreator.of("{player_data}")
+                .addNotNull("UUID", "VARCHAR(64)")
+                .add("Name", "TEXT")
+                .add("Data", "LONGTEXT")
+                .add("Updated", "DATETIME")
+                .setPrimaryColumn("UUID")
+        );
+    }
+
+    @Override
+    protected void onConnected() {
+        Common.broadcast("Connected To MariaDB!");
+
+    }
+
     public void loadCache(Player player, Consumer<DungeonCache> callThisWhenDataLoaded) {
         Valid.checkSync("Please call loadCache on the main thread.");
 
         Common.runAsync(() -> {
             try {
 
-                ResultSet resultSet = this.query("SELECT * FROM {table} WHERE UUID='" + player.getUniqueId() + "'");
+                LOAD loadedItems = loadEnchantableItems(player);
+                LOAD dataLoaded = loadPlayerData(player);
 
-                if (resultSet == null || !resultSet.next()) {
-                    //we want this on the main thread
-                    Common.runLater(() -> callThisWhenDataLoaded.accept(DungeonCache.from(player)));
-                } else {
-                    SerializedMap enchantedItemMap = SerializedMap.fromJson(resultSet.getString("Enchantable_Items"));
-                    SerializedMap normalItemMap = SerializedMap.fromJson(resultSet.getString("Normal_Items"));
-
-                    loadItemsFromMap(player, enchantedItemMap);
-                    loadItemsFromMap(player, normalItemMap);
-                }
+                if (loadedItems == LOAD.NO_SUCCESS && dataLoaded == LOAD.NO_SUCCESS)
+                    callThisWhenDataLoaded.accept(DungeonCache.from(player));
 
             } catch (Throwable t) {
                 Common.error(t, "Unable to load player data for " + player.getName());
@@ -75,25 +90,37 @@ public class MariaDatabase extends SimpleDatabase implements Database {
         });
     }
 
-    public void saveCache(Player player, Consumer<DungeonCache> callThisWhenDataSaved) {
-        Valid.checkSync("Please call loadCache on the main thread.");
+    private LOAD loadPlayerData(Player player) throws SQLException {
         DungeonCache cache = DungeonCache.from(player);
+        ResultSet playerDataResult = this.query("SELECT * FROM {player_data} WHERE UUID='" + player.getUniqueId() + "'");
 
-        Common.runAsync(() -> {
-            try {
-                this.insert("{table}", SerializedMap.ofArray(
-                        "UUID", player.getUniqueId(),
-                        "Name", player.getName(),
-                        "Updated", TimeUtil.toSQLTimestamp(),
-                        "Enchantable_Items", enchantableItemsToMap(player).toJson(),
-                        "Normal_Items", normalItemsToMap(player).toJson()
-                ));
-                Common.runLater(() -> callThisWhenDataSaved.accept(cache));
+        if (playerDataResult == null || !playerDataResult.next())
+            return LOAD.NO_SUCCESS;
+        else {
 
-            } catch (Throwable t) {
-                Common.error(t, "Unable to save player data for " + player.getName());
-            }
-        });
+            SerializedMap dataMap = SerializedMap.fromJson(playerDataResult.getString("Data"));
+            cache.moneyAmount = dataMap.getDouble("Money");
+
+            return LOAD.SUCCESS;
+        }
+
+    }
+
+    private LOAD loadEnchantableItems(Player player) throws SQLException {
+        ResultSet enchantableResult = this.query("SELECT * FROM {table} WHERE UUID='" + player.getUniqueId() + "'");
+
+
+        if (enchantableResult == null || !enchantableResult.next())
+            return LOAD.NO_SUCCESS;
+        else {
+            SerializedMap enchantedItemMap = SerializedMap.fromJson(enchantableResult.getString("Enchantable_Items"));
+            SerializedMap normalItemMap = SerializedMap.fromJson(enchantableResult.getString("Normal_Items"));
+
+            loadItemsFromMap(player, enchantedItemMap);
+            loadItemsFromMap(player, normalItemMap);
+
+            return LOAD.SUCCESS;
+        }
     }
 
     private void loadItemsFromMap(Player player, SerializedMap itemsMap) {
@@ -120,6 +147,36 @@ public class MariaDatabase extends SimpleDatabase implements Database {
 
             player.getInventory().setItem(pair.getSlot(), compiledItem);
         }
+    }
+
+
+    public void saveCache(Player player, Consumer<DungeonCache> callThisWhenDataSaved) {
+        Valid.checkSync("Please call loadCache on the main thread.");
+        DungeonCache cache = DungeonCache.from(player);
+
+        Common.runAsync(() -> {
+            try {
+                this.insert("{table}", SerializedMap.ofArray(
+                        "UUID", player.getUniqueId(),
+                        "Name", player.getName(),
+                        "Updated", TimeUtil.toSQLTimestamp(),
+                        "Enchantable_Items", enchantableItemsToMap(player).toJson(),
+                        "Normal_Items", normalItemsToMap(player).toJson()
+                ));
+
+                this.insert("{player_data}", SerializedMap.ofArray(
+                        "UUID", player.getUniqueId(),
+                        "Name", player.getName(),
+                        "Updated", TimeUtil.toSQLTimestamp(),
+                        "Data", cache.toSerializedMap().toJson()
+                ));
+
+                Common.runLater(() -> callThisWhenDataSaved.accept(cache));
+
+            } catch (Throwable t) {
+                Common.error(t, "Unable to save player data for " + player.getName());
+            }
+        });
     }
 
     private SerializedMap enchantableItemsToMap(Player player) {
@@ -150,6 +207,12 @@ public class MariaDatabase extends SimpleDatabase implements Database {
         }
 
         return SerializedMap.ofArray("Saved_Items", itemsAtSlotList);
+    }
+
+
+    private enum LOAD {
+        SUCCESS,
+        NO_SUCCESS
     }
 
 

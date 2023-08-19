@@ -1,4 +1,4 @@
-package dev.tablesalt.dungeon.item.impl;
+package dev.tablesalt.dungeon.item.impl.weapon;
 
 import dev.tablesalt.dungeon.event.PlayerGainGoldEvent;
 import dev.tablesalt.dungeon.item.ItemAttribute;

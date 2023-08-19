@@ -12,9 +12,12 @@ public class Keys {
 
     public static final String DEAD_BODY_NAME = "Body Of ";
 
+    public static final String IN_COMBAT = "InCombat";
+
     public static final int ENCHANTING_MENU_SLOT = 41;
 
-    public final List<String> KILL_VERB = Arrays.asList(
+
+    public static final List<String> KILL_VERB = Arrays.asList(
             "murdered", "killed", "slayed", "terminated",
             "assassinated", "annihilated", "eradicated", "liquidated",
             "eliminated", "neutralized", "dispatched", "executed",
@@ -28,4 +31,6 @@ public class Keys {
             "made an end of", "put a stop to", "put an end to", "put down like a rabid dog",
             "put to the sword", "sent to the great beyond"
     );
+
+
 }

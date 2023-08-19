@@ -15,6 +15,7 @@ import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.ServerPlayerConnection;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.Pose;
 import net.minecraft.world.scores.PlayerTeam;
 import net.minecraft.world.scores.Scoreboard;
@@ -28,10 +29,8 @@ import org.bukkit.craftbukkit.v1_20_R1.entity.CraftPlayer;
 import org.bukkit.craftbukkit.v1_20_R1.inventory.CraftItemStack;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.TextDisplay;
-import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
-import org.jetbrains.annotations.Nullable;
 import org.mineacademy.fo.Common;
 import org.mineacademy.fo.menu.model.InventoryDrawer;
 import org.mineacademy.fo.menu.model.ItemCreator;
@@ -39,6 +38,7 @@ import org.mineacademy.fo.menu.model.MenuClickLocation;
 import org.mineacademy.fo.remain.CompMaterial;
 import org.mineacademy.fo.remain.CompMetadata;
 
+import javax.annotation.Nullable;
 import java.util.*;
 
 public class PlayerCorpse {
@@ -113,11 +113,11 @@ public class PlayerCorpse {
     }
 
     public void updateArmorOnBody() {
-        List<Pair<net.minecraft.world.entity.EquipmentSlot, net.minecraft.world.item.ItemStack>> updatedArmor = Arrays.asList(
-                new Pair<>(net.minecraft.world.entity.EquipmentSlot.HEAD, getArmorToDisplay(EquipmentSlot.HEAD)),
-                new Pair<>(net.minecraft.world.entity.EquipmentSlot.CHEST, getArmorToDisplay(EquipmentSlot.CHEST)),
-                new Pair<>(net.minecraft.world.entity.EquipmentSlot.LEGS, getArmorToDisplay(EquipmentSlot.LEGS)),
-                new Pair<>(net.minecraft.world.entity.EquipmentSlot.FEET, getArmorToDisplay(EquipmentSlot.FEET))
+        List<Pair<EquipmentSlot, net.minecraft.world.item.ItemStack>> updatedArmor = Arrays.asList(
+                new Pair<>(net.minecraft.world.entity.EquipmentSlot.HEAD, getArmorToDisplay(org.bukkit.inventory.EquipmentSlot.HEAD)),
+                new Pair<>(net.minecraft.world.entity.EquipmentSlot.CHEST, getArmorToDisplay(org.bukkit.inventory.EquipmentSlot.CHEST)),
+                new Pair<>(net.minecraft.world.entity.EquipmentSlot.LEGS, getArmorToDisplay(org.bukkit.inventory.EquipmentSlot.LEGS)),
+                new Pair<>(net.minecraft.world.entity.EquipmentSlot.FEET, getArmorToDisplay(org.bukkit.inventory.EquipmentSlot.FEET))
         );
 
         for (Player on : Bukkit.getOnlinePlayers()) {
@@ -257,7 +257,7 @@ public class PlayerCorpse {
     }
 
 
-    private net.minecraft.world.item.ItemStack getArmorToDisplay(EquipmentSlot slot) {
+    private net.minecraft.world.item.ItemStack getArmorToDisplay(org.bukkit.inventory.EquipmentSlot slot) {
         return CraftItemStack.asNMSCopy(TBSItemUtil.ArmorSlotMapper.getInstance().getItemStackTypeInArmor(armor, slot));
     }
 

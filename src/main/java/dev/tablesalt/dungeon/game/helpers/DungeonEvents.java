@@ -1,5 +1,6 @@
 package dev.tablesalt.dungeon.game.helpers;
 
+import dev.tablesalt.dungeon.database.DungeonCache;
 import dev.tablesalt.dungeon.database.EnchantableItem;
 import dev.tablesalt.dungeon.database.Keys;
 import dev.tablesalt.dungeon.game.DungeonGame;
@@ -10,7 +11,10 @@ import dev.tablesalt.dungeon.util.DungeonUtil;
 import dev.tablesalt.dungeon.util.TBSItemUtil;
 import dev.tablesalt.dungeon.util.sound.TBSSound;
 import dev.tablesalt.gamelib.game.helpers.GameEvents;
+import org.apache.commons.math3.util.Pair;
+import org.bukkit.Bukkit;
 import org.bukkit.block.Block;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.block.BlockBreakEvent;
@@ -24,6 +28,7 @@ import org.mineacademy.fo.Common;
 import org.mineacademy.fo.PlayerUtil;
 import org.mineacademy.fo.RandomUtil;
 
+import java.util.HashMap;
 import java.util.Map;
 
 public class DungeonEvents extends GameEvents {
@@ -42,7 +47,6 @@ public class DungeonEvents extends GameEvents {
             new PlayerCorpse(player).makeCorpse();
             DungeonUtil.teleportToLobby(player, getGame());
             PlayerUtil.normalize(player, true);
-
         });
     }
 
@@ -74,6 +78,10 @@ public class DungeonEvents extends GameEvents {
         callOnDamaged(victim, null, event);
     }
 
+    @Override
+    protected void onPlayerDamagedByEntity(Entity attacker, Player victim, EntityDamageByEntityEvent event) {
+        startCombat(victim);
+    }
 
     @Override
     protected void onPvP(Player attacker, Player victim, EntityDamageByEntityEvent event) {
@@ -83,6 +91,8 @@ public class DungeonEvents extends GameEvents {
             attribute.onPvP(attacker, victim, Tier.fromInteger(itemItemAttributeMap.get(attribute)), event);
 
         callOnDamaged(victim, event, null);
+        startCombat(victim);
+        startCombat(attacker);
     }
 
     @Override
@@ -91,6 +101,8 @@ public class DungeonEvents extends GameEvents {
 
         for (ItemAttribute attribute : itemItemAttributeMap.keySet())
             attribute.onPvE(attacker, victim, Tier.fromInteger(itemItemAttributeMap.get(attribute)), event);
+
+        startCombat(attacker);
     }
 
     @Override
@@ -119,6 +131,35 @@ public class DungeonEvents extends GameEvents {
                 for (ItemAttribute attribute : victimsEnchantableArmor.getAttributeTierMap().keySet())
                     attribute.onDamaged(victim, Tier.fromInteger(victimsEnchantableArmor.getAttributeTierMap().get(attribute))
                             , attackedEvent == null ? damageEvent : attackedEvent);
+        }
+    }
+
+
+    private final HashMap<Player, Pair<Long, Integer>> playersInCombat = new HashMap<>();
+
+    private void startCombat(Player player) {
+        long currentTime = System.currentTimeMillis();
+
+        updateCombatTask(player);
+
+        int taskId;
+        DungeonCache.from(player).setInCombat(true);
+
+        taskId = Common.runLaterAsync(3 * 20, () -> {
+            playersInCombat.remove(player);
+            DungeonCache.from(player).setInCombat(false);
+
+
+        }).getTaskId();
+
+
+        playersInCombat.put(player, Pair.create(currentTime, taskId));
+    }
+
+    private void updateCombatTask(Player player) {
+        if (playersInCombat.containsKey(player)) {
+            int existingTaskId = playersInCombat.get(player).getSecond();
+            Bukkit.getScheduler().cancelTask(existingTaskId);
         }
     }
 

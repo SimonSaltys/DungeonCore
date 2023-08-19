@@ -37,7 +37,8 @@ public class DungeonScoreboard extends GameScoreboard {
                 "player_spawns", GameUtil.generateColoredGradientNumerical(game.getMaxPlayers(), map.getPlayerSpawnPoints().size()),
                 "extract_regions", GameUtil.generateColoredGradientNumerical(map.getExtractRegionAmount(), map.getExtractRegions().size()),
                 "current_map", map.getName(),
-                "money", formatter.format(cache.getMoney()));
+                "money", formatter.format(cache.getMoney()),
+                "combat_status", cache.isInCombat());
     }
 
     @Override
@@ -54,7 +55,8 @@ public class DungeonScoreboard extends GameScoreboard {
         super.addStartRows();
 
         addRows("",
-                "Gold: &6{money}g");
+                "Gold: &6{money}g",
+                "Combat: {combat_status}");
     }
 
     @Override

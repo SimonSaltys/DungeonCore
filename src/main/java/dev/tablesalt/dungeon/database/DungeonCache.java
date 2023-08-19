@@ -8,6 +8,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.mineacademy.fo.Common;
+import org.mineacademy.fo.collection.SerializedMap;
 import org.mineacademy.fo.remain.Remain;
 
 import javax.annotation.Nullable;
@@ -26,6 +27,8 @@ public class DungeonCache {
     private final UUID uniqueId;
     @Getter
     private final String playerName;
+
+    private boolean isInCombat = false;
 
     private final List<EnchantableItem> enchantableItems = new ArrayList<>();
 
@@ -116,6 +119,14 @@ public class DungeonCache {
         return Collections.unmodifiableList(enchantableItems);
     }
 
+    public void setInCombat(boolean combat) {
+        this.isInCombat = combat;
+    }
+
+    public boolean isInCombat() {
+        return isInCombat;
+    }
+
 
 
     /*----------------------------------------------------------------*/
@@ -145,6 +156,19 @@ public class DungeonCache {
         Player player = Remain.getPlayerByUUID(this.uniqueId);
         return player != null && player.isOnline() ? player : null;
     }
+
+    public SerializedMap toSerializedMap() {
+
+        return SerializedMap.ofArray(
+                "Money", moneyAmount
+        );
+    }
+
+
+
+    /*----------------------------------------------------------------*/
+    /* STATIC METHODS */
+    /*----------------------------------------------------------------*/
 
     /**
      * Return or create new player cache for the given player

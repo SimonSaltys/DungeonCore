@@ -199,6 +199,9 @@ public class EnchantableItem implements ConfigSerializable {
      * as an enchantable item representation.
      */
     public static EnchantableItem fromItemStack(ItemStack item) {
+        if (item == null)
+            return null;
+
         String uuidString = CompMetadata.getMetadata(item, "UUID");
         String tierString = CompMetadata.getMetadata(item, "Tier");
 

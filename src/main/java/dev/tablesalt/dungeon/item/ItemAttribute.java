@@ -1,5 +1,6 @@
 package dev.tablesalt.dungeon.item;
 
+import com.destroystokyo.paper.event.player.PlayerArmorChangeEvent;
 import dev.tablesalt.dungeon.DungeonPlugin;
 import dev.tablesalt.dungeon.database.EnchantableItem;
 import dev.tablesalt.dungeon.event.PlayerGainGoldEvent;
@@ -46,11 +47,9 @@ public abstract class ItemAttribute {
     }
 
     public void onPvE(Player attacker, LivingEntity victim, Tier tier, EntityDamageByEntityEvent event) {
-
     }
 
     public void onClick(Player clicker, Tier tier, PlayerInteractEvent event) {
-
     }
 
     public void onDamaged(Player victim, Tier tier, EntityDamageEvent event) {
@@ -58,6 +57,14 @@ public abstract class ItemAttribute {
     }
 
     public void onGoldGain(Player player, double amountGained, Tier tier, PlayerGainGoldEvent event) {
+    }
+
+    public void onArmorEquip(Player player, PlayerArmorChangeEvent event) {
+
+    }
+
+    public void onArmorTakeOff(Player player, PlayerArmorChangeEvent event) {
+
     }
 
     public boolean isForArmor() {

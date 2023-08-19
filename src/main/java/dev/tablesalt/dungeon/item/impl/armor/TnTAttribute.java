@@ -1,4 +1,4 @@
-package dev.tablesalt.dungeon.item.impl;
+package dev.tablesalt.dungeon.item.impl.armor;
 
 import dev.tablesalt.dungeon.item.ItemAttribute;
 import dev.tablesalt.dungeon.item.Rarity;
@@ -8,35 +8,36 @@ import lombok.Getter;
 
 import java.util.List;
 
-public final class AttributeTestThree extends ItemAttribute {
+public final class TnTAttribute extends ItemAttribute {
 
     @Getter
-    private static final AttributeTestThree instance = new AttributeTestThree();
+    private static final TnTAttribute instance = new TnTAttribute();
 
     @Getter
     private final Rarity rarity;
 
-    private AttributeTestThree() {
+    private TnTAttribute() {
         super();
 
-        this.rarity = Rarity.EPIC;
+        this.rarity = Rarity.MYTHIC;
     }
 
     @Override
     public String getName() {
-        return "Attribute Three";
+        return "TNT";
     }
 
     @Override
     public List<String> getAttributeLore(Tier tier) {
-        return List.of(new String[]{ " ",
+        return List.of(new String[]{" ",
                 TBSItemUtil.makeItemTitle(getName() + " " + tier.getAsRomanNumeral()),
-                rarity.getFormattedName() + "&7A Simple attribute that does nothing",
-                "&7but add &b" + (tier.getAsInteger() + 5) + " &7of some stat!",
+                rarity.getFormattedName() + "&7Work in progress",
                 " "
         });
     }
 
-
-
+    @Override
+    public boolean isForArmor() {
+        return true;
+    }
 }

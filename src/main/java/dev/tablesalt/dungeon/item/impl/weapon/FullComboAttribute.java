@@ -1,4 +1,4 @@
-package dev.tablesalt.dungeon.item.impl;
+package dev.tablesalt.dungeon.item.impl.weapon;
 
 import dev.tablesalt.dungeon.item.ItemAttribute;
 import dev.tablesalt.dungeon.item.Rarity;
@@ -8,15 +8,18 @@ import lombok.Getter;
 
 import java.util.List;
 
-public final class AttributeTestFour extends ItemAttribute {
+/**
+ * rewards? player for hitting 3+ consecutive hits on target
+ */
+public final class FullComboAttribute extends ItemAttribute {
 
     @Getter
-    private static final AttributeTestFour instance = new AttributeTestFour();
+    private static final FullComboAttribute instance = new FullComboAttribute();
 
     @Getter
     private final Rarity rarity;
 
-    private AttributeTestFour() {
+    private FullComboAttribute() {
         super();
 
         this.rarity = Rarity.RARE;
@@ -24,12 +27,12 @@ public final class AttributeTestFour extends ItemAttribute {
 
     @Override
     public String getName() {
-        return "Attribute Four";
+        return "&bFull Combo";
     }
 
     @Override
     public List<String> getAttributeLore(Tier tier) {
-        return List.of(new String[]{ " ",
+        return List.of(new String[]{" ",
                 TBSItemUtil.makeItemTitle(getName() + " " + tier.getAsRomanNumeral()),
                 rarity.getFormattedName() + "&7A Simple attribute that does nothing",
                 "&7but add &b" + (tier.getAsInteger() + 5) + " &7of some stat!",
@@ -37,6 +40,8 @@ public final class AttributeTestFour extends ItemAttribute {
         });
     }
 
-
-
+    @Override
+    public boolean isForArmor() {
+        return false;
+    }
 }

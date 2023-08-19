@@ -11,7 +11,6 @@ import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
-import org.mineacademy.fo.Common;
 import org.mineacademy.fo.RandomUtil;
 import org.mineacademy.fo.menu.model.ItemCreator;
 import org.mineacademy.fo.remain.CompMaterial;
@@ -97,10 +96,10 @@ public class TBSItemUtil {
         attributesToChoose.removeIf(item.getAttributeTierMap().keySet()::contains);
 
         //remove the armor attributes if the item is a weapon
-        Common.broadcast(isArmor(item.getMaterial()) + " item is armor?");
-
         if (isArmor(item.getMaterial()))
             attributesToChoose.removeIf(attribute -> !attribute.isForArmor());
+        else
+            attributesToChoose.removeIf(attribute -> attribute.isForArmor());
 
 
         return attributesToChoose;

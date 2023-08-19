@@ -31,6 +31,7 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
 import org.mineacademy.fo.Common;
+import org.mineacademy.fo.ItemUtil;
 import org.mineacademy.fo.menu.Menu;
 import org.mineacademy.fo.menu.model.InventoryDrawer;
 import org.mineacademy.fo.menu.model.ItemCreator;
@@ -472,7 +473,7 @@ public class EnchantingMenu extends TBSMenu {
                 return Component.text(Common.colorize(MessageUtil.makeInfo(" &7" + player.getName() + " just rolled a cool ")))
 
                         .append(Component.text()
-                                .content(Rarity.MYTHIC + " " + item.getName() + " ").color(mainColor)
+                                .content(Rarity.MYTHIC + " " + ItemUtil.bountifyCapitalized(item.getName()) + " ").color(mainColor)
                                 .hoverEvent(HoverEvent.showText(Component.text().content(Common.colorize(loreToString()))))
                                 .append(Component.text(item.getCurrentTier().getAsRomanNumeral(), Style.style(mainColor, TextDecoration.BOLD))).build());
 
