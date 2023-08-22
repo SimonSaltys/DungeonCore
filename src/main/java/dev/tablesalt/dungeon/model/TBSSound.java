@@ -1,4 +1,4 @@
-package dev.tablesalt.dungeon.util.sound;
+package dev.tablesalt.dungeon.model;
 
 
 import dev.tablesalt.gamelib.game.utils.SimpleRunnable;
@@ -42,8 +42,6 @@ public class TBSSound {
         @Override
         public void playTo(Player player) {
             CompSound.ITEM_PICKUP.play(player, 1, RandomUtils.nextFloat(0.8F, 1.2F));
-
-
         }
     }
 
@@ -189,10 +187,10 @@ public class TBSSound {
         }
     }
 
-    public final class Scanned implements GameSound {
+    public final class Debuffed implements GameSound {
 
         @Getter
-        private static final Scanned instance = new Scanned();
+        private static final Debuffed instance = new Debuffed();
 
         @Override
         public void playTo(Player player) {
@@ -200,10 +198,10 @@ public class TBSSound {
                 @Override
                 protected void onTick() {
                     super.onTick();
-                    CompSound.BLOCK_AZALEA_LEAVES_HIT.play(player, 1, 0.7F);
+                    CompSound.BLOCK_AZALEA_LEAVES_HIT.play(player, 1, RandomUtils.nextFloat(0.7F, 0.9F));
                 }
             }.launch();
-            CompSound.BLAZE_HIT.play(player, 1, 0);
+            CompSound.ENTITY_POLAR_BEAR_HURT.play(player, 1, RandomUtils.nextFloat(0.7F, 0.9F));
 
         }
     }

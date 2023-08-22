@@ -1,7 +1,5 @@
 package dev.tablesalt.dungeon.menu;
 
-import dev.tablesalt.dungeon.util.sound.TBSSound;
-import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.DragType;
 import org.bukkit.inventory.ItemStack;
@@ -10,7 +8,6 @@ import org.mineacademy.fo.menu.Menu;
 import org.mineacademy.fo.menu.model.ItemCreator;
 import org.mineacademy.fo.remain.CompMaterial;
 
-import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -39,17 +36,17 @@ public class TBSMenu extends Menu {
 
     protected final void restart() {
 
-            List<ItemStack> itemsToPutBack = new ArrayList<>();
+        List<ItemStack> itemsToPutBack = new ArrayList<>();
 
-            for (int i : slotsToPersist)
-                itemsToPutBack.add(getInventory().getItem(i));
+        for (int i : slotsToPersist)
+            itemsToPutBack.add(getInventory().getItem(i));
 
-            onRestart();
+        onRestart();
 
-            restartMenu();
+        restartMenu();
 
-            for (int i = 0; i < slotsToPersist.size(); i++)
-                getInventory().setItem(slotsToPersist.get(i),itemsToPutBack.get(i));
+        for (int i = 0; i < slotsToPersist.size(); i++)
+            getInventory().setItem(slotsToPersist.get(i), itemsToPutBack.get(i));
 
     }
 

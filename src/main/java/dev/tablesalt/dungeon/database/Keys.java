@@ -29,7 +29,7 @@ public class Keys {
             "took out", "annulled", "cancelled", "erased from existence",
             "brought down", "cut down", "laid to rest", "wiped off the face of the earth",
             "made an end of", "put a stop to", "put an end to", "put down like a rabid dog",
-            "put to the sword", "sent to the great beyond"
+            "put to the sword", "sent to the great beyond", "forced to retire early"
     );
 
 

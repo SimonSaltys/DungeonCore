@@ -4,7 +4,7 @@ import dev.tablesalt.dungeon.DungeonSettings;
 import dev.tablesalt.dungeon.game.DungeonGame;
 import dev.tablesalt.dungeon.maps.DungeonMap;
 import dev.tablesalt.dungeon.maps.spawnpoints.ExtractRegion;
-import dev.tablesalt.dungeon.util.DungeonLeaveReason;
+import dev.tablesalt.dungeon.model.DungeonLeaveReason;
 import dev.tablesalt.gamelib.game.helpers.PlayerLeaver;
 import org.bukkit.entity.Player;
 

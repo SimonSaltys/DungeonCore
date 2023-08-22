@@ -11,6 +11,7 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
+import org.mineacademy.fo.Common;
 import org.mineacademy.fo.ReflectionUtil;
 
 import java.util.*;
@@ -59,16 +60,21 @@ public abstract class ItemAttribute {
     public void onGoldGain(Player player, double amountGained, Tier tier, PlayerGainGoldEvent event) {
     }
 
-    public void onArmorEquip(Player player, PlayerArmorChangeEvent event) {
+    public void onArmorEquip(Player player, Tier tier, PlayerArmorChangeEvent event) {
 
     }
 
-    public void onArmorTakeOff(Player player, PlayerArmorChangeEvent event) {
+    public void onArmorTakeOff(Player player, Tier tier, PlayerArmorChangeEvent event) {
 
     }
 
     public boolean isForArmor() {
         return false;
+    }
+
+    @Override
+    public String toString() {
+        return getName();
     }
 
     /*----------------------------------------------------------------*/
@@ -93,7 +99,7 @@ public abstract class ItemAttribute {
 
     public static ItemAttribute fromName(String name) {
         for (ItemAttribute attribute : getRegisteredAttributes())
-            if (attribute.getName().equals(name))
+            if (Common.stripColors(attribute.getName()).equalsIgnoreCase(Common.stripColors(name)))
                 return attribute;
         return null;
     }

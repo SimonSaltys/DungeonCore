@@ -38,11 +38,11 @@ public class EnchantableItem implements ConfigSerializable {
     private final UUID uuid;
 
     public EnchantableItem(UUID uuid) {
-        this("", Material.AIR, new HashMap<>(), Tier.NONE, uuid);
+        this(uuid, "", Material.AIR, new HashMap<>(), Tier.NONE);
     }
 
 
-    public EnchantableItem(String name, Material material, Map<ItemAttribute, Integer> attributeTierMap, Tier tier, UUID uuid) {
+    public EnchantableItem(UUID uuid, String name, Material material, Map<ItemAttribute, Integer> attributeTierMap, Tier tier) {
         this.name = name;
         this.material = material;
         this.attributeTierMap = attributeTierMap;
@@ -142,7 +142,7 @@ public class EnchantableItem implements ConfigSerializable {
     public ItemStack compileToItemStack() {
         String formattedName = getFormattedName();
 
-        ItemStack compiledItem = ItemCreator.of(CompMaterial.fromMaterial(material), formattedName).lore(getLores()).make();
+        ItemStack compiledItem = ItemCreator.of(CompMaterial.fromMaterial(material), formattedName).lore(getLores()).unbreakable(true).hideTags(true).make();
 
 
         return setNBTOnItem(compiledItem);
@@ -241,7 +241,7 @@ public class EnchantableItem implements ConfigSerializable {
         UUID uuid = map.getUUID("UUID");
         Map<ItemAttribute, Integer> attributes = nameToItemMap(map.getMap("Attributes", String.class, Integer.class));
 
-        return new EnchantableItem(name, material, attributes, currentTier, uuid);
+        return new EnchantableItem(uuid, name, material, attributes, currentTier);
     }
 
     public static Map<ItemAttribute, Integer> nameToItemMap(HashMap<String, Integer> attributes) {

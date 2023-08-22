@@ -23,6 +23,7 @@ public class OutOfDungeonListener implements Listener {
 
     @EventHandler
     public void onPlayerLeaveGame(PlayerLeaveGameEvent event) {
+
         HubScoreboard.displayTo(event.getPlayer());
     }
 

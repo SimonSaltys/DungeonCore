@@ -1,8 +1,10 @@
 package dev.tablesalt.dungeon.database;
 
+import dev.tablesalt.dungeon.DungeonPlugin;
 import dev.tablesalt.dungeon.util.TBSItemUtil;
 import lombok.Getter;
 import org.apache.commons.math3.util.Pair;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.mineacademy.fo.Common;
@@ -11,6 +13,7 @@ import org.mineacademy.fo.Valid;
 import org.mineacademy.fo.collection.SerializedMap;
 import org.mineacademy.fo.database.SimpleDatabase;
 import org.mineacademy.fo.model.ConfigSerializable;
+import org.mineacademy.fo.remain.Remain;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -28,6 +31,13 @@ public class MariaDatabase extends SimpleDatabase implements Database {
 
     private MariaDatabase() {
 
+    }
+
+    public static void saveAll() {
+        for (Player player : Remain.getOnlinePlayers())
+            instance.saveCache(player, cache -> {
+                //no action
+            });
     }
 
     public void connect() {
@@ -78,11 +88,11 @@ public class MariaDatabase extends SimpleDatabase implements Database {
         Common.runAsync(() -> {
             try {
 
-                LOAD loadedItems = loadEnchantableItems(player);
-                LOAD dataLoaded = loadPlayerData(player);
+                loadEnchantableItems(player);
+                loadPlayerData(player);
 
-                if (loadedItems == LOAD.NO_SUCCESS && dataLoaded == LOAD.NO_SUCCESS)
-                    callThisWhenDataLoaded.accept(DungeonCache.from(player));
+                Common.runLater(() -> callThisWhenDataLoaded.accept(DungeonCache.from(player)));
+
 
             } catch (Throwable t) {
                 Common.error(t, "Unable to load player data for " + player.getName());
@@ -154,7 +164,7 @@ public class MariaDatabase extends SimpleDatabase implements Database {
         Valid.checkSync("Please call loadCache on the main thread.");
         DungeonCache cache = DungeonCache.from(player);
 
-        Common.runAsync(() -> {
+        Bukkit.getScheduler().runTaskAsynchronously(DungeonPlugin.getInstance(), () -> {
             try {
                 this.insert("{table}", SerializedMap.ofArray(
                         "UUID", player.getUniqueId(),

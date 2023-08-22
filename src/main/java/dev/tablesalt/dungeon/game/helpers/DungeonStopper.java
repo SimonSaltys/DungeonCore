@@ -2,6 +2,7 @@ package dev.tablesalt.dungeon.game.helpers;
 
 import dev.tablesalt.dungeon.game.DungeonGame;
 import dev.tablesalt.dungeon.maps.spawnpoints.ExtractRegion;
+import dev.tablesalt.dungeon.nms.PlayerCorpse;
 import dev.tablesalt.dungeon.util.DungeonUtil;
 import dev.tablesalt.gamelib.game.helpers.Stopper;
 
@@ -21,7 +22,7 @@ public class DungeonStopper extends Stopper {
         DungeonUtil.resetSpawnPoints(game);
         resetExtractLocations();
         DungeonUtil.despawnLoot(game);
-//        PlayerCorpse.removeAllCorpses();
+        PlayerCorpse.removeAllCorpses();
     }
 
 

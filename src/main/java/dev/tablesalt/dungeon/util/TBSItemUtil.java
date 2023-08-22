@@ -31,12 +31,11 @@ public class TBSItemUtil {
 
     public EnchantableItem makeEnchantableArmor() {
 
-        return new EnchantableItem(
+        return new EnchantableItem(UUID.randomUUID(),
                 CompMaterial.LEATHER_CHESTPLATE.name(),
                 Material.LEATHER_CHESTPLATE,
                 new HashMap<>(),
-                Tier.NONE,
-                UUID.randomUUID());
+                Tier.NONE);
     }
 
     /**

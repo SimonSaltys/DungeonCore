@@ -1,4 +1,4 @@
-package dev.tablesalt.dungeon.util;
+package dev.tablesalt.dungeon.model;
 
 import dev.tablesalt.gamelib.game.utils.Message;
 import lombok.Getter;

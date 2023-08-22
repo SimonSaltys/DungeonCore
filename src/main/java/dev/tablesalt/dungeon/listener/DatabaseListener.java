@@ -10,6 +10,7 @@ import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.mineacademy.fo.Common;
 import org.mineacademy.fo.PlayerUtil;
 
 public class DatabaseListener implements Listener {
@@ -20,6 +21,7 @@ public class DatabaseListener implements Listener {
         Player player = event.getPlayer();
 
         MariaDatabase.getInstance().loadCache(player, cache -> {
+            Common.broadcast("LOADING cache for " + player.getName());
         });
     }
 
@@ -29,6 +31,7 @@ public class DatabaseListener implements Listener {
 
         MariaDatabase.getInstance().saveCache(player, cache -> {
             PlayerUtil.normalize(player, true);
+            Common.broadcast("SAVING cache for " + player.getName());
         });
     }
 

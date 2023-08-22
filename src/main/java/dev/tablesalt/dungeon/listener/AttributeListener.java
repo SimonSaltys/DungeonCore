@@ -32,11 +32,11 @@ public class AttributeListener implements Listener {
 
         if (armorToEquip == null && armorToRemove != null)
             for (ItemAttribute attribute : armorToRemove.getAttributeTierMap().keySet())
-                attribute.onArmorTakeOff(player, event);
+                attribute.onArmorTakeOff(player, Tier.fromInteger(armorToRemove.getAttributeTierMap().get(attribute)), event);
 
         if (armorToEquip != null)
             for (ItemAttribute attribute : armorToEquip.getAttributeTierMap().keySet())
-                attribute.onArmorEquip(player, event);
+                attribute.onArmorEquip(player, Tier.fromInteger(armorToEquip.getAttributeTierMap().get(attribute)), event);
 
 
     }

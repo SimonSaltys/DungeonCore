@@ -6,10 +6,10 @@ import dev.tablesalt.dungeon.database.Keys;
 import dev.tablesalt.dungeon.game.DungeonGame;
 import dev.tablesalt.dungeon.item.ItemAttribute;
 import dev.tablesalt.dungeon.item.Tier;
+import dev.tablesalt.dungeon.model.TBSSound;
 import dev.tablesalt.dungeon.nms.PlayerCorpse;
 import dev.tablesalt.dungeon.util.DungeonUtil;
 import dev.tablesalt.dungeon.util.TBSItemUtil;
-import dev.tablesalt.dungeon.util.sound.TBSSound;
 import dev.tablesalt.gamelib.game.helpers.GameEvents;
 import org.apache.commons.math3.util.Pair;
 import org.bukkit.Bukkit;
@@ -36,9 +36,9 @@ public class DungeonEvents extends GameEvents {
         super(game);
     }
 
-
     @Override
     protected void onDeath(Player player, EntityDamageEvent event) {
+
         PlayerCorpse foundCorpse = PlayerCorpse.getFromPlayerName(player.getName());
         if (foundCorpse != null)
             PlayerCorpse.removeCorpse(foundCorpse);
