@@ -18,18 +18,13 @@ public class MendingMossAttribute extends ItemAttribute {
     @Getter
     private static final MendingMossAttribute instance = new MendingMossAttribute();
 
-    private static final HashMap<DungeonCache, Tier> playersWithAttribute = new HashMap<>();
-
-
-    private final SimpleRunnable regenRunnable = new RegenRunnable();
+    private static final HashMap<Player, RegenRunnable> playersRegenerating = new HashMap<>();
 
 
     @Getter
     private final Rarity rarity = Rarity.RARE;
 
     private MendingMossAttribute() {
-        if (!regenRunnable.isRunning())
-            regenRunnable.launch();
     }
 
     @Override
@@ -39,12 +34,15 @@ public class MendingMossAttribute extends ItemAttribute {
 
     @Override
     public void onArmorEquip(Player player, Tier tier, PlayerArmorChangeEvent event) {
-
+        playersRegenerating.put(player, new RegenRunnable(tier, DungeonCache.from(player)));
     }
 
     @Override
     public void onArmorTakeOff(Player player, Tier tier, PlayerArmorChangeEvent event) {
+        RegenRunnable regenRunnable = playersRegenerating.get(player);
 
+        if (regenRunnable != null)
+            regenRunnable.end();
     }
 
     @Override
@@ -72,20 +70,29 @@ public class MendingMossAttribute extends ItemAttribute {
     }
 
 
-    private class RegenRunnable extends SimpleRunnable {
+    private static class RegenRunnable extends SimpleRunnable {
 
-        public RegenRunnable() {
+        private final Tier tier;
+
+        private final DungeonCache cache;
+
+        public RegenRunnable(Tier tier, DungeonCache cache) {
             super(-1, 0, 10);
+            this.tier = tier;
+            this.cache = cache;
         }
 
         @Override
         protected void onTick() {
-            //todo check if player is not in combat then regen them
+
+            if (!cache.isInCombat()) {
+                //todo regen the player play some nice sounds and particles
+            }
         }
 
         @Override
         protected void onEnd() {
-
+            playersRegenerating.remove(cache.toPlayer());
         }
     }
 
