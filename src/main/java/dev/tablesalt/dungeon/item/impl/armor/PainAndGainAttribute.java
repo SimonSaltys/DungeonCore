@@ -40,7 +40,7 @@ public final class PainAndGainAttribute extends ItemAttribute {
         return List.of(new String[]{" ",
                 TBSItemUtil.makeItemTitle(getName() + " " + tier.getAsRomanNumeral()),
                 rarity.getFormattedName() + "&7When you get hit",
-                "&7you gain &b" + goldGainedOnHit(tier),
+                "&7you gain &b" + goldGainedOnHit(tier) + " &7gold",
                 " "
         });
     }

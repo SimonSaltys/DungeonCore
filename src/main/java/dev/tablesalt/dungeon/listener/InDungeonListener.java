@@ -5,6 +5,7 @@ import dev.tablesalt.dungeon.database.DungeonCache;
 import dev.tablesalt.dungeon.database.Keys;
 import dev.tablesalt.dungeon.model.DungeonLeaveReason;
 import dev.tablesalt.dungeon.model.TBSSound;
+import dev.tablesalt.dungeon.nms.PlayerCorpse;
 import dev.tablesalt.dungeon.util.EntityUtil;
 import dev.tablesalt.gamelib.event.PlayerLeaveGameEvent;
 import dev.tablesalt.gamelib.players.PlayerCache;
@@ -69,15 +70,16 @@ public class InDungeonListener implements Listener {
             Block block = event.getClickedBlock();
             TextDisplay display = EntityUtil.getClosestTextDisplay(block.getLocation(), 2);
 
-            if (display == null || !CompMetadata.hasMetadata(display, Keys.DEAD_BODY_NAME)) {
-            }
+            if (display == null || !CompMetadata.hasMetadata(display, Keys.DEAD_BODY_NAME))
+                return;
 
-//            PlayerCorpse corpseToLoot = PlayerCorpse.getFromPlayerName(CompMetadata.getMetadata(display, Keys.DEAD_BODY_NAME));
 
-//            if (corpseToLoot == null)
-//                return;
+            PlayerCorpse corpseToLoot = PlayerCorpse.getFromPlayerName(CompMetadata.getMetadata(display, Keys.DEAD_BODY_NAME));
 
-//            corpseToLoot.displayLootTo(player);
+            if (corpseToLoot == null)
+                return;
+
+            corpseToLoot.displayLootTo(player);
         }
 
     }

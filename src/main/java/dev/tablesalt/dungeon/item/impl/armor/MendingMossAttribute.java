@@ -1,15 +1,17 @@
 package dev.tablesalt.dungeon.item.impl.armor;
 
 import com.destroystokyo.paper.event.player.PlayerArmorChangeEvent;
+import dev.tablesalt.dungeon.collection.Cooldown;
 import dev.tablesalt.dungeon.database.DungeonCache;
 import dev.tablesalt.dungeon.item.ItemAttribute;
 import dev.tablesalt.dungeon.item.Rarity;
 import dev.tablesalt.dungeon.item.Tier;
-import dev.tablesalt.dungeon.model.TBSSound;
+import dev.tablesalt.dungeon.nms.HealthPackets;
 import dev.tablesalt.dungeon.util.TBSItemUtil;
 import dev.tablesalt.gamelib.game.utils.SimpleRunnable;
 import lombok.Getter;
 import org.bukkit.entity.Player;
+import org.mineacademy.fo.model.SimpleTime;
 
 import java.util.HashMap;
 import java.util.List;
@@ -20,6 +22,8 @@ public class MendingMossAttribute extends ItemAttribute {
     private static final MendingMossAttribute instance = new MendingMossAttribute();
 
     private static final HashMap<Player, RegenRunnable> playersRegenerating = new HashMap<>();
+
+    private static final Cooldown regenCooldown = new Cooldown();
 
 
     @Getter
@@ -35,14 +39,17 @@ public class MendingMossAttribute extends ItemAttribute {
 
     @Override
     public void onArmorEquip(Player player, Tier tier, PlayerArmorChangeEvent event) {
-        playersRegenerating.put(player, new RegenRunnable(tier, DungeonCache.from(player)));
+        RegenRunnable regenRunnable = new RegenRunnable(tier, DungeonCache.from(player));
+        playersRegenerating.put(player, regenRunnable);
+
+        regenRunnable.launch();
     }
 
     @Override
     public void onArmorTakeOff(Player player, Tier tier, PlayerArmorChangeEvent event) {
         RegenRunnable regenRunnable = playersRegenerating.get(player);
 
-        if (regenRunnable != null)
+        if (regenRunnable != null && regenRunnable.isRunning())
             regenRunnable.end();
     }
 
@@ -56,21 +63,6 @@ public class MendingMossAttribute extends ItemAttribute {
         });
     }
 
-
-    private static double healthToRegen(Tier tier) {
-        if (tier == Tier.ONE)
-            return 8;
-
-        if (tier == Tier.TWO)
-            return 12;
-
-        if (tier == Tier.THREE)
-            return 15;
-
-        return 5;
-    }
-
-
     private static class RegenRunnable extends SimpleRunnable {
 
         private final Tier tier;
@@ -78,6 +70,11 @@ public class MendingMossAttribute extends ItemAttribute {
         private final DungeonCache cache;
 
         private final Player player;
+
+        private final double healthToRegenPerTick = 0.5;
+
+        private double healthRegained = 0;
+
 
         public RegenRunnable(Tier tier, DungeonCache cache) {
             super(-1, 0, 10);
@@ -87,12 +84,30 @@ public class MendingMossAttribute extends ItemAttribute {
         }
 
         @Override
-        protected void onTick() {
+        protected void onStart() {
+        }
 
-            if (!cache.isInCombat()) {
-                if (player.getHealth() < 20) {
-                    TBSSound.Buffed.getInstance().playTo(player);
-                    player.setHealth(player.getHealth() + healthToRegen(tier));
+        @Override
+        protected void onTick() {
+            if (!cache.isInCombat() && !regenCooldown.hasTimeLeft(player)) {
+
+                if (healthRegained < healthToRegen(tier)) {
+
+                    double heathGainedOnTick = player.getHealth() + healthToRegenPerTick;
+
+                    //we don't want to overfill the players default max health
+                    if (heathGainedOnTick >= 20)
+                        return;
+
+                    HealthPackets.sendRegenPacket(player, heathGainedOnTick);
+                    player.setHealth(heathGainedOnTick);
+                    healthRegained += healthToRegenPerTick;
+
+
+                    if (healthRegained >= healthToRegen(tier)) {
+                        regenCooldown.startCooldown(player, SimpleTime.from("5 seconds"));
+                        healthRegained = 0;
+                    }
                 }
             }
         }
@@ -100,8 +115,27 @@ public class MendingMossAttribute extends ItemAttribute {
         @Override
         protected void onEnd() {
             playersRegenerating.remove(cache.toPlayer());
+            healthRegained = 0;
         }
     }
 
 
+    private static double healthToRegen(Tier tier) {
+        if (tier == Tier.ONE)
+            return 6;
+
+        if (tier == Tier.TWO)
+            return 8;
+
+        if (tier == Tier.THREE)
+            return 10;
+
+        return 3;
+    }
+
+
+    @Override
+    public boolean isForArmor() {
+        return true;
+    }
 }

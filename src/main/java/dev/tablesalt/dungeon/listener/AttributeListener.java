@@ -5,6 +5,7 @@ import dev.tablesalt.dungeon.database.EnchantableItem;
 import dev.tablesalt.dungeon.event.PlayerGainGoldEvent;
 import dev.tablesalt.dungeon.item.ItemAttribute;
 import dev.tablesalt.dungeon.item.Tier;
+import dev.tablesalt.gamelib.players.PlayerCache;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -24,6 +25,11 @@ public class AttributeListener implements Listener {
     @EventHandler
     public void onArmorEquip(PlayerArmorChangeEvent event) {
         Player player = event.getPlayer();
+
+        PlayerCache cache = PlayerCache.from(player);
+
+        if (!cache.getGameIdentifier().hasGame())
+            return;
 
 
         EnchantableItem armorToEquip = EnchantableItem.fromItemStack(event.getNewItem());

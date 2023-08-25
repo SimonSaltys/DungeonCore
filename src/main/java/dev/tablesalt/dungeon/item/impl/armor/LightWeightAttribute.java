@@ -82,8 +82,8 @@ public final class LightWeightAttribute extends ItemAttribute {
         protected void onTick() {
             for (DungeonCache cache : playersWithAttribute.keySet())
                 if (!cache.isInCombat())
-                    cache.toPlayer().addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 100,
-                            playersWithAttribute.get(cache).getAsInteger(), false));
+                    cache.toPlayer().addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 200,
+                            playersWithAttribute.get(cache).getAsInteger() - 1, false));
                 else
                     cache.toPlayer().removePotionEffect(PotionEffectType.SPEED);
         }

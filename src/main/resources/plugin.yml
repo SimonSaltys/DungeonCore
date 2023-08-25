@@ -3,7 +3,7 @@ version: ${project.version}
 main: ${main.class}
 api-version: 1.13
 
-depend:
+depend: [ EffectLib ]
 
 libraries:
   - org.openjdk.nashorn:nashorn-core:15.4

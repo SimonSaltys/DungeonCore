@@ -58,7 +58,6 @@
         </dependency>
 
 
-
         <dependency>
             <groupId>net.kyori</groupId>
             <artifactId>adventure-api</artifactId>
@@ -77,7 +76,6 @@
             <artifactId>Foundation</artifactId>
             <version>${foundation.version}</version>
         </dependency>
-
 
 
         <!-- https://mvnrepository.com/artifact/org.mariadb.jdbc/mariadb-java-client -->
@@ -165,9 +163,9 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
                 <configuration>
-<!--                    <outputDirectory>-->
-<!--                        C:\Users\simon\Desktop\Main\MinecraftPlugins\DevelopmentServer\plugins-->
-<!--                    </outputDirectory>-->
+                    <outputDirectory>
+                        C:\Users\simon\Desktop\Main\MinecraftPlugins\DevelopmentServer\plugins
+                    </outputDirectory>
                 </configuration>
                 <!-- Change version to the latest one from
                      https://mvnrepository.com/artifact/org.apache.maven.plugins/maven-jar-plugin -->
@@ -188,7 +186,6 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
-
                 <!-- Change version to the latest one from
                      https://mvnrepository.com/artifact/org.apache.maven.plugins/maven-shade-plugin -->
                 <version>3.4.1</version>
@@ -207,12 +204,15 @@
                         <includes>
                             <include>dev.tablesalt:gameLib*</include>
                             <include>${foundation.path}:Foundation*</include>
+                            <include>com.elmakers.mine.bukkit:Effect*</include>
                         </includes>
                     </artifactSet>
                     <relocations>
                         <relocation>
                             <pattern>de.slikey</pattern>
-                            <shadedPattern>${project.groupId}.${project.artifactId}.effectlib</shadedPattern>
+                            <shadedPattern>
+                                ${project.groupId}.${project.artifactId}.effectlib
+                            </shadedPattern>
                         </relocation>
                         <relocation>
                             <pattern>org.mineacademy.${project.artifactId}.fo

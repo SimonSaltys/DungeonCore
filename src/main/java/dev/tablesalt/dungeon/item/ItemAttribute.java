@@ -38,6 +38,11 @@ public abstract class ItemAttribute {
 
     public abstract List<String> getAttributeLore(Tier tier);
 
+    //start the runnables and such.
+    public void onGameJoin(Player player) {
+
+    }
+
 
     /*----------------------------------------------------------------*/
     /* OVERRIDABLE LOGIC */

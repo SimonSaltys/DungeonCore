@@ -52,6 +52,15 @@ public class EnchantableItem implements ConfigSerializable {
         this.uuid = uuid;
     }
 
+    public static EnchantableItem makeArmor() {
+        return new EnchantableItem(UUID.randomUUID(), "Tunic", Material.LEATHER_CHESTPLATE, new HashMap<>(), Tier.NONE);
+    }
+
+    public static EnchantableItem makeWeapon() {
+        return new EnchantableItem(UUID.randomUUID(), "Sword", Material.GOLDEN_SWORD, new HashMap<>(), Tier.NONE);
+
+    }
+
     @Override
     public SerializedMap serialize() {
         return SerializedMap.ofArray(

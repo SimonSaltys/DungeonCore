@@ -1,5 +1,6 @@
 package dev.tablesalt.dungeon.model.effects;
 
+
 import de.slikey.effectlib.EffectManager;
 import dev.tablesalt.dungeon.DungeonPlugin;
 import dev.tablesalt.gamelib.game.utils.MessageUtil;
@@ -22,11 +23,6 @@ public final class Effects {
     public static void disable() {
         effectManager.dispose();
     }
-
-
-
-
-
 
 
 }
