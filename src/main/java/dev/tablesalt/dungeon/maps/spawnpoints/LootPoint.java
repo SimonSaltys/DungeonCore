@@ -101,7 +101,7 @@ public class LootPoint extends SpawnPoint {
                 int amount = RandomUtils.nextInt(1, 10);
                 itemToAdd = ItemCreator.of(CompMaterial.GOLD_NUGGET,
                         ChatUtil.generateGradient("Gold Nugget", CompChatColor.YELLOW,CompChatColor.GOLD))
-                        .amount(amount).lore("","&7Pickup to gain &6" + amount * DungeonStaticSettings.Loot.moneyPerNugget + "g").make();
+                        .amount(amount).lore("","&7Pickup to gain &6" + amount * DungeonStaticSettings.Loot.MONEY_PER_NUGGET + "g").make();
                 goldAdded++;
 
             } if (itemToAdd == null)

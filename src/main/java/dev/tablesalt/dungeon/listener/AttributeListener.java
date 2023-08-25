@@ -5,21 +5,30 @@ import dev.tablesalt.dungeon.database.EnchantableItem;
 import dev.tablesalt.dungeon.event.PlayerGainGoldEvent;
 import dev.tablesalt.dungeon.item.ItemAttribute;
 import dev.tablesalt.dungeon.item.Tier;
+import dev.tablesalt.dungeon.util.TBSItemUtil;
+import dev.tablesalt.gamelib.event.PlayerJoinGameEvent;
 import dev.tablesalt.gamelib.players.PlayerCache;
+import org.bukkit.entity.Cod;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.inventory.ItemStack;
 
 import java.util.Map;
+import java.util.function.BiConsumer;
 
 public class AttributeListener implements Listener {
 
     @EventHandler
     public void onPlayerGainGold(PlayerGainGoldEvent event) {
-        Map<ItemAttribute, Integer> itemItemAttributeMap = ItemAttribute.getAttributesOnMainHandItem(event.getPlayer());
+        Player player = event.getPlayer();
+        EnchantableItem item = EnchantableItem.fromItemStack(player.getInventory().getItemInMainHand());
 
-        for (ItemAttribute attribute : itemItemAttributeMap.keySet())
-            attribute.onGoldGain(event.getPlayer(), event.getAmountGained(), Tier.fromInteger(itemItemAttributeMap.get(attribute)), event);
+        if (item == null)
+            return;
+
+        item.forAllAttributes(((itemAttribute, tier)
+                -> itemAttribute.onGoldGain(player,event.getAmountGained(),tier,event)));
     }
 
     @EventHandler
@@ -31,19 +40,32 @@ public class AttributeListener implements Listener {
         if (!cache.getGameIdentifier().hasGame())
             return;
 
-
         EnchantableItem armorToEquip = EnchantableItem.fromItemStack(event.getNewItem());
         EnchantableItem armorToRemove = EnchantableItem.fromItemStack(event.getOldItem());
 
-
         if (armorToEquip == null && armorToRemove != null)
-            for (ItemAttribute attribute : armorToRemove.getAttributeTierMap().keySet())
-                attribute.onArmorTakeOff(player, Tier.fromInteger(armorToRemove.getAttributeTierMap().get(attribute)), event);
+            armorToRemove.forAllAttributes(((itemAttribute, tier)
+                    -> itemAttribute.onArmorTakeOff(player, tier, event)));
 
         if (armorToEquip != null)
-            for (ItemAttribute attribute : armorToEquip.getAttributeTierMap().keySet())
-                attribute.onArmorEquip(player, Tier.fromInteger(armorToEquip.getAttributeTierMap().get(attribute)), event);
+            armorToEquip.forAllAttributes(((itemAttribute, tier)
+                    -> itemAttribute.onArmorEquip(player, tier, event)));
+    }
+    @EventHandler
+    public void onGameJoin(PlayerJoinGameEvent event) {
+        Player player = event.getPlayer();
 
+        ItemStack[] allContents = player.getInventory().getContents();
+
+        for (ItemStack item : allContents) {
+            EnchantableItem enchantableItem = EnchantableItem.fromItemStack(item);
+
+            if (enchantableItem == null)
+                continue;
+
+            enchantableItem.forAllAttributes((itemAttribute, tier)
+                    -> itemAttribute.onPlayerJoinGame(player, tier, event));
+        }
 
     }
 

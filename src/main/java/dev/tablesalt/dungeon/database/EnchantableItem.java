@@ -18,6 +18,10 @@ import org.mineacademy.fo.remain.CompMaterial;
 import org.mineacademy.fo.remain.CompMetadata;
 
 import java.util.*;
+import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 @Getter
 @Setter
@@ -177,6 +181,12 @@ public class EnchantableItem implements ConfigSerializable {
     public String getFormattedName() {
         return currentTier.getColor().getChatColor() + Rarity.MYTHIC.toString() + " " + ItemUtil.bountifyCapitalized(name) + " " +
                 (currentTier != Tier.NONE ? "&l" + currentTier.getAsRomanNumeral() + " " : "");
+    }
+
+    public void forAllAttributes(BiConsumer<ItemAttribute,Tier> consumer) {
+        for (ItemAttribute attribute : attributeTierMap.keySet())
+            consumer.accept(attribute, Tier.fromInteger(attributeTierMap.get(attribute)));
+
     }
 
     private ItemStack setNBTOnItem(ItemStack item) {

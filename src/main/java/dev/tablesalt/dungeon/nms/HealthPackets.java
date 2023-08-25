@@ -8,7 +8,7 @@ import org.bukkit.entity.Player;
 
 public class HealthPackets {
 
-
+    
     public static void sendRegenPacket(Player playerToSend, double healthAfterRegen) {
         ServerPlayerConnection connection = ((CraftPlayer) playerToSend).getHandle().connection;
 

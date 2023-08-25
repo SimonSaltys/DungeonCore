@@ -5,16 +5,21 @@ import dev.tablesalt.dungeon.DungeonPlugin;
 import dev.tablesalt.dungeon.database.EnchantableItem;
 import dev.tablesalt.dungeon.event.PlayerGainGoldEvent;
 import dev.tablesalt.dungeon.util.TBSItemUtil;
+import dev.tablesalt.gamelib.event.PlayerJoinGameEvent;
+import dev.tablesalt.gamelib.event.PlayerLeaveGameEvent;
+import io.papermc.paper.event.player.PlayerPickItemEvent;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
 import org.mineacademy.fo.Common;
 import org.mineacademy.fo.ReflectionUtil;
 
 import java.util.*;
+import java.util.function.Consumer;
 
 /**
  * A way to apply custom listeners to an Item a player is using
@@ -48,22 +53,36 @@ public abstract class ItemAttribute {
     /* OVERRIDABLE LOGIC */
     /*----------------------------------------------------------------*/
 
+    /**
+     * Called when a player hits another player
+     */
     public void onPvP(Player attacker, Player victim, Tier tier, EntityDamageByEntityEvent event) {
 
     }
 
+    /**
+     * Called when a player hits a non player entity
+     */
     public void onPvE(Player attacker, LivingEntity victim, Tier tier, EntityDamageByEntityEvent event) {
     }
 
+    /**
+     * Called when this player clicks while the item is in their main hand
+     */
     public void onClick(Player clicker, Tier tier, PlayerInteractEvent event) {
     }
 
+    /**
+     * Called when the player takes any damage other than pvp
+     */
     public void onDamaged(Player victim, Tier tier, EntityDamageEvent event) {
 
     }
 
+
     public void onGoldGain(Player player, double amountGained, Tier tier, PlayerGainGoldEvent event) {
     }
+
 
     public void onArmorEquip(Player player, Tier tier, PlayerArmorChangeEvent event) {
 
@@ -73,6 +92,33 @@ public abstract class ItemAttribute {
 
     }
 
+    /**
+     * This will be called for all custom items
+     * in a players inventory.
+     */
+    public void onPlayerJoinGame(Player player, Tier tier, PlayerJoinGameEvent event) {
+    }
+
+    /**
+     * This will be called for all custom items
+     * in a players inventory.
+     */
+    public void onPlayerLeaveGame(Player player, Tier tier, PlayerLeaveGameEvent event) {
+    }
+
+    public void onDrop(Player player, Tier tier, PlayerDropItemEvent event) {
+
+    }
+
+    public void onPickup(Player player, Tier tier, PlayerPickItemEvent event) {
+
+    }
+
+    /**
+     * if this is true then this attribute can only be applied
+     * to armor. The inverse aswell is true
+     * @return
+     */
     public boolean isForArmor() {
         return false;
     }
@@ -81,6 +127,8 @@ public abstract class ItemAttribute {
     public String toString() {
         return getName();
     }
+
+
 
     /*----------------------------------------------------------------*/
     /* STATIC UTILS */

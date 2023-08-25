@@ -23,7 +23,7 @@ public class DungeonHeartbeat extends GameHeartbeat {
     private int secondsPassed = 0;
 
     public DungeonHeartbeat(DungeonGame game) {
-        super(game, DungeonStaticSettings.GameConfig.timeUntilStop);
+        super(game, DungeonStaticSettings.GameConfig.TIME_UNTIL_STOP);
         this.game = game;
     }
 

@@ -47,7 +47,7 @@ public class InDungeonListener implements Listener {
         if (stack.getType().equals(Material.GOLD_NUGGET)) {
             int amount = stack.getAmount();
 
-            cache.giveMoney(amount * DungeonStaticSettings.Loot.moneyPerNugget);
+            cache.giveMoney(amount * DungeonStaticSettings.Loot.MONEY_PER_NUGGET);
             TBSSound.MoneyPickup.getInstance().playTo(player);
 
             inventory.setItem(event.getSlot(), null);
