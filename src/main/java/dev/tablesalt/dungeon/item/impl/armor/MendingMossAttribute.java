@@ -5,6 +5,7 @@ import dev.tablesalt.dungeon.database.DungeonCache;
 import dev.tablesalt.dungeon.item.ItemAttribute;
 import dev.tablesalt.dungeon.item.Rarity;
 import dev.tablesalt.dungeon.item.Tier;
+import dev.tablesalt.dungeon.model.TBSSound;
 import dev.tablesalt.dungeon.util.TBSItemUtil;
 import dev.tablesalt.gamelib.game.utils.SimpleRunnable;
 import lombok.Getter;
@@ -56,7 +57,7 @@ public class MendingMossAttribute extends ItemAttribute {
     }
 
 
-    private double healthToRegen(Tier tier) {
+    private static double healthToRegen(Tier tier) {
         if (tier == Tier.ONE)
             return 8;
 
@@ -76,17 +77,23 @@ public class MendingMossAttribute extends ItemAttribute {
 
         private final DungeonCache cache;
 
+        private final Player player;
+
         public RegenRunnable(Tier tier, DungeonCache cache) {
             super(-1, 0, 10);
             this.tier = tier;
             this.cache = cache;
+            this.player = cache.toPlayer();
         }
 
         @Override
         protected void onTick() {
 
             if (!cache.isInCombat()) {
-                //todo regen the player play some nice sounds and particles
+                if (player.getHealth() < 20) {
+                    TBSSound.Buffed.getInstance().playTo(player);
+                    player.setHealth(player.getHealth() + healthToRegen(tier));
+                }
             }
         }
 

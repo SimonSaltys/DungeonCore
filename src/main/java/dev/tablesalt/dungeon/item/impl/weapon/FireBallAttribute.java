@@ -3,7 +3,7 @@ package dev.tablesalt.dungeon.item.impl.weapon;
 import dev.tablesalt.dungeon.item.ItemAttribute;
 import dev.tablesalt.dungeon.item.Rarity;
 import dev.tablesalt.dungeon.item.Tier;
-import dev.tablesalt.dungeon.model.Cooldown;
+import dev.tablesalt.dungeon.collection.Cooldown;
 import dev.tablesalt.dungeon.util.TBSItemUtil;
 import lombok.Getter;
 import org.bukkit.entity.Player;

@@ -8,6 +8,7 @@ import dev.tablesalt.dungeon.game.DungeonGame;
 import dev.tablesalt.dungeon.item.ItemAttribute;
 import dev.tablesalt.dungeon.listener.*;
 import dev.tablesalt.dungeon.menu.MenuListener;
+import dev.tablesalt.dungeon.model.effects.Effects;
 import dev.tablesalt.gamelib.game.helpers.Game;
 import dev.tablesalt.gamelib.game.helpers.GameListener;
 import dev.tablesalt.gamelib.game.types.GameTypeList;
@@ -34,17 +35,20 @@ public final class DungeonPlugin extends SimplePlugin {
         DungeonCache.purge();
         for (Game game : Game.getGames())
             game.getStopper().stop();
+
+        Effects.disable();
     }
 
     /**
-     * Holds the operations that need to be done on server start and reload.
+     * Executes the operations that need to be done on server start and reload.
      */
     private void initialization() {
         GameTypeList.getInstance().addType(new Type<>("dungeon", DungeonGame.class));
         LootChance.loadChances();
-        MariaDatabase.getInstance().connect();
 
+        MariaDatabase.getInstance().connect();
         ItemAttribute.registerAttributes();
+        Effects.loadEffects();
 
         registerDungeonEvents();
 

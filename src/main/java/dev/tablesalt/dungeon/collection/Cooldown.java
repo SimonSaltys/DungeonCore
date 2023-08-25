@@ -1,4 +1,4 @@
-package dev.tablesalt.dungeon.model;
+package dev.tablesalt.dungeon.collection;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

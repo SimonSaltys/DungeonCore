@@ -35,6 +35,7 @@
             <version>1.20.1-R0.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
+
         <dependency>
             <groupId>org.spigotmc</groupId>
             <artifactId>spigot</artifactId>
@@ -42,6 +43,20 @@
             <scope>provided</scope>
             <classifier>remapped-mojang</classifier>
         </dependency>
+
+        <dependency>
+            <groupId>dev.tablesalt</groupId>
+            <artifactId>gameLib</artifactId>
+            <version>0.1-ALPHA</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.elmakers.mine.bukkit</groupId>
+            <artifactId>EffectLib</artifactId>
+            <version>9.4</version>
+            <scope>compile</scope>
+        </dependency>
+
 
 
         <dependency>
@@ -63,11 +78,7 @@
             <version>${foundation.version}</version>
         </dependency>
 
-        <dependency>
-            <groupId>dev.tablesalt</groupId>
-            <artifactId>gameLib</artifactId>
-            <version>0.1-ALPHA</version>
-        </dependency>
+
 
         <!-- https://mvnrepository.com/artifact/org.mariadb.jdbc/mariadb-java-client -->
         <dependency>
@@ -115,6 +126,11 @@
 
     <repositories>
         <repository>
+            <id>github</id>
+            <url>https://maven.pkg.github.com/Slikey/EffectLib</url>
+        </repository>
+
+        <repository>
             <id>dmulloy2-repo</id>
             <url>https://repo.dmulloy2.net/repository/public/</url>
         </repository>
@@ -149,9 +165,9 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
                 <configuration>
-                    <outputDirectory>
-                        C:\Users\simon\Desktop\Main\MinecraftPlugins\DevelopmentServer\plugins
-                    </outputDirectory>
+<!--                    <outputDirectory>-->
+<!--                        C:\Users\simon\Desktop\Main\MinecraftPlugins\DevelopmentServer\plugins-->
+<!--                    </outputDirectory>-->
                 </configuration>
                 <!-- Change version to the latest one from
                      https://mvnrepository.com/artifact/org.apache.maven.plugins/maven-jar-plugin -->
@@ -194,6 +210,10 @@
                         </includes>
                     </artifactSet>
                     <relocations>
+                        <relocation>
+                            <pattern>de.slikey</pattern>
+                            <shadedPattern>${project.groupId}.${project.artifactId}.effectlib</shadedPattern>
+                        </relocation>
                         <relocation>
                             <pattern>org.mineacademy.${project.artifactId}.fo
                             </pattern>
