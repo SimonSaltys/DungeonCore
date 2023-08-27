@@ -14,6 +14,8 @@ public class Keys {
 
     public static final String IN_COMBAT = "InCombat";
 
+    public static final String ALLOW_FLIGHT = "Allow_Flight";
+
     public static final int ENCHANTING_MENU_SLOT = 41;
 
 

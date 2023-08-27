@@ -1,7 +1,8 @@
 package dev.tablesalt.dungeon.item.impl.armor;
 
-import com.destroystokyo.paper.event.player.PlayerArmorChangeEvent;
 import dev.tablesalt.dungeon.database.DungeonCache;
+import dev.tablesalt.dungeon.database.EnchantableItem;
+import dev.tablesalt.dungeon.item.EnchantmentLifecycle;
 import dev.tablesalt.dungeon.item.ItemAttribute;
 import dev.tablesalt.dungeon.item.Rarity;
 import dev.tablesalt.dungeon.item.Tier;
@@ -15,7 +16,7 @@ import org.bukkit.potion.PotionEffectType;
 import java.util.HashMap;
 import java.util.List;
 
-public final class LightWeightAttribute extends ItemAttribute {
+public final class LightWeightAttribute extends ItemAttribute implements EnchantmentLifecycle {
 
     @Getter
     private static final LightWeightAttribute instance = new LightWeightAttribute();
@@ -36,20 +37,17 @@ public final class LightWeightAttribute extends ItemAttribute {
     }
 
     @Override
-    public void onArmorEquip(Player player, Tier tier, PlayerArmorChangeEvent event) {
+    public void start(Player player, EnchantableItem item, Tier tier) {
         DungeonCache cache = DungeonCache.from(player);
 
         if (!playersWithAttribute.containsKey(cache))
             playersWithAttribute.put(cache, tier);
-
     }
 
     @Override
-    public void onArmorTakeOff(Player player, Tier tier, PlayerArmorChangeEvent event) {
+    public void stop(Player player, EnchantableItem item, Tier tier) {
         playersWithAttribute.remove(DungeonCache.from(player));
         player.removePotionEffect(PotionEffectType.SPEED);
-
-
     }
 
     @Override

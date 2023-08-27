@@ -1,5 +1,6 @@
 package dev.tablesalt.dungeon.item.impl.weapon;
 
+import dev.tablesalt.dungeon.database.EnchantableItem;
 import dev.tablesalt.dungeon.item.ItemAttribute;
 import dev.tablesalt.dungeon.item.Rarity;
 import dev.tablesalt.dungeon.item.Tier;
@@ -29,12 +30,12 @@ public class VampireAttribute extends ItemAttribute {
     }
 
     @Override
-    public void onPvP(Player attacker, Player victim, Tier tier, EntityDamageByEntityEvent event) {
+    public void onPvP(Player attacker, Player victim, EnchantableItem item, Tier tier, EntityDamageByEntityEvent event) {
         healDamageDealt(attacker, tier, event.getDamage());
     }
 
     @Override
-    public void onPvE(Player attacker, LivingEntity victim, Tier tier, EntityDamageByEntityEvent event) {
+    public void onPvE(Player attacker, LivingEntity victim, EnchantableItem item, Tier tier, EntityDamageByEntityEvent event) {
         healDamageDealt(attacker, tier, event.getDamage());
     }
 

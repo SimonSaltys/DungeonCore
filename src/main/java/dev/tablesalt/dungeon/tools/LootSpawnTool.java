@@ -4,7 +4,7 @@ import dev.tablesalt.dungeon.game.DungeonGame;
 import dev.tablesalt.dungeon.maps.DungeonMap;
 import dev.tablesalt.dungeon.maps.spawnpoints.LootPoint;
 import dev.tablesalt.dungeon.menu.impl.LootSpawnMenu;
-import dev.tablesalt.dungeon.util.PlayerUtil;
+import dev.tablesalt.dungeon.util.TBSPlayerUtil;
 import dev.tablesalt.gamelib.tools.GameTool;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -43,7 +43,7 @@ public final class LootSpawnTool extends GameTool<DungeonGame> {
 
     @Override
     protected List<Location> getGamePoints(Player player, DungeonGame game) {
-        return Common.convert(PlayerUtil.getMapSafe(player).getLootPoints(), LootPoint::getLocation);
+        return Common.convert(TBSPlayerUtil.getMapSafe(player).getLootPoints(), LootPoint::getLocation);
     }
 
     @Override

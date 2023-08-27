@@ -1,7 +1,7 @@
 package dev.tablesalt.dungeon.menu.impl;
 
 import dev.tablesalt.dungeon.maps.spawnpoints.MonsterPoint;
-import dev.tablesalt.dungeon.util.PlayerUtil;
+import dev.tablesalt.dungeon.util.TBSPlayerUtil;
 import dev.tablesalt.gamelib.game.utils.MessageUtil;
 import org.bukkit.conversations.ConversationContext;
 import org.bukkit.conversations.Prompt;
@@ -93,7 +93,7 @@ public class MonsterSpawnMenu extends Menu {
         protected void onPageClick(Player player, EntityType entityType, ClickType clickType) {
             point.setEntity(entityType);
             restartMenu();
-            PlayerUtil.getMapSafe(player).save();
+            TBSPlayerUtil.getMapSafe(player).save();
         }
     }
 
@@ -146,7 +146,7 @@ public class MonsterSpawnMenu extends Menu {
             }
 
             Player player = (Player) conversationContext.getForWhom();
-            PlayerUtil.getMapSafe(player).save();
+            TBSPlayerUtil.getMapSafe(player).save();
 
             return END_OF_CONVERSATION;
         }
@@ -193,7 +193,7 @@ public class MonsterSpawnMenu extends Menu {
             point.setAmountToSpawn(amount);
 
             Player player = (Player) conversationContext.getForWhom();
-            PlayerUtil.getMapSafe(player).save();
+            TBSPlayerUtil.getMapSafe(player).save();
 
             return END_OF_CONVERSATION;
         }

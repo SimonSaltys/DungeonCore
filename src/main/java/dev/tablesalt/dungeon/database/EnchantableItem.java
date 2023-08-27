@@ -19,9 +19,6 @@ import org.mineacademy.fo.remain.CompMetadata;
 
 import java.util.*;
 import java.util.function.BiConsumer;
-import java.util.function.BiFunction;
-import java.util.function.Consumer;
-import java.util.function.Function;
 
 @Getter
 @Setter
@@ -36,6 +33,7 @@ public class EnchantableItem implements ConfigSerializable {
     private Map<ItemAttribute, Integer> attributeTierMap;
 
     private ItemAttribute lastAdded;
+
 
     private Tier currentTier;
 
@@ -183,7 +181,7 @@ public class EnchantableItem implements ConfigSerializable {
                 (currentTier != Tier.NONE ? "&l" + currentTier.getAsRomanNumeral() + " " : "");
     }
 
-    public void forAllAttributes(BiConsumer<ItemAttribute,Tier> consumer) {
+    public void forAllAttributes(BiConsumer<ItemAttribute, Tier> consumer) {
         for (ItemAttribute attribute : attributeTierMap.keySet())
             consumer.accept(attribute, Tier.fromInteger(attributeTierMap.get(attribute)));
 
@@ -276,5 +274,27 @@ public class EnchantableItem implements ConfigSerializable {
                 return value;
             }
         });
+    }
+
+
+    public static HashSet<EnchantableItem> getArmorAndWeapon(Player player) {
+        HashSet<EnchantableItem> enchantableItems = new HashSet<>();
+
+        for (ItemStack stack : player.getInventory().getArmorContents()) {
+            EnchantableItem item = EnchantableItem.fromItemStack(stack);
+
+            if (item != null) {
+                enchantableItems.add(item);
+                break;
+            }
+        }
+
+        EnchantableItem item = EnchantableItem.fromItemStack(player.getInventory().getItemInMainHand());
+
+        if (item != null)
+            enchantableItems.add(item);
+
+        return enchantableItems;
+
     }
 }

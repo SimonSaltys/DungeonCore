@@ -1,6 +1,7 @@
 package dev.tablesalt.dungeon.item.impl.armor;
 
 import dev.tablesalt.dungeon.database.DungeonCache;
+import dev.tablesalt.dungeon.database.EnchantableItem;
 import dev.tablesalt.dungeon.item.ItemAttribute;
 import dev.tablesalt.dungeon.item.Rarity;
 import dev.tablesalt.dungeon.item.Tier;
@@ -29,7 +30,7 @@ public final class PainAndGainAttribute extends ItemAttribute {
     }
 
     @Override
-    public void onDamaged(Player victim, Tier tier, EntityDamageEvent event) {
+    public void onDamaged(Player victim, EnchantableItem item, Tier tier, EntityDamageEvent event) {
         DungeonCache cache = DungeonCache.from(victim);
 
         cache.giveMoney(goldGainedOnHit(tier));

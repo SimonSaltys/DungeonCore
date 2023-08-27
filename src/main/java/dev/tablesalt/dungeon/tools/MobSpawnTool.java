@@ -5,7 +5,7 @@ import dev.tablesalt.dungeon.maps.DungeonMap;
 import dev.tablesalt.dungeon.maps.spawnpoints.MonsterPoint;
 import dev.tablesalt.dungeon.maps.spawnpoints.SpawnPoint;
 import dev.tablesalt.dungeon.menu.impl.MonsterSpawnMenu;
-import dev.tablesalt.dungeon.util.PlayerUtil;
+import dev.tablesalt.dungeon.util.TBSPlayerUtil;
 import dev.tablesalt.gamelib.tools.GameTool;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -25,6 +25,7 @@ import java.util.List;
 public final class MobSpawnTool extends GameTool<DungeonGame> {
     @Getter
     private static final MobSpawnTool instance = new MobSpawnTool();
+
     @Override
     protected CompMaterial getBlockMask(Block block, Player player) {
         return CompMaterial.SPAWNER;
@@ -43,13 +44,13 @@ public final class MobSpawnTool extends GameTool<DungeonGame> {
         boolean added = map.toggleMonsterSpawnPoint(block.getLocation());
 
         Messenger.success(player, "Successfully " + (added ? "&2added&7" : "&cremoved&7") + " a monster spawn point. Click to configure");
-       }
+    }
 
     @Override
     protected List<Location> getGamePoints(Player player, DungeonGame game) {
 
-            return Common.convert(PlayerUtil.getMapSafe(player).getMonsterPoints(),
-                    MonsterPoint::getLocation);
+        return Common.convert(TBSPlayerUtil.getMapSafe(player).getMonsterPoints(),
+                MonsterPoint::getLocation);
 
 
     }

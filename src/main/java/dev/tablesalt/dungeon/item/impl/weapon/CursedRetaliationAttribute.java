@@ -35,7 +35,7 @@ public final class CursedRetaliationAttribute extends ItemAttribute {
     }
 
     @Override
-    public void onPvP(Player attacker, Player victim, Tier tier, EntityDamageByEntityEvent event) {
+    public void onPvP(Player attacker, Player victim, EnchantableItem item, Tier tier, EntityDamageByEntityEvent event) {
         if (event.getDamage() >= victim.getHealth()) {
             cursedEntities.remove(victim);
             return;
@@ -46,7 +46,7 @@ public final class CursedRetaliationAttribute extends ItemAttribute {
     }
 
     @Override
-    public void onPvE(Player attacker, LivingEntity victim, Tier tier, EntityDamageByEntityEvent event) {
+    public void onPvE(Player attacker, LivingEntity victim, EnchantableItem item, Tier tier, EntityDamageByEntityEvent event) {
         if (event.getDamage() >= victim.getHealth()) {
             cursedEntities.remove(victim);
             return;
@@ -94,13 +94,14 @@ public final class CursedRetaliationAttribute extends ItemAttribute {
                 if (entity instanceof Player victim) {
                     TBSSound.Debuffed.getInstance().playTo(victim);
 
-                    for (ItemAttribute attribute : item.getAttributeTierMap().keySet())
-                        attribute.onPvP(attacker, victim, tier, event);
+                    item.forAllAttributes((itemAttribute, tier) ->
+                            itemAttribute.onPvP(attacker, victim, item, tier, event));
+
 
                 } else {
 
-                    for (ItemAttribute attribute : item.getAttributeTierMap().keySet())
-                        attribute.onPvE(attacker, entity, tier, event);
+                    item.forAllAttributes((itemAttribute, tier) ->
+                            itemAttribute.onPvE(attacker, entity, item, tier, event));
                 }
 
 

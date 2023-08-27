@@ -1,5 +1,6 @@
 package dev.tablesalt.dungeon.item.impl.weapon;
 
+import dev.tablesalt.dungeon.database.EnchantableItem;
 import dev.tablesalt.dungeon.event.PlayerGainGoldEvent;
 import dev.tablesalt.dungeon.item.ItemAttribute;
 import dev.tablesalt.dungeon.item.Rarity;
@@ -26,7 +27,7 @@ public final class GoldRushAttribute extends ItemAttribute {
     }
 
     @Override
-    public void onGoldGain(Player player, double amountGained, Tier tier, PlayerGainGoldEvent event) {
+    public void onGoldGain(Player player, EnchantableItem item, double amountGained, Tier tier, PlayerGainGoldEvent event) {
         double percentageIncrease = getGainsAsPercent(tier);
         double additionalGold = amountGained * (percentageIncrease / 100.0);
 

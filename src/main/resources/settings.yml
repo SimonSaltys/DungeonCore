@@ -35,6 +35,7 @@ loot:
 
 game:
   time_until_stop: 15 minutes
+  time_between_games: 10 seconds
 
 database:
   host: localhost # host of your database

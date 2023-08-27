@@ -9,8 +9,8 @@ import dev.tablesalt.dungeon.item.Tier;
 import dev.tablesalt.dungeon.menu.TBSButton;
 import dev.tablesalt.dungeon.menu.TBSMenu;
 import dev.tablesalt.dungeon.model.TBSSound;
-import dev.tablesalt.dungeon.util.PlayerUtil;
 import dev.tablesalt.dungeon.util.TBSItemUtil;
+import dev.tablesalt.dungeon.util.TBSPlayerUtil;
 import dev.tablesalt.gamelib.game.utils.MessageUtil;
 import dev.tablesalt.gamelib.game.utils.SimpleRunnable;
 import dev.tablesalt.gamelib.game.utils.TBSColor;
@@ -274,7 +274,7 @@ public class EnchantingMenu extends TBSMenu {
         @Override
         protected void onTickError(Throwable t) {
 
-            PlayerUtil.giveItem(getViewer(), enchantedItem);
+            TBSPlayerUtil.giveItem(getViewer(), enchantedItem);
             cancel();
         }
     }

@@ -1,8 +1,9 @@
 package dev.tablesalt.dungeon.item.impl.armor;
 
-import com.destroystokyo.paper.event.player.PlayerArmorChangeEvent;
 import dev.tablesalt.dungeon.collection.Cooldown;
 import dev.tablesalt.dungeon.database.DungeonCache;
+import dev.tablesalt.dungeon.database.EnchantableItem;
+import dev.tablesalt.dungeon.item.EnchantmentLifecycle;
 import dev.tablesalt.dungeon.item.ItemAttribute;
 import dev.tablesalt.dungeon.item.Rarity;
 import dev.tablesalt.dungeon.item.Tier;
@@ -16,7 +17,7 @@ import org.mineacademy.fo.model.SimpleTime;
 import java.util.HashMap;
 import java.util.List;
 
-public class MendingMossAttribute extends ItemAttribute {
+public class MendingMossAttribute extends ItemAttribute implements EnchantmentLifecycle {
 
     @Getter
     private static final MendingMossAttribute instance = new MendingMossAttribute();
@@ -37,8 +38,9 @@ public class MendingMossAttribute extends ItemAttribute {
         return "&aMending Moss";
     }
 
+
     @Override
-    public void onArmorEquip(Player player, Tier tier, PlayerArmorChangeEvent event) {
+    public void start(Player player, EnchantableItem item, Tier tier) {
         RegenRunnable regenRunnable = new RegenRunnable(tier, DungeonCache.from(player));
         playersRegenerating.put(player, regenRunnable);
 
@@ -46,12 +48,13 @@ public class MendingMossAttribute extends ItemAttribute {
     }
 
     @Override
-    public void onArmorTakeOff(Player player, Tier tier, PlayerArmorChangeEvent event) {
+    public void stop(Player player, EnchantableItem item, Tier tier) {
         RegenRunnable regenRunnable = playersRegenerating.get(player);
 
         if (regenRunnable != null && regenRunnable.isRunning())
             regenRunnable.end();
     }
+
 
     @Override
     public List<String> getAttributeLore(Tier tier) {
@@ -62,6 +65,7 @@ public class MendingMossAttribute extends ItemAttribute {
                 " "
         });
     }
+
 
     private static class RegenRunnable extends SimpleRunnable {
 

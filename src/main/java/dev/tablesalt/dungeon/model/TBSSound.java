@@ -5,9 +5,12 @@ import dev.tablesalt.gamelib.game.utils.SimpleRunnable;
 import lombok.Getter;
 import lombok.experimental.UtilityClass;
 import org.apache.commons.lang3.RandomUtils;
+import org.bukkit.Location;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.mineacademy.fo.RandomUtil;
 import org.mineacademy.fo.remain.CompSound;
+import org.mineacademy.fo.remain.Remain;
 
 @UtilityClass
 public class TBSSound {
@@ -30,8 +33,6 @@ public class TBSSound {
         @Override
         public void playTo(Player player) {
             CompSound.ITEM_PICKUP.play(player, 1, RandomUtils.nextFloat(1.5F, 2F));
-
-
         }
     }
 
@@ -206,6 +207,18 @@ public class TBSSound {
         }
     }
 
+    public final class Poof implements GameSound {
+
+        @Getter
+        private static final Poof instance = new Poof();
+
+        @Override
+        public void playTo(Player player) {
+            CompSound.BLOCK_BIG_DRIPLEAF_TILT_DOWN.play(player, 1, RandomUtils.nextFloat(1, 2));
+            CompSound.SHOOT_ARROW.play(player, 1, RandomUtils.nextFloat(1, 2));
+        }
+    }
+
 
     // ------–------–------–------–------–------–------–------–------–------–------–------–----
     // Private Access and Utility methods
@@ -249,5 +262,15 @@ public class TBSSound {
         protected void onEnd() {
 
         }
+    }
+
+    public static void playTo(GameSound sound, Location location, double radius) {
+
+        for (Entity entity : Remain.getNearbyEntities(location, radius)) {
+            if (entity instanceof Player player)
+                sound.playTo(player);
+
+        }
+
     }
 }

@@ -37,6 +37,7 @@ public class OutOfDungeonListener implements Listener {
             EnchantingMenu.openEnchantMenu(player);
     }
 
+
     private boolean isBlockEnchantingWell(Block block) {
         TextDisplay display = EntityUtil.getClosestTextDisplay(block.getLocation().clone().add(0.5, 1, 0.5), 0.5);
 

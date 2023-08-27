@@ -4,8 +4,6 @@ import dev.tablesalt.dungeon.database.DungeonCache;
 import dev.tablesalt.dungeon.database.EnchantableItem;
 import dev.tablesalt.dungeon.database.Keys;
 import dev.tablesalt.dungeon.game.DungeonGame;
-import dev.tablesalt.dungeon.item.ItemAttribute;
-import dev.tablesalt.dungeon.item.Tier;
 import dev.tablesalt.dungeon.model.TBSSound;
 import dev.tablesalt.dungeon.nms.PlayerCorpse;
 import dev.tablesalt.dungeon.util.DungeonUtil;
@@ -29,7 +27,6 @@ import org.mineacademy.fo.PlayerUtil;
 import org.mineacademy.fo.RandomUtil;
 
 import java.util.HashMap;
-import java.util.Map;
 
 public class DungeonEvents extends GameEvents {
     public DungeonEvents(DungeonGame game) {
@@ -78,6 +75,7 @@ public class DungeonEvents extends GameEvents {
         callOnDamaged(victim, null, event);
     }
 
+
     @Override
     protected void onPlayerDamagedByEntity(Entity attacker, Player victim, EntityDamageByEntityEvent event) {
         startCombat(victim);
@@ -85,10 +83,13 @@ public class DungeonEvents extends GameEvents {
 
     @Override
     protected void onPvP(Player attacker, Player victim, EntityDamageByEntityEvent event) {
-        Map<ItemAttribute, Integer> itemItemAttributeMap = ItemAttribute.getAttributesOnMainHandItem(attacker);
 
-        for (ItemAttribute attribute : itemItemAttributeMap.keySet())
-            attribute.onPvP(attacker, victim, Tier.fromInteger(itemItemAttributeMap.get(attribute)), event);
+        EnchantableItem item = EnchantableItem.fromItemStack(attacker.getInventory().getItemInMainHand());
+
+        if (item != null)
+            item.forAllAttributes((itemAttribute, tier) ->
+                    itemAttribute.onPvP(attacker, victim, item, tier, event));
+
 
         callOnDamaged(victim, event, null);
         startCombat(victim);
@@ -97,20 +98,25 @@ public class DungeonEvents extends GameEvents {
 
     @Override
     protected void onPvE(Player attacker, LivingEntity victim, EntityDamageByEntityEvent event) {
-        Map<ItemAttribute, Integer> itemItemAttributeMap = ItemAttribute.getAttributesOnMainHandItem(attacker);
+        EnchantableItem item = EnchantableItem.fromItemStack(attacker.getInventory().getItemInMainHand());
 
-        for (ItemAttribute attribute : itemItemAttributeMap.keySet())
-            attribute.onPvE(attacker, victim, Tier.fromInteger(itemItemAttributeMap.get(attribute)), event);
+        if (item != null)
+            item.forAllAttributes((itemAttribute, tier) ->
+                    itemAttribute.onPvE(attacker, victim, item, tier, event));
+
 
         startCombat(attacker);
     }
 
     @Override
     protected void onInteract(Player player, PlayerInteractEvent event) {
-        Map<ItemAttribute, Integer> itemItemAttributeMap = ItemAttribute.getAttributesOnMainHandItem(player);
+        EnchantableItem item = EnchantableItem.fromItemStack(player.getInventory().getItemInMainHand());
 
-        for (ItemAttribute attribute : itemItemAttributeMap.keySet())
-            attribute.onClick(player, Tier.fromInteger(itemItemAttributeMap.get(attribute)), event);
+        if (item != null)
+            item.forAllAttributes((itemAttribute, tier) ->
+                    itemAttribute.onClick(player, item, tier, event));
+
+
     }
 
     /**
@@ -128,9 +134,17 @@ public class DungeonEvents extends GameEvents {
         if (victimsArmor != null) {
             EnchantableItem victimsEnchantableArmor = EnchantableItem.fromItemStack(victimsArmor);
             if (victimsEnchantableArmor != null)
-                for (ItemAttribute attribute : victimsEnchantableArmor.getAttributeTierMap().keySet())
-                    attribute.onDamaged(victim, Tier.fromInteger(victimsEnchantableArmor.getAttributeTierMap().get(attribute))
-                            , attackedEvent == null ? damageEvent : attackedEvent);
+
+                victimsEnchantableArmor.forAllAttributes((itemAttribute, tier) -> {
+
+                    if (attackedEvent == null)
+                        itemAttribute.onDamaged(victim, victimsEnchantableArmor, tier, damageEvent);
+                    else
+                        itemAttribute.onDamaged(victim, victimsEnchantableArmor, tier, attackedEvent);
+
+                });
+
+
         }
     }
 

@@ -1,6 +1,7 @@
 package dev.tablesalt.dungeon.item.impl.weapon;
 
 import dev.tablesalt.dungeon.database.DungeonCache;
+import dev.tablesalt.dungeon.database.EnchantableItem;
 import dev.tablesalt.dungeon.item.ItemAttribute;
 import dev.tablesalt.dungeon.item.Rarity;
 import dev.tablesalt.dungeon.item.Tier;
@@ -28,7 +29,7 @@ public final class PickpocketAttribute extends ItemAttribute {
     }
 
     @Override
-    public void onPvP(Player attacker, Player victim, Tier tier, EntityDamageByEntityEvent event) {
+    public void onPvP(Player attacker, Player victim, EnchantableItem item, Tier tier, EntityDamageByEntityEvent event) {
         DungeonCache cache = DungeonCache.from(attacker);
 
         int playSoundRandomly = RandomUtil.nextBetween(0, 2);

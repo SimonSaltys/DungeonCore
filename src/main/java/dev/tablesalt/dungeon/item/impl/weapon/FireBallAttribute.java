@@ -1,9 +1,10 @@
 package dev.tablesalt.dungeon.item.impl.weapon;
 
+import dev.tablesalt.dungeon.collection.Cooldown;
+import dev.tablesalt.dungeon.database.EnchantableItem;
 import dev.tablesalt.dungeon.item.ItemAttribute;
 import dev.tablesalt.dungeon.item.Rarity;
 import dev.tablesalt.dungeon.item.Tier;
-import dev.tablesalt.dungeon.collection.Cooldown;
 import dev.tablesalt.dungeon.util.TBSItemUtil;
 import lombok.Getter;
 import org.bukkit.entity.Player;
@@ -33,7 +34,7 @@ public final class FireBallAttribute extends ItemAttribute {
     }
 
     @Override
-    public void onClick(Player clicker, Tier tier, PlayerInteractEvent event) {
+    public void onClick(Player clicker, EnchantableItem item, Tier tier, PlayerInteractEvent event) {
         if (cooldown.hasTimeLeft(clicker)) {
             Common.broadcast("Seconds left: " + cooldown.getSecondsLeft(clicker));
             return;
