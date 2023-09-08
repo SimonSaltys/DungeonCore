@@ -110,14 +110,8 @@ public abstract class ItemAttribute {
 
     }
 
-    /**
-     * if this is true then this attribute can only be applied
-     * to armor. The inverse aswell is true
-     *
-     * @return
-     */
-    public boolean isForArmor() {
-        return false;
+    public ItemType getType() {
+        return ItemType.NONE;
     }
 
     @Override

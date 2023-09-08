@@ -3,10 +3,7 @@ package dev.tablesalt.dungeon.item.impl.armor;
 import dev.tablesalt.dungeon.collection.Cooldown;
 import dev.tablesalt.dungeon.database.DungeonCache;
 import dev.tablesalt.dungeon.database.EnchantableItem;
-import dev.tablesalt.dungeon.item.EnchantmentLifecycle;
-import dev.tablesalt.dungeon.item.ItemAttribute;
-import dev.tablesalt.dungeon.item.Rarity;
-import dev.tablesalt.dungeon.item.Tier;
+import dev.tablesalt.dungeon.item.*;
 import dev.tablesalt.dungeon.nms.HealthPackets;
 import dev.tablesalt.dungeon.util.TBSItemUtil;
 import dev.tablesalt.gamelib.game.utils.SimpleRunnable;
@@ -139,7 +136,7 @@ public class MendingMossAttribute extends ItemAttribute implements EnchantmentLi
 
 
     @Override
-    public boolean isForArmor() {
-        return true;
+    public ItemType getType() {
+        return ItemType.ARMOR;
     }
 }

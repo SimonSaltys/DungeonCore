@@ -1,6 +1,7 @@
 package dev.tablesalt.dungeon.item.impl.armor;
 
 import dev.tablesalt.dungeon.item.ItemAttribute;
+import dev.tablesalt.dungeon.item.ItemType;
 import dev.tablesalt.dungeon.item.Rarity;
 import dev.tablesalt.dungeon.item.Tier;
 import dev.tablesalt.dungeon.util.TBSItemUtil;
@@ -37,7 +38,7 @@ public final class TnTAttribute extends ItemAttribute {
     }
 
     @Override
-    public boolean isForArmor() {
-        return true;
+    public ItemType getType() {
+        return ItemType.ARMOR;
     }
 }

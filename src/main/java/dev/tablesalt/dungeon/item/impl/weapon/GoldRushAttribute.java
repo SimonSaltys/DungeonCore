@@ -3,6 +3,7 @@ package dev.tablesalt.dungeon.item.impl.weapon;
 import dev.tablesalt.dungeon.database.EnchantableItem;
 import dev.tablesalt.dungeon.event.PlayerGainGoldEvent;
 import dev.tablesalt.dungeon.item.ItemAttribute;
+import dev.tablesalt.dungeon.item.ItemType;
 import dev.tablesalt.dungeon.item.Rarity;
 import dev.tablesalt.dungeon.item.Tier;
 import dev.tablesalt.dungeon.util.TBSItemUtil;
@@ -49,11 +50,6 @@ public final class GoldRushAttribute extends ItemAttribute {
         });
     }
 
-    @Override
-    public boolean isForArmor() {
-        return false;
-    }
-
     public int getGainsAsPercent(Tier tier) {
         if (tier == Tier.ONE)
             return 3;
@@ -65,6 +61,11 @@ public final class GoldRushAttribute extends ItemAttribute {
             return 9;
 
         return 2;
+    }
+
+    @Override
+    public ItemType getType() {
+        return ItemType.WEAPON;
     }
 
 

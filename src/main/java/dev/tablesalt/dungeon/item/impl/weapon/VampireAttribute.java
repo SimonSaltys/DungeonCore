@@ -2,6 +2,7 @@ package dev.tablesalt.dungeon.item.impl.weapon;
 
 import dev.tablesalt.dungeon.database.EnchantableItem;
 import dev.tablesalt.dungeon.item.ItemAttribute;
+import dev.tablesalt.dungeon.item.ItemType;
 import dev.tablesalt.dungeon.item.Rarity;
 import dev.tablesalt.dungeon.item.Tier;
 import dev.tablesalt.dungeon.nms.HealthPackets;
@@ -77,7 +78,7 @@ public class VampireAttribute extends ItemAttribute {
     }
 
     @Override
-    public boolean isForArmor() {
-        return false;
+    public ItemType getType() {
+        return ItemType.WEAPON;
     }
 }

@@ -3,6 +3,7 @@ package dev.tablesalt.dungeon.item.impl.weapon;
 import dev.tablesalt.dungeon.DungeonPlugin;
 import dev.tablesalt.dungeon.database.EnchantableItem;
 import dev.tablesalt.dungeon.item.ItemAttribute;
+import dev.tablesalt.dungeon.item.ItemType;
 import dev.tablesalt.dungeon.item.Rarity;
 import dev.tablesalt.dungeon.item.Tier;
 import dev.tablesalt.dungeon.model.TBSSound;
@@ -157,34 +158,8 @@ public final class CursedRetaliationAttribute extends ItemAttribute {
     }
 
     @Override
-    public boolean isForArmor() {
-        return false;
+    public ItemType getType() {
+        return ItemType.WEAPON;
     }
-
-
-    //might be to op so finish this class to limit the amount a player can curse each other
-//    private static class CursedData {
-//
-//       private static final List<Triple<Player, Player,Integer>> playersCursed = new ArrayList<>();
-//
-//
-//       public int getAmountCursedFrom(Player attacker, Player victim) {
-//           for (Triple<Player,Player,Integer> cursedBy : playersCursed)
-//               if (cursedBy.getLeft().equals(attacker) && cursedBy.getMiddle().equals(victim))
-//                   return cursedBy.getRight();
-//
-//           return 0;
-//       }
-//
-//       public void
-//
-//
-//
-//
-//
-//
-//
-//
-//    }
 
 }

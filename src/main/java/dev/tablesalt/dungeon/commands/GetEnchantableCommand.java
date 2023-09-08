@@ -2,6 +2,7 @@ package dev.tablesalt.dungeon.commands;
 
 import dev.tablesalt.dungeon.database.EnchantableItem;
 import dev.tablesalt.dungeon.item.ItemAttribute;
+import dev.tablesalt.dungeon.item.ItemType;
 import dev.tablesalt.dungeon.item.Tier;
 import dev.tablesalt.dungeon.util.TBSItemUtil;
 import dev.tablesalt.gamelib.commands.GameSubCommand;
@@ -49,12 +50,12 @@ public final class GetEnchantableCommand extends GameSubCommand {
 
 
         if (weaponOrArmor.equalsIgnoreCase("Weapon")) {
-            if (attributeToApply.isForArmor()) {
+            if (attributeToApply.getType() != ItemType.WEAPON) {
                 tellError("This enchantment cannot be applied to weapons.");
                 return;
             }
         } else if (weaponOrArmor.equalsIgnoreCase("Armor")) {
-            if (!attributeToApply.isForArmor()) {
+            if (attributeToApply.getType() != ItemType.ARMOR) {
                 tellError("This enchantment cannot be applied to armor.");
                 return;
             }
@@ -97,8 +98,8 @@ public final class GetEnchantableCommand extends GameSubCommand {
 
         if (args.length == 3)
             return Common.convert((args[0].equalsIgnoreCase("armor")
-                            ? ItemAttribute.getRegisteredAttributes().stream().filter(ItemAttribute::isForArmor).toList() :
-                            ItemAttribute.getRegisteredAttributes().stream().filter(attribute -> !attribute.isForArmor()).toList()),
+                            ? ItemAttribute.getRegisteredAttributes().stream().filter(attribute -> attribute.getType() == ItemType.ARMOR ).toList() :
+                            ItemAttribute.getRegisteredAttributes().stream().filter(attribute -> attribute.getType() == ItemType.WEAPON).toList()),
                     attribute -> Common.stripColors(attribute.getName()));
 
         return NO_COMPLETE;

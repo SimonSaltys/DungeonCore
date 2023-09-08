@@ -3,6 +3,7 @@ package dev.tablesalt.dungeon.item.impl.armor;
 import dev.tablesalt.dungeon.database.DungeonCache;
 import dev.tablesalt.dungeon.database.EnchantableItem;
 import dev.tablesalt.dungeon.item.ItemAttribute;
+import dev.tablesalt.dungeon.item.ItemType;
 import dev.tablesalt.dungeon.item.Rarity;
 import dev.tablesalt.dungeon.item.Tier;
 import dev.tablesalt.dungeon.util.TBSItemUtil;
@@ -61,7 +62,7 @@ public final class PainAndGainAttribute extends ItemAttribute {
     }
 
     @Override
-    public boolean isForArmor() {
-        return true;
+    public ItemType getType() {
+        return ItemType.ARMOR;
     }
 }
