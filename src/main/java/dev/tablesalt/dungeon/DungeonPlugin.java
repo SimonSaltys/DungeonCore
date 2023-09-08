@@ -37,7 +37,7 @@ public final class DungeonPlugin extends SimplePlugin {
         Common.log(TBSItemUtil.getItemCategory(Material.CHAINMAIL_BOOTS) + " ");
         Common.log(Common.consoleLine());
 
-//        DungeonSettings.getInstance().onLoad();
+        DungeonSettings.getInstance().onLoad();
     }
 
     @Override
@@ -56,7 +56,7 @@ public final class DungeonPlugin extends SimplePlugin {
         GameTypeList.getInstance().addType(new Type<>("dungeon", DungeonGame.class));
         LootChance.loadChances();
 
-//        MariaDatabase.getInstance().connect();
+        MariaDatabase.getInstance().connect();
         ItemAttribute.registerAttributes();
         Effects.loadEffects();
 
