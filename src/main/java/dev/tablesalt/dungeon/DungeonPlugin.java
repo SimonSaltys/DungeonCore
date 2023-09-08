@@ -9,10 +9,13 @@ import dev.tablesalt.dungeon.item.ItemAttribute;
 import dev.tablesalt.dungeon.listener.*;
 import dev.tablesalt.dungeon.menu.MenuListener;
 import dev.tablesalt.dungeon.model.effects.Effects;
+import dev.tablesalt.dungeon.util.TBSItemUtil;
 import dev.tablesalt.gamelib.game.helpers.Game;
 import dev.tablesalt.gamelib.game.helpers.GameListener;
 import dev.tablesalt.gamelib.game.types.GameTypeList;
 import dev.tablesalt.gamelib.game.types.Type;
+import org.bukkit.Material;
+import org.mineacademy.fo.Common;
 import org.mineacademy.fo.plugin.SimplePlugin;
 
 public final class DungeonPlugin extends SimplePlugin {
@@ -26,6 +29,13 @@ public final class DungeonPlugin extends SimplePlugin {
     @Override
     protected void onReloadablesStart() {
         initialization();
+
+        Common.log(Common.consoleLine());
+        Common.log(TBSItemUtil.getItemCategory(Material.LEATHER_CHESTPLATE) + " ");
+        Common.log(TBSItemUtil.getItemCategory(Material.GOLDEN_SWORD) + " ");
+        Common.log(TBSItemUtil.getItemCategory(Material.NETHERITE_AXE) + " ");
+        Common.log(TBSItemUtil.getItemCategory(Material.CHAINMAIL_BOOTS) + " ");
+        Common.log(Common.consoleLine());
 
         DungeonSettings.getInstance().onLoad();
     }

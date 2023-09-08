@@ -3,10 +3,7 @@ package dev.tablesalt.dungeon.item.impl.armor;
 import dev.tablesalt.dungeon.collection.Cooldown;
 import dev.tablesalt.dungeon.database.EnchantableItem;
 import dev.tablesalt.dungeon.database.Keys;
-import dev.tablesalt.dungeon.item.EnchantmentLifecycle;
-import dev.tablesalt.dungeon.item.ItemAttribute;
-import dev.tablesalt.dungeon.item.Rarity;
-import dev.tablesalt.dungeon.item.Tier;
+import dev.tablesalt.dungeon.item.*;
 import dev.tablesalt.dungeon.model.TBSSound;
 import dev.tablesalt.dungeon.model.effects.Trail;
 import dev.tablesalt.dungeon.util.TBSItemUtil;
@@ -121,8 +118,8 @@ public class EtherealDodgeAttribute extends ItemAttribute implements Enchantment
     }
 
     @Override
-    public boolean isForArmor() {
-        return true;
+    public ItemType getType() {
+        return ItemType.ARMOR;
     }
 
 

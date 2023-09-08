@@ -2,10 +2,7 @@ package dev.tablesalt.dungeon.item.impl.armor;
 
 import dev.tablesalt.dungeon.database.DungeonCache;
 import dev.tablesalt.dungeon.database.EnchantableItem;
-import dev.tablesalt.dungeon.item.EnchantmentLifecycle;
-import dev.tablesalt.dungeon.item.ItemAttribute;
-import dev.tablesalt.dungeon.item.Rarity;
-import dev.tablesalt.dungeon.item.Tier;
+import dev.tablesalt.dungeon.item.*;
 import dev.tablesalt.dungeon.util.TBSItemUtil;
 import dev.tablesalt.gamelib.game.utils.SimpleRunnable;
 import lombok.Getter;
@@ -65,11 +62,6 @@ public final class LightWeightAttribute extends ItemAttribute implements Enchant
         });
     }
 
-    @Override
-    public boolean isForArmor() {
-        return true;
-    }
-
     private static class LightWeightRunnable extends SimpleRunnable {
 
         protected LightWeightRunnable() {
@@ -95,5 +87,10 @@ public final class LightWeightAttribute extends ItemAttribute implements Enchant
         protected void onTickError(Throwable t) {
             playersWithAttribute.clear();
         }
+    }
+
+    @Override
+    public ItemType getType() {
+        return ItemType.ARMOR;
     }
 }

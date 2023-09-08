@@ -1,6 +1,7 @@
 package dev.tablesalt.dungeon.item.impl.weapon;
 
 import dev.tablesalt.dungeon.item.ItemAttribute;
+import dev.tablesalt.dungeon.item.ItemType;
 import dev.tablesalt.dungeon.item.Rarity;
 import dev.tablesalt.dungeon.item.Tier;
 import dev.tablesalt.dungeon.util.TBSItemUtil;
@@ -41,7 +42,7 @@ public final class FullComboAttribute extends ItemAttribute {
     }
 
     @Override
-    public boolean isForArmor() {
-        return false;
+    public ItemType getType() {
+        return ItemType.WEAPON;
     }
 }
