@@ -29,6 +29,7 @@
     </properties>
 
     <dependencies>
+        <!--> main paper repo -->
         <dependency>
             <groupId>io.papermc.paper</groupId>
             <artifactId>paper-api</artifactId>
@@ -36,6 +37,7 @@
             <scope>provided</scope>
         </dependency>
 
+        <!--> NMS mappings (NEED TO RUN BUILDTOOLS FOR THIS TO WORK with the remaped flag) -->
         <dependency>
             <groupId>org.spigotmc</groupId>
             <artifactId>spigot</artifactId>
@@ -44,12 +46,14 @@
             <classifier>remapped-mojang</classifier>
         </dependency>
 
+        <!--> My own game library -->
         <dependency>
             <groupId>dev.tablesalt</groupId>
             <artifactId>gameLib</artifactId>
             <version>0.1-ALPHA</version>
         </dependency>
 
+        <!--> particle effects -->
         <dependency>
             <groupId>com.elmakers.mine.bukkit</groupId>
             <artifactId>EffectLib</artifactId>
@@ -57,7 +61,14 @@
             <scope>compile</scope>
         </dependency>
 
+        <!--> JSON Helper Library -->
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+            <version>2.10.1</version>
+        </dependency>
 
+        <!--> Not really using here if needed (helps with formatting messages to send) -->
         <dependency>
             <groupId>net.kyori</groupId>
             <artifactId>adventure-api</artifactId>
@@ -70,7 +81,7 @@
             <version>4.14.0</version>
         </dependency>
 
-
+        <!--> Core library  -->
         <dependency>
             <groupId>${foundation.path}</groupId>
             <artifactId>Foundation</artifactId>
@@ -164,7 +175,7 @@
                 <artifactId>maven-jar-plugin</artifactId>
                 <configuration>
                     <outputDirectory>
-                        C:\Users\simon\Desktop\Main\MinecraftPlugins\DevelopmentServer\plugins
+                        /Users/saltsimon/Desktop/Custom Plugins/Server Latest
                     </outputDirectory>
                 </configuration>
                 <!-- Change version to the latest one from

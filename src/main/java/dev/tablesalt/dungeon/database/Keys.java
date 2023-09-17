@@ -18,6 +18,8 @@ public class Keys {
 
     public static final int ENCHANTING_MENU_SLOT = 41;
 
+    public static final String BUNGEE_MESSAGE_CHANNEL = "plugin:dungeon";
+
 
     public static final List<String> KILL_VERB = Arrays.asList(
             "murdered", "killed", "slayed", "terminated",

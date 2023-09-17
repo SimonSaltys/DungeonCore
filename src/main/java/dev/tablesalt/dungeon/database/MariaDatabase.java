@@ -130,7 +130,10 @@ public class MariaDatabase extends SimpleDatabase implements Database {
      */
     private LOAD loadPlayerData(Player player) throws SQLException {
         DungeonCache cache = DungeonCache.from(player);
-        ResultSet playerDataResult = this.query("SELECT * FROM {player_data} WHERE UUID='" + player.getUniqueId() + "'");
+        ResultSet playerDataResult = this.query("" +
+                "SELECT * FROM " +
+                "{player_data} " +
+                "WHERE UUID='" + player.getUniqueId() + "'");
 
         if (playerDataResult == null || !playerDataResult.next())
             return LOAD.NO_SUCCESS;
