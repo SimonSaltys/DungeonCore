@@ -18,9 +18,9 @@
 
         <main.class>dev.tablesalt.dungeon.DungeonPlugin</main.class>
 
-        <foundation.version>6.4.2</foundation.version>
+        <foundation.version>6.5.5</foundation.version>
 
-        <remapped.version>1.20.1-R0.1-SNAPSHOT</remapped.version>
+        <remapped.version>1.20.2-R0.1-SNAPSHOT</remapped.version>
 
         <foundation.path>com.github.kangarko</foundation.path>
 
@@ -29,11 +29,12 @@
     </properties>
 
     <dependencies>
+
         <!--> main paper repo -->
         <dependency>
             <groupId>io.papermc.paper</groupId>
             <artifactId>paper-api</artifactId>
-            <version>1.20.1-R0.1-SNAPSHOT</version>
+            <version>1.20.2-R0.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
 
@@ -89,31 +90,12 @@
         </dependency>
 
 
+
         <!-- https://mvnrepository.com/artifact/org.mariadb.jdbc/mariadb-java-client -->
         <dependency>
             <groupId>org.mariadb.jdbc</groupId>
             <artifactId>mariadb-java-client</artifactId>
             <version>3.1.4</version>
-        </dependency>
-
-
-        <dependency>
-            <groupId>redis.clients</groupId>
-            <artifactId>jedis</artifactId>
-            <version>4.3.0</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.comphenix.protocol</groupId>
-            <artifactId>ProtocolLib</artifactId>
-            <version>4.8.0</version>
-        </dependency>
-
-        <!-- https://mvnrepository.com/artifact/biz.source_code/base64coder -->
-        <dependency>
-            <groupId>biz.source_code</groupId>
-            <artifactId>base64coder</artifactId>
-            <version>2010-12-19</version>
         </dependency>
 
         <!-- https://mvnrepository.com/artifact/org.apache.commons/commons-lang3 -->

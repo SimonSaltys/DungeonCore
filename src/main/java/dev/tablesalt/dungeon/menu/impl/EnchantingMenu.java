@@ -109,12 +109,12 @@ public class EnchantingMenu extends TBSMenu {
     }
 
     @Override
-    protected void onRestart() {
+    public void onRestart() {
         updateEnchantingButton();
     }
 
     @Override
-    protected void onDisplay(InventoryDrawer drawer) {
+    protected void onPreDisplay(InventoryDrawer drawer) {
         DungeonCache cache = DungeonCache.from(getViewer());
 
         EnchantableItem itemLeftInMenu = cache.getItemInEnchanter();

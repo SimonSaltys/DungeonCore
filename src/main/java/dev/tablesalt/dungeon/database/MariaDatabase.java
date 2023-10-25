@@ -56,7 +56,7 @@ public class MariaDatabase extends SimpleDatabase implements Database {
 
         connect(jdbcUrl, username, password);
 
-        Common.runLaterAsync(() -> {
+        Common.runLaterAsync(0,() -> {
             makePlayerInventoryTable();
             makePlayerDataTable();
         });

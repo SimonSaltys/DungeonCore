@@ -26,7 +26,7 @@ public class TBSMenu extends Menu {
     }
 
 
-    protected void onRestart() {
+    public void onRestart() {
     }
 
     protected void onMenuDrag(Player player, int slot, DragType type, ItemStack cursor) {
