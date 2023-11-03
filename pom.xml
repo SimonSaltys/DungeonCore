@@ -89,7 +89,11 @@
             <version>${foundation.version}</version>
         </dependency>
 
-
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>2.14.2</version>
+        </dependency>
 
         <!-- https://mvnrepository.com/artifact/org.mariadb.jdbc/mariadb-java-client -->
         <dependency>
@@ -157,7 +161,7 @@
                 <artifactId>maven-jar-plugin</artifactId>
                 <configuration>
                     <outputDirectory>
-                        /Users/saltsimon/Desktop/Custom Plugins/Server Latest
+                        /Users/saltsimon/Desktop/Custom Plugins/Server Latest/plugins
                     </outputDirectory>
                 </configuration>
                 <!-- Change version to the latest one from

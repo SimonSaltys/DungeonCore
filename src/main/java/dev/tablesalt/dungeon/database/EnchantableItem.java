@@ -1,11 +1,15 @@
 package dev.tablesalt.dungeon.database;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.tablesalt.dungeon.item.ItemAttribute;
 import dev.tablesalt.dungeon.item.Rarity;
 import dev.tablesalt.dungeon.item.Tier;
 import dev.tablesalt.dungeon.util.TBSItemUtil;
 import lombok.Getter;
 import lombok.Setter;
+import org.apache.logging.log4j.core.util.JsonUtils;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -77,13 +81,35 @@ public class EnchantableItem implements ConfigSerializable {
     private Map<String, Integer> serializeAttributeTierMap() {
         Map<String, Integer> serializedMap = new HashMap<>();
 
-
         // Transform ItemAttribute keys into strings and populate the new map
         for (Map.Entry<ItemAttribute, Integer> entry : attributeTierMap.entrySet()) {
             serializedMap.put(entry.getKey().getName(), entry.getValue());
         }
 
         return serializedMap;
+    }
+
+    public static Map<ItemAttribute,Integer> deserializeAttributeTierMap(String jsonMap) {
+        Map<ItemAttribute,Integer> finalMap = new HashMap<>();
+
+        try {
+            Map<String,Integer> result = new ObjectMapper().readValue(jsonMap, new TypeReference<>(){});
+
+            for (String nameOfAttribute : result.keySet()) {
+                ItemAttribute attribute = ItemAttribute.fromName(nameOfAttribute);
+
+                if (attribute == null)
+                    continue;
+
+                finalMap.put(attribute,result.get(nameOfAttribute));
+            }
+
+        } catch (JsonProcessingException ex) {
+            Common.error(ex,"Could not deserialize jsonMap");
+        }
+
+
+        return finalMap;
     }
 
     @Override
@@ -99,39 +125,6 @@ public class EnchantableItem implements ConfigSerializable {
         return obj instanceof EnchantableItem && ((EnchantableItem) obj).getUuid().equals(uuid);
     }
 
-    /**
-     * Returns the slot number of this item in
-     * the specified players inventory
-     * returns Null if the item is not found.
-     */
-    public Integer getSlotInInventory(Player player) {
-        DungeonCache cache = DungeonCache.from(player);
-
-        if (cache.getEnchantableItems().contains(this)) {
-            ItemStack[] contents = player.getInventory().getContents();
-
-            for (int i = 0; i < contents.length; i++) {
-                ItemStack checkedItem = contents[i];
-
-                if (checkedItem == null)
-                    continue;
-
-                UUID checkedUUID = TBSItemUtil.getItemsUUID(checkedItem);
-
-                if (checkedUUID == null || !checkedUUID.equals(uuid))
-                    continue;
-
-                return i;
-            }
-        }
-
-        if (cache.getItemInEnchanter() != null)
-            return Keys.ENCHANTING_MENU_SLOT;
-
-
-        return null;
-
-    }
 
     /**
      * Attempts to add the attribute and current tier

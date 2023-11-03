@@ -29,10 +29,6 @@ public class DatabaseListener implements Listener {
     public void onLeave(PlayerQuitEvent event) {
         Player player = event.getPlayer();
 
-        MariaDatabase.getInstance().saveCache(player, cache -> {
-            PlayerUtil.normalize(player, true);
-            Common.broadcast("SAVING cache for " + player.getName());
-        });
     }
 
     @EventHandler
