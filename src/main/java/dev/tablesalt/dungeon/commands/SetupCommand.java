@@ -1,28 +1,41 @@
 package dev.tablesalt.dungeon.commands;
 
+import dev.tablesalt.dungeon.database.MariaDatabase;
 import dev.tablesalt.dungeon.tools.EnchantingWellTool;
 import dev.tablesalt.gamelib.commands.GameSubCommand;
+import org.bukkit.entity.Player;
+import org.mineacademy.fo.Common;
+
+import java.util.Arrays;
+import java.util.List;
 
 public final class SetupCommand extends GameSubCommand {
     private SetupCommand() {
-        super("setup", 0, "", "gives you all the setup tools");
+        super("database", 1, "load|save", "loads and saves from database");
     }
 
     @Override
     protected void onCommand() {
 
-        EnchantingWellTool.getInstance().give(getPlayer());
-//        Player player = getPlayer();
-//
-//        player.getInventory().setItem(EquipmentSlot.HEAD, ItemCreator.of(CompMaterial.DIAMOND_HELMET).make());
-//        player.getInventory().setItem(EquipmentSlot.CHEST, ItemCreator.of(CompMaterial.DIAMOND_CHESTPLATE).make());
-//        player.getInventory().setItem(EquipmentSlot.LEGS, ItemCreator.of(CompMaterial.DIAMOND_LEGGINGS).make());
-//        player.getInventory().setItem(EquipmentSlot.FEET, ItemCreator.of(CompMaterial.DIAMOND_BOOTS).make());
-//
-//        player.getInventory().setItem(EquipmentSlot.OFF_HAND, ItemCreator.of(CompMaterial.SHIELD).make());
-//
-//        for (int i = 0; i < 9; i++)
-//            player.getInventory().setItem(i, ItemCreator.of(CompMaterial.RED_WOOL).make());
+        Player player = getPlayer();
+        String arg = args[0];
 
+        if (arg.equalsIgnoreCase("load"))
+            MariaDatabase.getInstance().loadCache(player,cache -> {});
+
+        else if(arg.equalsIgnoreCase("save"))
+            MariaDatabase.getInstance().saveCache(player);
+
+        else
+            tellError("Please use the arguments save or load.");
+    }
+
+
+    @Override
+    protected List<String> tabComplete() {
+        if (args.length == 1)
+            return Arrays.asList("save","load");
+
+        return NO_COMPLETE;
     }
 }

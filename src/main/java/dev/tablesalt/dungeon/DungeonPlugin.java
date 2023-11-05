@@ -23,19 +23,11 @@ public final class DungeonPlugin extends SimplePlugin {
 
     @Override
     public void onPluginStart() {
-
     }
 
     @Override
     protected void onReloadablesStart() {
         initialization();
-
-        Common.log(Common.consoleLine());
-        Common.log(TBSItemUtil.getItemCategory(Material.LEATHER_CHESTPLATE) + " ");
-        Common.log(TBSItemUtil.getItemCategory(Material.GOLDEN_SWORD) + " ");
-        Common.log(TBSItemUtil.getItemCategory(Material.NETHERITE_AXE) + " ");
-        Common.log(TBSItemUtil.getItemCategory(Material.CHAINMAIL_BOOTS) + " ");
-        Common.log(Common.consoleLine());
 
         DungeonSettings.getInstance().onLoad();
     }

@@ -12,7 +12,9 @@ import lombok.Setter;
 import org.apache.logging.log4j.core.util.JsonUtils;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.PlayerInventory;
 import org.mineacademy.fo.Common;
 import org.mineacademy.fo.ItemUtil;
 import org.mineacademy.fo.collection.SerializedMap;
@@ -21,12 +23,15 @@ import org.mineacademy.fo.model.ConfigSerializable;
 import org.mineacademy.fo.remain.CompMaterial;
 import org.mineacademy.fo.remain.CompMetadata;
 
+import java.io.IOException;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.*;
 import java.util.function.BiConsumer;
 
 @Getter
 @Setter
-public class EnchantableItem implements ConfigSerializable {
+public class EnchantableItem {
 
     public static final Integer MAX_ENCHANTS_PER_ITEM = 3;
 
@@ -67,18 +72,7 @@ public class EnchantableItem implements ConfigSerializable {
 
     }
 
-    @Override
-    public SerializedMap serialize() {
-        return SerializedMap.ofArray(
-                "Name", name,
-                "Material", material,
-                "Attributes", serializeAttributeTierMap(),
-                "Tier", currentTier,
-                "UUID", uuid
-        );
-    }
-
-    private Map<String, Integer> serializeAttributeTierMap() {
+    public String serializeAttributeTierMap() {
         Map<String, Integer> serializedMap = new HashMap<>();
 
         // Transform ItemAttribute keys into strings and populate the new map
@@ -86,7 +80,14 @@ public class EnchantableItem implements ConfigSerializable {
             serializedMap.put(entry.getKey().getName(), entry.getValue());
         }
 
-        return serializedMap;
+        // Serialize the map to JSON string using Jackson
+        ObjectMapper objectMapper = new ObjectMapper();
+        try {
+            return objectMapper.writeValueAsString(serializedMap);
+        } catch (IOException e) {
+             Common.error(e,"Could not convert Attribute and Tier map for item " + getName() + " to json!!!");
+            return null;
+        }
     }
 
     public static Map<ItemAttribute,Integer> deserializeAttributeTierMap(String jsonMap) {
@@ -243,30 +244,14 @@ public class EnchantableItem implements ConfigSerializable {
         return enchantableItem;
     }
 
-    public static EnchantableItem deserialize(SerializedMap map) {
+    public static EnchantableItem fromResultSet(ResultSet resultSetItem) throws SQLException {
+        UUID itemId = UUID.fromString(resultSetItem.getString("ITEM_ID"));
 
-        String name = map.getString("Name");
-        Material material = map.getMaterial("Material").toMaterial();
-        Tier currentTier = map.get("Tier", Tier.class);
-        UUID uuid = map.getUUID("UUID");
-        Map<ItemAttribute, Integer> attributes = nameToItemMap(map.getMap("Attributes", String.class, Integer.class));
-
-        return new EnchantableItem(uuid, name, material, attributes, currentTier);
-    }
-
-    public static Map<ItemAttribute, Integer> nameToItemMap(HashMap<String, Integer> attributes) {
-
-        return Common.convert(attributes, new Common.MapToMapConverter<>() {
-            @Override
-            public ItemAttribute convertKey(String key) {
-                return ItemAttribute.fromName(key);
-            }
-
-            @Override
-            public Integer convertValue(Integer value) {
-                return value;
-            }
-        });
+        return new EnchantableItem(itemId,
+                resultSetItem.getString("Name"),
+                Material.valueOf(resultSetItem.getString("Material")),
+                EnchantableItem.deserializeAttributeTierMap(resultSetItem.getString("Attributes")),
+                Tier.fromInteger(resultSetItem.getInt("Tier")));
     }
 
 
@@ -288,6 +273,17 @@ public class EnchantableItem implements ConfigSerializable {
             enchantableItems.add(item);
 
         return enchantableItems;
+    }
 
+    public static int getSlotInPlayersInventory(EnchantableItem item, Player player) {
+        PlayerInventory inventory = player.getInventory();
+
+       for (int i = 0; i < inventory.getSize(); i++) {
+           UUID itemStackUUID = TBSItemUtil.getItemsUUID(inventory.getItem(i));
+
+           if (itemStackUUID != null && itemStackUUID == item.getUuid())
+               return i;
+       }
+        return 10;
     }
 }

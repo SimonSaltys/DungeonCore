@@ -64,7 +64,6 @@ public class MariaDatabase extends SimpleDatabase implements Database {
         String createTableSQL = String.format(
                 "CREATE TABLE IF NOT EXISTS %s (" +
                         "ITEM_ID VARCHAR(64) NOT NULL, " +
-                        "Owner VARCHAR(64), " +
                         "Tier TINYINT(10), " +
                         "Name VARCHAR(32), " +
                         "Material TEXT, " +
@@ -130,14 +129,33 @@ public class MariaDatabase extends SimpleDatabase implements Database {
 
                 Common.runLater(() -> callThisWhenDataLoaded.accept(DungeonCache.from(player)));
 
-
             } catch (Throwable t) {
-                Common.error(t, "Unable to load player data for " + player.getName());
+                Common.error(t, "Unable to LOAD player data for " + player.getName());
             }
         });
     }
 
-    private void loadPlayerData(Player player) throws SQLException {
+    public void saveCache(Player player) {
+        Valid.checkSync("Please call saveCache on the main thread.");
+
+        Common.runAsync(() -> {
+
+            try {
+                saveItems(player);
+                saveData(player);
+
+
+            } catch (Throwable t) {
+                Common.error(t, "Unable to SAVE player data for " + player.getName());
+            }
+        });
+    }
+
+    /*----------------------------------------------------------------*/
+    /* HELPER METHODS FOR SAVING AND LOADING */
+    /*----------------------------------------------------------------*/
+
+    private void loadPlayerData(Player player)  {
         DungeonCache cache = DungeonCache.from(player);
         String sql = "SELECT * FROM player_data WHERE UUID = ?";
 
@@ -158,40 +176,94 @@ public class MariaDatabase extends SimpleDatabase implements Database {
             }
         } catch (SQLException e) {
             // Handle exception
-            e.printStackTrace();
+           Common.error(e,"Could not load the players " + player.getName() + " data!");
         }
     }
 
 
-    private void loadEnchantableItems(Player player) throws SQLException {
+    private void loadEnchantableItems(Player player)  {
         String playerUUID = player.getUniqueId().toString();
 
-        String query = "SELECT ei.*, pit.Slot_In_Inventory FROM Enchantable_Items AS ei " +
-                "JOIN player_item_table AS pit ON ei.ITEM_ID = pit.ITEM_ID " +
-                "WHERE ei.Owner = ? AND pit.UUID = ?";
+        String playerItemsTableQuery = "SELECT ITEM_ID, Slot_In_Inventory FROM " + playerItemTable + " WHERE UUID = ?";
 
-        try (PreparedStatement statement = this.getConnection().prepareStatement(query)) {
+        try (PreparedStatement statement = this.getConnection().prepareStatement(playerItemsTableQuery)) {
             statement.setString(1, playerUUID); // This sets the first "?" to the player's UUID
-            statement.setString(2, playerUUID); // This sets the second "?" to the player's UUID
 
-            try (ResultSet resultSet = statement.executeQuery()) {
-                while (resultSet.next()) {
-                    // Create UUID from ITEM_ID
-                    UUID itemId = UUID.fromString(resultSet.getString("ITEM_ID"));
-                    String name = resultSet.getString("Name");
-                    Material material = Material.getMaterial(resultSet.getString("Material"));
-                    Tier tier = Tier.fromInteger(resultSet.getInt("Tier"));
-                    int slotInInventory = resultSet.getInt("Slot_In_Inventory");
+            try (ResultSet playerItemsResult = statement.executeQuery()) {
+                while (playerItemsResult.next()) {
 
-                    Map<ItemAttribute, Integer> attributes = EnchantableItem.deserializeAttributeTierMap(resultSet.getString("Attributes"));
+                    //Let's get the UUID of the Item and what slot it should be in for the player.
+                    UUID itemId = UUID.fromString(playerItemsResult.getString("ITEM_ID"));
+                    int slotInInventory = playerItemsResult.getInt("Slot_In_Inventory");
 
-                    EnchantableItem item = new EnchantableItem(itemId, name, material, attributes, tier);
+                    //Now lets query the item table with the UUID of the item found to get its data...
+                    String itemTableQuery = "SELECT * FROM " + itemTable + " WHERE ITEM_ID = ?";
+                    try (PreparedStatement stmtItem = getConnection().prepareStatement(itemTableQuery)) {
+                        stmtItem.setString(1, itemId.toString());
+                        ResultSet itemResult = stmtItem.executeQuery();
 
-                    player.getInventory().setItem(slotInInventory, item.compileToItemStack());
+                        //no while here since we are expecting one result.
+                        if (itemResult.next()) {
+                            // Create an item instance from the ResultSet
+                            EnchantableItem item = EnchantableItem.fromResultSet(itemResult);
+
+                            // Add the item to the player's inventory in the correct slot and update their cache
+                            DungeonCache.from(player).addEnchantableItem(item);
+                            player.getInventory().setItem(slotInInventory, item.compileToItemStack());
+                        }
+                    }
                 }
             }
+        } catch (SQLException e) {
+            Common.error(e,"Could not load items from the database to the player " + player);
         }
     }
+
+    private void saveData(Player player) {
+        String dataSql = "UPDATE " + playerTable + " SET Data = ?, Updated = NOW()";
+
+        try(PreparedStatement statement = this.getConnection().prepareStatement(dataSql)) {
+            statement.setString(1,DungeonCache.from(player).toSerializedMap().toJson());
+        } catch (SQLException e) {
+            Common.error(e,"Could not save players cached data.");
+        }
+    }
+
+
+    private void saveItems(Player player) {
+        DungeonCache cache = DungeonCache.from(player);
+
+        for (EnchantableItem item : cache.getEnchantableItems()) {
+            String sqlItem = "REPLACE INTO " + itemTable + " (ITEM_ID, Tier, Name, Material, Attributes) VALUES (?, ?, ?, ?, ?)";
+            try(PreparedStatement saveToItemTableStatement = getConnection().prepareStatement(sqlItem)) {
+
+                saveToItemTableStatement.setString(1, item.getUuid().toString());
+                saveToItemTableStatement.setInt(2, item.getCurrentTier().getAsInteger());
+                saveToItemTableStatement.setString(3, item.getName());
+                saveToItemTableStatement.setString(4, item.getMaterial().toString());
+                saveToItemTableStatement.setString(5, item.serializeAttributeTierMap()); // Convert attributes to JSON
+                saveToItemTableStatement.executeUpdate();
+
+            } catch (SQLException e) {
+               Common.error(e,"Could not save item " + item.getName() + " to the items table!!!");
+            }
+
+            // Now we only need to update the player_items with the reference
+            String sqlPlayerItems = "REPLACE INTO " + playerItemTable + " (UUID, ITEM_ID, Slot_In_Inventory) VALUES (?, ?, ?)";
+            try (PreparedStatement stmtPlayerItems = getConnection().prepareStatement(sqlPlayerItems)) {
+                stmtPlayerItems.setString(1, player.getUniqueId().toString());
+                stmtPlayerItems.setString(2, item.getUuid().toString());
+                stmtPlayerItems.setInt(3, EnchantableItem.getSlotInPlayersInventory(item,player)); // Assuming `getInventorySlot` returns the slot index
+                stmtPlayerItems.executeUpdate();
+            } catch (SQLException e) {
+              Common.error(e,"Could not save " + item.getName() + " into the player_items table!!");
+            }
+        }
+
+    }
+
+
+
 }
 
 
