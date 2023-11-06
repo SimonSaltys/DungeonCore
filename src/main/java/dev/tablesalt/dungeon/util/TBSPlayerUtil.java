@@ -41,10 +41,6 @@ public class TBSPlayerUtil {
 
         HashMap<Integer, ItemStack> failedItems = player.getInventory().addItem(itemStack);
 
-        if (!failedItems.containsValue(itemStack))
-            if (TBSItemUtil.isEnchantable(itemStack))
-                DungeonCache.from(player).addEnchantableItem(itemStack);
-
         for (Map.Entry<Integer, ItemStack> entry : failedItems.entrySet()) {
             player.getWorld().dropItemNaturally(player.getLocation(), entry.getValue());
         }

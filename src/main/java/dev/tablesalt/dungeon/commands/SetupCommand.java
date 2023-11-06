@@ -1,6 +1,9 @@
 package dev.tablesalt.dungeon.commands;
 
+import dev.tablesalt.dungeon.database.DungeonCache;
+import dev.tablesalt.dungeon.database.EnchantableItem;
 import dev.tablesalt.dungeon.database.MariaDatabase;
+import dev.tablesalt.dungeon.item.ItemAttribute;
 import dev.tablesalt.dungeon.tools.EnchantingWellTool;
 import dev.tablesalt.gamelib.commands.GameSubCommand;
 import org.bukkit.entity.Player;
@@ -26,6 +29,11 @@ public final class SetupCommand extends GameSubCommand {
         else if(arg.equalsIgnoreCase("save"))
             MariaDatabase.getInstance().saveCache(player);
 
+
+        else if(arg.equalsIgnoreCase("test")) {
+
+        }
+
         else
             tellError("Please use the arguments save or load.");
     }
@@ -34,7 +42,7 @@ public final class SetupCommand extends GameSubCommand {
     @Override
     protected List<String> tabComplete() {
         if (args.length == 1)
-            return Arrays.asList("save","load");
+            return Arrays.asList("save","load","test");
 
         return NO_COMPLETE;
     }

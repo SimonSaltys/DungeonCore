@@ -3,10 +3,12 @@ package dev.tablesalt.dungeon.database;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
 import dev.tablesalt.dungeon.item.ItemAttribute;
 import dev.tablesalt.dungeon.item.Rarity;
 import dev.tablesalt.dungeon.item.Tier;
 import dev.tablesalt.dungeon.util.TBSItemUtil;
+import io.r2dbc.spi.Parameter;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.logging.log4j.core.util.JsonUtils;
@@ -33,6 +35,8 @@ import java.util.function.BiConsumer;
 @Setter
 public class EnchantableItem {
 
+    private static final List<EnchantableItem> allItems = new ArrayList<>();
+
     public static final Integer MAX_ENCHANTS_PER_ITEM = 3;
 
     private String name;
@@ -43,24 +47,18 @@ public class EnchantableItem {
 
     private ItemAttribute lastAdded;
 
-
     private Tier currentTier;
 
     private final UUID uuid;
 
-    public EnchantableItem(UUID uuid) {
-        this(uuid, "", Material.AIR, new HashMap<>(), Tier.NONE);
-    }
-
-
-    public EnchantableItem(UUID uuid, String name, Material material, Map<ItemAttribute, Integer> attributeTierMap, Tier tier) {
+    private EnchantableItem(UUID uuid, String name, Material material, Map<ItemAttribute, Integer> attributeTierMap, Tier tier) {
         this.name = name;
         this.material = material;
         this.attributeTierMap = attributeTierMap;
         this.currentTier = tier;
-
-
         this.uuid = uuid;
+
+        allItems.add(this);
     }
 
     public static EnchantableItem makeArmor() {
@@ -74,35 +72,32 @@ public class EnchantableItem {
 
     public String serializeAttributeTierMap() {
         Map<String, Integer> serializedMap = new HashMap<>();
+        // Check for non-null keys before adding them to the serialized map
+        for (ItemAttribute entry : attributeTierMap.keySet()) {
 
-        // Transform ItemAttribute keys into strings and populate the new map
-        for (Map.Entry<ItemAttribute, Integer> entry : attributeTierMap.entrySet()) {
-            serializedMap.put(entry.getKey().getName(), entry.getValue());
+            if (entry == null)
+                continue;
+
+            serializedMap.put(Common.stripColors(entry.getName()), attributeTierMap.get(entry));
         }
 
-        // Serialize the map to JSON string using Jackson
-        ObjectMapper objectMapper = new ObjectMapper();
-        try {
-            return objectMapper.writeValueAsString(serializedMap);
-        } catch (IOException e) {
-             Common.error(e,"Could not convert Attribute and Tier map for item " + getName() + " to json!!!");
-            return null;
-        }
+        Gson gson = new Gson();
+        return gson.toJson(serializedMap);
+
     }
 
-    public static Map<ItemAttribute,Integer> deserializeAttributeTierMap(String jsonMap) {
-        Map<ItemAttribute,Integer> finalMap = new HashMap<>();
+    public static HashMap<ItemAttribute,Integer> deserializeAttributeTierMap(String jsonMap) {
+        HashMap<ItemAttribute,Integer> finalMap = new HashMap<>();
 
         try {
             Map<String,Integer> result = new ObjectMapper().readValue(jsonMap, new TypeReference<>(){});
 
             for (String nameOfAttribute : result.keySet()) {
                 ItemAttribute attribute = ItemAttribute.fromName(nameOfAttribute);
+                Integer tier = result.get(nameOfAttribute);
 
-                if (attribute == null)
-                    continue;
-
-                finalMap.put(attribute,result.get(nameOfAttribute));
+                if (attribute != null && tier != null)
+                    finalMap.put(attribute,tier);
             }
 
         } catch (JsonProcessingException ex) {
@@ -132,9 +127,6 @@ public class EnchantableItem {
      * if not already added
      */
     public void addAttribute(ItemAttribute attribute, Tier tier) {
-        if (attributeTierMap.containsKey(attribute))
-            return;
-
         attributeTierMap.put(attribute, tier.getAsInteger());
         lastAdded = attribute;
     }
@@ -156,8 +148,9 @@ public class EnchantableItem {
     public List<String> getLores() {
         List<String> lore = new ArrayList<>();
 
-        for (ItemAttribute attribute : attributeTierMap.keySet())
-            lore.addAll(attribute.getAttributeLore(Tier.fromInteger(attributeTierMap.get(attribute))));
+        forAllAttributes(((attribute, tier) -> {
+            lore.addAll(attribute.getAttributeLore(tier));
+        }));
 
         return lore;
     }
@@ -176,8 +169,13 @@ public class EnchantableItem {
     }
 
     public void forAllAttributes(BiConsumer<ItemAttribute, Tier> consumer) {
-        for (ItemAttribute attribute : attributeTierMap.keySet())
-            consumer.accept(attribute, Tier.fromInteger(attributeTierMap.get(attribute)));
+        for (ItemAttribute attribute : attributeTierMap.keySet()) {
+            Integer tierValue = attributeTierMap.get(attribute);
+
+            if (tierValue != null)
+                consumer.accept(attribute, Tier.fromInteger(tierValue));
+        }
+
 
     }
 
@@ -189,7 +187,11 @@ public class EnchantableItem {
         item = CompMetadata.setMetadata(item, "Tier", currentTier.getAsInteger() + "");
 
         int attributeAdded = 0;
+
         for (ItemAttribute attribute : attributeTierMap.keySet()) {
+            if (attribute == null)
+                continue;
+
             attributeAdded++;
             item = CompMetadata.setMetadata(item, "attribute_" + attributeAdded,
                     SerializedMap.ofArray(
@@ -219,29 +221,30 @@ public class EnchantableItem {
         if (uuidString == null)
             return null;
 
-        EnchantableItem enchantableItem = new EnchantableItem(UUID.fromString(uuidString));
+        UUID uuid = UUID.fromString(uuidString);
+        String name = item.getType().equals(Material.LEATHER_CHESTPLATE) ? "Tunic" : item.getType().toString();
+        Material material = item.getType();
+        Map<ItemAttribute,Integer> attributes = new HashMap<>();
+        Tier tier = Tier.NONE;
 
         if (tierString != null) {
             int integer = Integer.parseInt(tierString);
-            enchantableItem.setCurrentTier(Tier.fromInteger(integer));
+            tier = Tier.fromInteger(integer);
         }
 
-        enchantableItem.setMaterial(item.getType());
-        enchantableItem.setName(item.getType().equals(Material.LEATHER_CHESTPLATE) ? "Tunic" : item.getType().toString());
-
-
-        for (int i = 0; i < MAX_ENCHANTS_PER_ITEM; i++) {
+        //todo change later............ back to max_enchants_per_item
+        for (int i = 0; i < 100; i++) {
             String json = CompMetadata.getMetadata(item, "attribute_" + (i + 1));
             if (json == null)
                 continue;
 
             SerializedMap map = SerializedMap.fromJson(json);
-            enchantableItem.getAttributeTierMap().put(
-                    ItemAttribute.fromName(map.getString("Name")),
+
+            attributes.put(ItemAttribute.fromName(map.getString("Name")),
                     map.getInteger("Tier"));
         }
 
-        return enchantableItem;
+        return new EnchantableItem(uuid,name,material,attributes,tier);
     }
 
     public static EnchantableItem fromResultSet(ResultSet resultSetItem) throws SQLException {
@@ -275,15 +278,7 @@ public class EnchantableItem {
         return enchantableItems;
     }
 
-    public static int getSlotInPlayersInventory(EnchantableItem item, Player player) {
-        PlayerInventory inventory = player.getInventory();
-
-       for (int i = 0; i < inventory.getSize(); i++) {
-           UUID itemStackUUID = TBSItemUtil.getItemsUUID(inventory.getItem(i));
-
-           if (itemStackUUID != null && itemStackUUID == item.getUuid())
-               return i;
-       }
-        return 10;
+    public static List<EnchantableItem> getAllItems() {
+        return Collections.unmodifiableList(allItems);
     }
 }

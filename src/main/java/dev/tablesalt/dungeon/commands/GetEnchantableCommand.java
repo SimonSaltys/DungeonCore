@@ -73,18 +73,16 @@ public final class GetEnchantableCommand extends GameSubCommand {
             EnchantableItem enchantableItem = EnchantableItem.fromItemStack(itemInHand);
             enchantableItem.addAttribute(ItemAttribute.fromName(enchantName), tier);
             player.getInventory().setItemInMainHand(enchantableItem.compileToItemStack());
+
         } else {
+            EnchantableItem item;
+            if (weaponOrArmor.equalsIgnoreCase("Weapon"))
+                item = EnchantableItem.makeWeapon();
+            else
+                item = EnchantableItem.makeArmor();
 
-            HashMap<ItemAttribute, Integer> attributeTierHashMap = new HashMap<>();
-            attributeTierHashMap.put(ItemAttribute.fromName(enchantName), tier.getAsInteger());
-
-            EnchantableItem enchantableItem = new EnchantableItem(UUID.randomUUID(), "Custom Item",
-                    (weaponOrArmor.equalsIgnoreCase("Weapon") ? Material.GOLDEN_SWORD : Material.LEATHER_CHESTPLATE),
-                    attributeTierHashMap, Tier.NONE);
-
-            player.getInventory().setItemInMainHand(enchantableItem.compileToItemStack());
+            player.getInventory().setItemInMainHand(item.compileToItemStack());
         }
-
     }
 
 

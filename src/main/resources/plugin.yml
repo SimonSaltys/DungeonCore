@@ -11,7 +11,7 @@ libraries:
   - biz.source_code:base64coder:2010-12-19
   - org.apache.commons:commons-math3:3.6.1
   - org.mariadb.jdbc:mariadb-java-client:3.1.4
-  - com.fasterxml.jackson.core:2.14.2
+  - com.fasterxml.jackson.core:jackson-databind:2.14.2
 
 
 authors: [ SimonSaltikov ]
