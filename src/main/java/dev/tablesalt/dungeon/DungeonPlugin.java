@@ -3,6 +3,7 @@ package dev.tablesalt.dungeon;
 
 import dev.tablesalt.dungeon.configitems.LootChance;
 import dev.tablesalt.dungeon.database.DungeonCache;
+import dev.tablesalt.dungeon.database.EnchantableItem;
 import dev.tablesalt.dungeon.database.MariaDatabase;
 import dev.tablesalt.dungeon.game.DungeonGame;
 import dev.tablesalt.dungeon.item.ItemAttribute;
@@ -15,8 +16,11 @@ import dev.tablesalt.gamelib.game.helpers.GameListener;
 import dev.tablesalt.gamelib.game.types.GameTypeList;
 import dev.tablesalt.gamelib.game.types.Type;
 import org.bukkit.Material;
+import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.mineacademy.fo.Common;
 import org.mineacademy.fo.plugin.SimplePlugin;
+import org.mineacademy.fo.remain.Remain;
 
 public final class DungeonPlugin extends SimplePlugin {
 
@@ -24,18 +28,27 @@ public final class DungeonPlugin extends SimplePlugin {
     @Override
     public void onPluginStart() {
 
+        Common.runTimer(20,() -> {
+
+            for (Player player : Remain.getOnlinePlayers())
+                for (ItemStack stack : player.getInventory()) {
+                    if (TBSItemUtil.isEnchantable(stack)) {
+                        //
+//                        Common.broadcast(item + "<------");
+//
+//                        Common.broadcast(item.getAttributeTierMap().size() + " SIZE");
+//                        Common.broadcast(item.getAttributeTierMap().toString() + " CONTENTS");
+//                        Common.broadcast(" ");
+                    }
+                }
+        });
+
+
     }
 
     @Override
     protected void onReloadablesStart() {
         initialization();
-
-        Common.log(Common.consoleLine());
-        Common.log(TBSItemUtil.getItemCategory(Material.LEATHER_CHESTPLATE) + " ");
-        Common.log(TBSItemUtil.getItemCategory(Material.GOLDEN_SWORD) + " ");
-        Common.log(TBSItemUtil.getItemCategory(Material.NETHERITE_AXE) + " ");
-        Common.log(TBSItemUtil.getItemCategory(Material.CHAINMAIL_BOOTS) + " ");
-        Common.log(Common.consoleLine());
 
         DungeonSettings.getInstance().onLoad();
     }
@@ -55,9 +68,9 @@ public final class DungeonPlugin extends SimplePlugin {
     private void initialization() {
         GameTypeList.getInstance().addType(new Type<>("dungeon", DungeonGame.class));
         LootChance.loadChances();
+        ItemAttribute.registerAttributes();
 
         MariaDatabase.getInstance().connect();
-        ItemAttribute.registerAttributes();
         Effects.loadEffects();
 
         registerDungeonEvents();

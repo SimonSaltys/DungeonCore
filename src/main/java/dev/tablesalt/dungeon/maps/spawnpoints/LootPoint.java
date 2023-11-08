@@ -2,6 +2,7 @@ package dev.tablesalt.dungeon.maps.spawnpoints;
 
 
 import dev.tablesalt.dungeon.DungeonStaticSettings;
+import dev.tablesalt.dungeon.database.EnchantableItem;
 import dev.tablesalt.dungeon.maps.DungeonMap;
 import dev.tablesalt.dungeon.configitems.LootChance;
 import dev.tablesalt.dungeon.util.TBSItemUtil;
@@ -94,7 +95,7 @@ public class LootPoint extends SpawnPoint {
             ItemStack itemToAdd = null;
 
             if (dropType == DropType.MYTHIC && mysticsAdded < lootChance.getMaxMythicDrops()) {
-                itemToAdd = TBSItemUtil.makeEnchantableArmor().compileToItemStack();
+                itemToAdd = EnchantableItem.makeArmor().compileToItemStack();
                 mysticsAdded++;
 
             } else if(dropType == DropType.GOLD && goldAdded < lootChance.getMaxGoldDrops()) {

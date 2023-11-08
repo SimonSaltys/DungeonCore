@@ -21,7 +21,8 @@ public final class Effects {
     }
 
     public static void disable() {
-        effectManager.dispose();
+        if (effectManager != null)
+             effectManager.dispose();
     }
 
 

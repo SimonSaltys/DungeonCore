@@ -1,14 +1,22 @@
 package dev.tablesalt.dungeon.database;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
 import dev.tablesalt.dungeon.item.ItemAttribute;
 import dev.tablesalt.dungeon.item.Rarity;
 import dev.tablesalt.dungeon.item.Tier;
 import dev.tablesalt.dungeon.util.TBSItemUtil;
+import io.r2dbc.spi.Parameter;
 import lombok.Getter;
 import lombok.Setter;
+import org.apache.logging.log4j.core.util.JsonUtils;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.PlayerInventory;
 import org.mineacademy.fo.Common;
 import org.mineacademy.fo.ItemUtil;
 import org.mineacademy.fo.collection.SerializedMap;
@@ -17,14 +25,17 @@ import org.mineacademy.fo.model.ConfigSerializable;
 import org.mineacademy.fo.remain.CompMaterial;
 import org.mineacademy.fo.remain.CompMetadata;
 
+import java.io.IOException;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.*;
 import java.util.function.BiConsumer;
 
 @Getter
 @Setter
-public class EnchantableItem implements ConfigSerializable {
+public class EnchantableItem {
 
-    public static final Integer MAX_ENCHANTS_PER_ITEM = 3;
+    public static final Integer MAX_ENCHANTS_PER_ITEM = 100;
 
     private String name;
 
@@ -34,24 +45,17 @@ public class EnchantableItem implements ConfigSerializable {
 
     private ItemAttribute lastAdded;
 
-
     private Tier currentTier;
 
     private final UUID uuid;
 
-    public EnchantableItem(UUID uuid) {
-        this(uuid, "", Material.AIR, new HashMap<>(), Tier.NONE);
-    }
-
-
-    public EnchantableItem(UUID uuid, String name, Material material, Map<ItemAttribute, Integer> attributeTierMap, Tier tier) {
+    private EnchantableItem(UUID uuid, String name, Material material, Map<ItemAttribute, Integer> attributeTierMap, Tier tier) {
         this.name = name;
         this.material = material;
         this.attributeTierMap = attributeTierMap;
         this.currentTier = tier;
-
-
         this.uuid = uuid;
+
     }
 
     public static EnchantableItem makeArmor() {
@@ -63,27 +67,42 @@ public class EnchantableItem implements ConfigSerializable {
 
     }
 
-    @Override
-    public SerializedMap serialize() {
-        return SerializedMap.ofArray(
-                "Name", name,
-                "Material", material,
-                "Attributes", serializeAttributeTierMap(),
-                "Tier", currentTier,
-                "UUID", uuid
-        );
-    }
-
-    private Map<String, Integer> serializeAttributeTierMap() {
+    public String serializeAttributeTierMap() {
         Map<String, Integer> serializedMap = new HashMap<>();
+        // Check for non-null keys before adding them to the serialized map
+        for (ItemAttribute entry : attributeTierMap.keySet()) {
 
+            if (entry == null)
+                continue;
 
-        // Transform ItemAttribute keys into strings and populate the new map
-        for (Map.Entry<ItemAttribute, Integer> entry : attributeTierMap.entrySet()) {
-            serializedMap.put(entry.getKey().getName(), entry.getValue());
+            serializedMap.put(Common.stripColors(entry.getName()), attributeTierMap.get(entry));
         }
 
-        return serializedMap;
+        Gson gson = new Gson();
+        return gson.toJson(serializedMap);
+
+    }
+
+    public static HashMap<ItemAttribute,Integer> deserializeAttributeTierMap(String jsonMap) {
+        HashMap<ItemAttribute,Integer> finalMap = new HashMap<>();
+
+        try {
+            Map<String,Integer> result = new ObjectMapper().readValue(jsonMap, new TypeReference<>(){});
+
+            for (String nameOfAttribute : result.keySet()) {
+                ItemAttribute attribute = ItemAttribute.fromName(nameOfAttribute);
+                Integer tier = result.get(nameOfAttribute);
+
+                if (attribute != null && tier != null)
+                    finalMap.put(attribute,tier);
+            }
+
+        } catch (JsonProcessingException ex) {
+            Common.error(ex,"Could not deserialize jsonMap");
+        }
+
+
+        return finalMap;
     }
 
     @Override
@@ -99,48 +118,12 @@ public class EnchantableItem implements ConfigSerializable {
         return obj instanceof EnchantableItem && ((EnchantableItem) obj).getUuid().equals(uuid);
     }
 
-    /**
-     * Returns the slot number of this item in
-     * the specified players inventory
-     * returns Null if the item is not found.
-     */
-    public Integer getSlotInInventory(Player player) {
-        DungeonCache cache = DungeonCache.from(player);
-
-        if (cache.getEnchantableItems().contains(this)) {
-            ItemStack[] contents = player.getInventory().getContents();
-
-            for (int i = 0; i < contents.length; i++) {
-                ItemStack checkedItem = contents[i];
-
-                if (checkedItem == null)
-                    continue;
-
-                UUID checkedUUID = TBSItemUtil.getItemsUUID(checkedItem);
-
-                if (checkedUUID == null || !checkedUUID.equals(uuid))
-                    continue;
-
-                return i;
-            }
-        }
-
-        if (cache.getItemInEnchanter() != null)
-            return Keys.ENCHANTING_MENU_SLOT;
-
-
-        return null;
-
-    }
 
     /**
      * Attempts to add the attribute and current tier
      * if not already added
      */
     public void addAttribute(ItemAttribute attribute, Tier tier) {
-        if (attributeTierMap.containsKey(attribute))
-            return;
-
         attributeTierMap.put(attribute, tier.getAsInteger());
         lastAdded = attribute;
     }
@@ -162,8 +145,9 @@ public class EnchantableItem implements ConfigSerializable {
     public List<String> getLores() {
         List<String> lore = new ArrayList<>();
 
-        for (ItemAttribute attribute : attributeTierMap.keySet())
-            lore.addAll(attribute.getAttributeLore(Tier.fromInteger(attributeTierMap.get(attribute))));
+        forAllAttributes(((attribute, tier) -> {
+            lore.addAll(attribute.getAttributeLore(tier));
+        }));
 
         return lore;
     }
@@ -182,8 +166,13 @@ public class EnchantableItem implements ConfigSerializable {
     }
 
     public void forAllAttributes(BiConsumer<ItemAttribute, Tier> consumer) {
-        for (ItemAttribute attribute : attributeTierMap.keySet())
-            consumer.accept(attribute, Tier.fromInteger(attributeTierMap.get(attribute)));
+        for (ItemAttribute attribute : attributeTierMap.keySet()) {
+            Integer tierValue = attributeTierMap.get(attribute);
+
+            if (tierValue != null)
+                consumer.accept(attribute, Tier.fromInteger(tierValue));
+        }
+
 
     }
 
@@ -195,7 +184,11 @@ public class EnchantableItem implements ConfigSerializable {
         item = CompMetadata.setMetadata(item, "Tier", currentTier.getAsInteger() + "");
 
         int attributeAdded = 0;
+
         for (ItemAttribute attribute : attributeTierMap.keySet()) {
+            if (attribute == null)
+                continue;
+
             attributeAdded++;
             item = CompMetadata.setMetadata(item, "attribute_" + attributeAdded,
                     SerializedMap.ofArray(
@@ -225,16 +218,16 @@ public class EnchantableItem implements ConfigSerializable {
         if (uuidString == null)
             return null;
 
-        EnchantableItem enchantableItem = new EnchantableItem(UUID.fromString(uuidString));
+        UUID uuid = UUID.fromString(uuidString);
+        String name = item.getType().equals(Material.LEATHER_CHESTPLATE) ? "Tunic" : item.getType().toString();
+        Material material = item.getType();
+        Map<ItemAttribute,Integer> attributes = new HashMap<>();
+        Tier tier = Tier.NONE;
 
         if (tierString != null) {
             int integer = Integer.parseInt(tierString);
-            enchantableItem.setCurrentTier(Tier.fromInteger(integer));
+            tier = Tier.fromInteger(integer);
         }
-
-        enchantableItem.setMaterial(item.getType());
-        enchantableItem.setName(item.getType().equals(Material.LEATHER_CHESTPLATE) ? "Tunic" : item.getType().toString());
-
 
         for (int i = 0; i < MAX_ENCHANTS_PER_ITEM; i++) {
             String json = CompMetadata.getMetadata(item, "attribute_" + (i + 1));
@@ -242,38 +235,22 @@ public class EnchantableItem implements ConfigSerializable {
                 continue;
 
             SerializedMap map = SerializedMap.fromJson(json);
-            enchantableItem.getAttributeTierMap().put(
-                    ItemAttribute.fromName(map.getString("Name")),
+
+            attributes.put(ItemAttribute.fromName(map.getString("Name")),
                     map.getInteger("Tier"));
         }
 
-        return enchantableItem;
+        return new EnchantableItem(uuid,name,material,attributes,tier);
     }
 
-    public static EnchantableItem deserialize(SerializedMap map) {
+    public static EnchantableItem fromResultSet(ResultSet resultSetItem) throws SQLException {
+        UUID itemId = UUID.fromString(resultSetItem.getString("ITEM_ID"));
 
-        String name = map.getString("Name");
-        Material material = map.getMaterial("Material").toMaterial();
-        Tier currentTier = map.get("Tier", Tier.class);
-        UUID uuid = map.getUUID("UUID");
-        Map<ItemAttribute, Integer> attributes = nameToItemMap(map.getMap("Attributes", String.class, Integer.class));
-
-        return new EnchantableItem(uuid, name, material, attributes, currentTier);
-    }
-
-    public static Map<ItemAttribute, Integer> nameToItemMap(HashMap<String, Integer> attributes) {
-
-        return Common.convert(attributes, new Common.MapToMapConverter<>() {
-            @Override
-            public ItemAttribute convertKey(String key) {
-                return ItemAttribute.fromName(key);
-            }
-
-            @Override
-            public Integer convertValue(Integer value) {
-                return value;
-            }
-        });
+        return new EnchantableItem(itemId,
+                resultSetItem.getString("Name"),
+                Material.valueOf(resultSetItem.getString("Material")),
+                EnchantableItem.deserializeAttributeTierMap(resultSetItem.getString("Attributes")),
+                Tier.fromInteger(resultSetItem.getInt("Tier")));
     }
 
 
@@ -295,6 +272,5 @@ public class EnchantableItem implements ConfigSerializable {
             enchantableItems.add(item);
 
         return enchantableItems;
-
     }
 }

@@ -42,22 +42,12 @@ public class TBSItemUtil {
     }
 
 
-    public EnchantableItem makeEnchantableArmor() {
-
-        return new EnchantableItem(UUID.randomUUID(),
-                CompMaterial.LEATHER_CHESTPLATE.name(),
-                Material.LEATHER_CHESTPLATE,
-                new HashMap<>(),
-                Tier.NONE);
-    }
-
     /**
      * Enchants the item by increasing its tier
      * applies a random attribute and
      * increases the tier of other random attributes
      */
     public ItemStack enchantItem(Player player, EnchantableItem item) {
-        DungeonCache cache = DungeonCache.from(player);
 
         int currentTier = item.getCurrentTier().getAsInteger();
 
@@ -75,8 +65,6 @@ public class TBSItemUtil {
                     upgradeRandomAttribute(item);
             }
         }
-
-        cache.updateEnchantableItem(item);
 
         return item.compileToItemStack();
     }
@@ -149,6 +137,9 @@ public class TBSItemUtil {
      * @return
      */
     public UUID getItemsUUID(ItemStack item) {
+        if (item == null)
+            return  null;
+
         String uuidString = CompMetadata.getMetadata(item, "UUID");
 
         if (uuidString == null)
@@ -156,7 +147,6 @@ public class TBSItemUtil {
 
         return UUID.fromString(uuidString);
     }
-
 
     /**
      * returns true if the item can

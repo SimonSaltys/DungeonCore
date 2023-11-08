@@ -125,7 +125,8 @@ public class AttributeListener implements Listener {
 
     @EventHandler
     public void onPickup(EntityPickupItemEvent event) {
-        Player player = (Player) event.getEntity();
+        if (!(event.getEntity() instanceof Player player))
+            return;
 
         ItemStack pickedUp = event.getItem().getItemStack();
 

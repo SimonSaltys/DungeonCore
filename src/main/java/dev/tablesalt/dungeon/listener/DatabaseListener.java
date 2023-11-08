@@ -20,25 +20,18 @@ public class DatabaseListener implements Listener {
     public void onJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
 
-        MariaDatabase.getInstance().loadCache(player, cache -> {
-            Common.broadcast("LOADING cache for " + player.getName());
-        });
+
     }
 
     @EventHandler(priority = EventPriority.LOW)
     public void onLeave(PlayerQuitEvent event) {
         Player player = event.getPlayer();
 
-        MariaDatabase.getInstance().saveCache(player, cache -> {
-            PlayerUtil.normalize(player, true);
-            Common.broadcast("SAVING cache for " + player.getName());
-        });
     }
 
     @EventHandler
     public void onItemDropped(PlayerDropItemEvent event) {
         DungeonCache cache = DungeonCache.from(event.getPlayer());
-        cache.removeEnchantableItem(event.getItemDrop().getItemStack());
     }
 
     @EventHandler
@@ -47,6 +40,5 @@ public class DatabaseListener implements Listener {
             return;
 
         DungeonCache cache = DungeonCache.from(player);
-        cache.addEnchantableItem(event.getItem().getItemStack());
     }
 }

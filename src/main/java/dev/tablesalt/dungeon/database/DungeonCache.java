@@ -30,8 +30,6 @@ public class DungeonCache {
 
     private boolean isInCombat = false;
 
-    private final List<EnchantableItem> enchantableItems = new ArrayList<>();
-
     @Getter
     @Setter
     private EnchantableItem itemInEnchanter;
@@ -43,80 +41,6 @@ public class DungeonCache {
         this.uniqueId = uniqueId;
         this.playerName = name;
 
-    }
-
-
-    /*----------------------------------------------------------------*/
-    /* ENCHANTABLE ITEM METHODS */
-    /*----------------------------------------------------------------*/
-
-    /**
-     * Removes enchantable items that are no longer
-     * in the players actual inventory as itemstacks.
-     */
-    public void removeOldEnchantableItems(Player player) {
-        PlayerInventory inventory = player.getInventory();
-
-        enchantableItems.removeIf(item -> !inventory.contains(item.compileToItemStack()));
-    }
-
-    public void addEnchantableItem(EnchantableItem item) {
-        if (item != null)
-            if (!enchantableItems.contains(item)) {
-                enchantableItems.add(item);
-            }
-    }
-
-    /**
-     * Attempts to parse and add the itemstack
-     * to the players cache if not already contained.
-     */
-    public void addEnchantableItem(ItemStack item) {
-        EnchantableItem enchantableItem = EnchantableItem.fromItemStack(item);
-
-        if (enchantableItem != null)
-            if (!enchantableItems.contains(enchantableItem)) {
-                enchantableItems.add(enchantableItem);
-            }
-    }
-
-    public void updateEnchantableItem(EnchantableItem item) {
-        enchantableItems.remove(item);
-        enchantableItems.add(item);
-    }
-
-    /**
-     * Attempts to parse and remove the itemstack
-     * in the players inventory.
-     */
-    public void removeEnchantableItem(ItemStack itemStack) {
-        EnchantableItem enchantableItem = EnchantableItem.fromItemStack(itemStack);
-        if (enchantableItem == null)
-            return;
-
-        enchantableItems.remove(enchantableItem);
-    }
-
-    /**
-     * Attempts to get the enchantable item
-     * from the provided item_stack stored in
-     * this players cache.
-     */
-    public EnchantableItem getEnchantableItem(ItemStack item) {
-        UUID itemUUID = TBSItemUtil.getItemsUUID(item);
-
-
-        if (itemUUID != null)
-            for (EnchantableItem enchantableItem : enchantableItems)
-                if (enchantableItem.getUuid().equals(itemUUID))
-                    return enchantableItem;
-
-        return null;
-    }
-
-
-    public List<EnchantableItem> getEnchantableItems() {
-        return Collections.unmodifiableList(enchantableItems);
     }
 
     public void setInCombat(boolean combat) {

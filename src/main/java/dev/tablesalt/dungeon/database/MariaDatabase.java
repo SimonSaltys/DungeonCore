@@ -1,25 +1,24 @@
 package dev.tablesalt.dungeon.database;
 
 import dev.tablesalt.dungeon.DungeonPlugin;
+import dev.tablesalt.dungeon.item.ItemAttribute;
+import dev.tablesalt.dungeon.item.Tier;
 import dev.tablesalt.dungeon.util.TBSItemUtil;
 import lombok.Getter;
-import org.apache.commons.math3.util.Pair;
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.PlayerInventory;
 import org.mineacademy.fo.Common;
-import org.mineacademy.fo.TimeUtil;
 import org.mineacademy.fo.Valid;
 import org.mineacademy.fo.collection.SerializedMap;
 import org.mineacademy.fo.database.SimpleDatabase;
-import org.mineacademy.fo.model.ConfigSerializable;
-import org.mineacademy.fo.remain.Remain;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
+import java.sql.*;
+import java.util.*;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 /**
  * This class is able to load and save relevant data from an off site database.
@@ -28,23 +27,18 @@ import java.util.function.Consumer;
  */
 public class MariaDatabase extends SimpleDatabase implements Database {
 
-    //using the singleton design pattern... we only want this class instanced once
     @Getter
     private static final MariaDatabase instance = new MariaDatabase();
 
     public static final EnchantableItem NO_ITEM = null;
 
+    //table names.
+    private static final String playerTable = "Player_Data";
+    private static final String itemTable = "Enchantable_Items";
+    private static final String playerItemTable = "Player_Items";
 
     private MariaDatabase() {
     }
-
-    public static void saveAll() {
-        for (Player player : Remain.getOnlinePlayers())
-            instance.saveCache(player, cache -> {
-                //no action needed on save here...
-            });
-    }
-
     /**
      * Attempts to connect to the database
      */
@@ -52,13 +46,14 @@ public class MariaDatabase extends SimpleDatabase implements Database {
         //todo move to a config file, kinda un secure having it here
         String jdbcUrl = "jdbc:mariadb://localhost:3306/minecraftdb";
         String username = "root";
-        String password = "password";
+        String password = "644200";
 
         connect(jdbcUrl, username, password);
 
-        Common.runLaterAsync(() -> {
-            makePlayerInventoryTable();
-            makePlayerDataTable();
+        Common.runLaterAsync(0,() -> {
+           makePlayerDataTable();
+           makeItemTable();
+           makePlayerItemTable();
         });
     }
 
@@ -66,16 +61,18 @@ public class MariaDatabase extends SimpleDatabase implements Database {
      * Creates the table that is able to store
      * custom items the player has.
      */
-    private void makePlayerInventoryTable() {
-        this.addVariable("table", "Enchantable_Items");
-        createTable(TableCreator.of("{table}")
-                .addNotNull("UUID", "VARCHAR(64)")
-                .add("Name", "TEXT")
-                .add("Enchantable_Items", "LONGTEXT")
-                .add("Normal_Items", "LONGTEXT")
-                .add("Updated", "DATETIME")
-                .setPrimaryColumn("UUID")
+    private void makeItemTable() {
+        String createTableSQL = String.format(
+                "CREATE TABLE IF NOT EXISTS %s (" +
+                        "ITEM_ID VARCHAR(64) NOT NULL, " +
+                        "Tier TINYINT(10), " +
+                        "Name VARCHAR(32), " +
+                        "Material TEXT, " +
+                        "Attributes LONGTEXT, " +
+                        "PRIMARY KEY (ITEM_ID))",
+                itemTable, playerTable
         );
+        query(createTableSQL);
     }
 
     /**
@@ -84,21 +81,34 @@ public class MariaDatabase extends SimpleDatabase implements Database {
      * as their "money".
      */
     private void makePlayerDataTable() {
-        this.addVariable("player_data", "Player_Data");
-        createTable(TableCreator.of("{player_data}")
-                .addNotNull("UUID", "VARCHAR(64)")
-                .add("Name", "TEXT")
-                .add("Data", "LONGTEXT")
-                .add("Updated", "DATETIME")
-                .setPrimaryColumn("UUID")
+            String createPlayerDataTableSQL = String.format(
+                    "CREATE TABLE IF NOT EXISTS %s (" +
+                            "PLAYER_UUID VARCHAR(64) NOT NULL, " +
+                            "Name TEXT, " +
+                            "Data LONGTEXT, " +
+                            "Updated DATETIME, " +
+                            "PRIMARY KEY (PLAYER_UUID))",
+                    playerTable
+            );
+
+            query(createPlayerDataTableSQL);
+    }
+
+    private void makePlayerItemTable() {
+        String createPlayerItemTableSQL = String.format(
+                "CREATE TABLE IF NOT EXISTS %s (" +
+                        "PLAYER_UUID VARCHAR(64) NOT NULL, " +
+                        "ITEM_ID VARCHAR(64) NOT NULL, " +
+                        "Slot_In_Inventory TINYINT(3), " +
+                        "PRIMARY KEY (PLAYER_UUID, ITEM_ID), " +
+                        "FOREIGN KEY (PLAYER_UUID) REFERENCES %s(PLAYER_UUID) ON DELETE CASCADE ON UPDATE NO ACTION, " +
+                        "FOREIGN KEY (ITEM_ID) REFERENCES %s(ITEM_ID) ON DELETE CASCADE ON UPDATE NO ACTION)",
+                playerItemTable, playerTable, itemTable
         );
+
+        query(createPlayerItemTableSQL);
     }
 
-    @Override
-    protected void onConnected() {
-        Common.broadcast("Connected To MariaDB!");
-
-    }
 
     /**
      * Either creates/loads the players cache from the database,
@@ -112,229 +122,225 @@ public class MariaDatabase extends SimpleDatabase implements Database {
 
         Common.runAsync(() -> {
             try {
-
                 loadEnchantableItems(player);
                 loadPlayerData(player);
 
                 Common.runLater(() -> callThisWhenDataLoaded.accept(DungeonCache.from(player)));
 
-
             } catch (Throwable t) {
-                Common.error(t, "Unable to load player data for " + player.getName());
+                Common.error(t, "Unable to LOAD player data for " + player.getName());
             }
         });
     }
 
-    /**
-     * loads all the data into the players {@link DungeonCache} from the player data table.
-     */
-    private LOAD loadPlayerData(Player player) throws SQLException {
-        DungeonCache cache = DungeonCache.from(player);
-        ResultSet playerDataResult = this.query("" +
-                "SELECT * FROM " +
-                "{player_data} " +
-                "WHERE UUID='" + player.getUniqueId() + "'");
+    public void saveCache(Player player) {
+        Valid.checkSync("Please call saveCache on the main thread.");
 
-        if (playerDataResult == null || !playerDataResult.next())
-            return LOAD.NO_SUCCESS;
-        else {
+        Common.runAsync(() -> {
 
-            SerializedMap dataMap = SerializedMap.fromJson(playerDataResult.getString("Data"));
-            cache.moneyAmount = dataMap.getDouble("Money");
-
-            return LOAD.SUCCESS;
-        }
-
-    }
-
-    /**
-     * Loads all custom items stored in the enchantable items table
-     */
-    private LOAD loadEnchantableItems(Player player) throws SQLException {
-        ResultSet enchantableResult = this.query("SELECT * FROM {table} WHERE UUID='" + player.getUniqueId() + "'");
-
-
-        if (enchantableResult == null || !enchantableResult.next())
-            return LOAD.NO_SUCCESS;
-        else {
-            SerializedMap enchantedItemMap = SerializedMap.fromJson(enchantableResult.getString("Enchantable_Items"));
-            SerializedMap normalItemMap = SerializedMap.fromJson(enchantableResult.getString("Normal_Items"));
-
-            loadItemsFromMap(player, enchantedItemMap);
-            loadItemsFromMap(player, normalItemMap);
-
-            return LOAD.SUCCESS;
-        }
-    }
-
-
-    private void loadItemsFromMap(Player player, SerializedMap itemsMap) {
-        DungeonCache cache = DungeonCache.from(player);
-        List<ItemSlotPair> itemsAtSlotList = itemsMap.getList("Saved_Items", ItemSlotPair.class);
-
-        for (ItemSlotPair pair : itemsAtSlotList) {
-            //add the item to the local plugin cache
-            EnchantableItem enchantableItem = pair.getEnchantableItem();
-
-            ItemStack compiledItem;
-            if (enchantableItem == null)
-                compiledItem = pair.getNormalItem();
-            else {
-                compiledItem = enchantableItem.compileToItemStack();
-                cache.addEnchantableItem(enchantableItem);
-            }
-
-            //is there an item that is supposed to be loaded in the enchanter?
-            if (pair.getSlot() == Keys.ENCHANTING_MENU_SLOT) {
-                cache.setItemInEnchanter(pair.getEnchantableItem());
-                continue;
-            }
-
-            player.getInventory().setItem(pair.getSlot(), compiledItem);
-        }
-    }
-
-
-    public void saveCache(Player player, Consumer<DungeonCache> callThisWhenDataSaved) {
-        Valid.checkSync("Please call loadCache on the main thread.");
-        DungeonCache cache = DungeonCache.from(player);
-
-        Bukkit.getScheduler().runTaskAsynchronously(DungeonPlugin.getInstance(), () -> {
             try {
-                this.insert("{table}", SerializedMap.ofArray(
-                        "UUID", player.getUniqueId(),
-                        "Name", player.getName(),
-                        "Updated", TimeUtil.toSQLTimestamp(),
-                        "Enchantable_Items", enchantableItemsToMap(player).toJson(),
-                        "Normal_Items", normalItemsToMap(player).toJson()
-                ));
+                Common.broadcast("Saving");
+                saveData(player);
+                saveItems(player);
 
-                this.insert("{player_data}", SerializedMap.ofArray(
-                        "UUID", player.getUniqueId(),
-                        "Name", player.getName(),
-                        "Updated", TimeUtil.toSQLTimestamp(),
-                        "Data", cache.toSerializedMap().toJson()
-                ));
-
-                Common.runLater(() -> callThisWhenDataSaved.accept(cache));
 
             } catch (Throwable t) {
-                Common.error(t, "Unable to save player data for " + player.getName());
+                Common.error(t, "Unable to SAVE player data for " + player.getName());
             }
         });
     }
 
-    /**
-     * Saves all custom items to a map, so we can convert it to
-     * a json string.
-     */
-    private SerializedMap enchantableItemsToMap(Player player) {
+    public void cleanCache(Player player) {
+        Valid.checkSync("Please call saveCache on the main thread.");
+
+        Common.runAsync(() -> {
+           try {
+                removeOwnerships(player);
+
+                //todo move this later just testing. This is an expensive task.
+                removeItemsWithoutOwners();
+           } catch (Throwable t) {
+               Common.error(t, "Unable to CLEAN player data for " + player.getName());
+           }
+        });
+
+    }
+
+    /*----------------------------------------------------------------*/
+    /* HELPER METHODS FOR SAVING AND LOADING */
+    /*----------------------------------------------------------------*/
+
+    private void loadPlayerData(Player player)  {
         DungeonCache cache = DungeonCache.from(player);
-        List<ItemSlotPair> itemsAtSlotList = new ArrayList<>();
+        String sql = "SELECT * FROM player_data WHERE PLAYER_UUID = ?";
 
-        for (EnchantableItem item : cache.getEnchantableItems()) {
-            Integer slot = item.getSlotInInventory(player);
+        try (PreparedStatement stmt = this.getConnection().prepareStatement(sql)) {
+            stmt.setString(1, player.getUniqueId().toString());
 
-            if (slot == null)
+            try (ResultSet playerDataResult = stmt.executeQuery()) {
+
+                if (playerDataResult.next()) {
+                    String jsonData = playerDataResult.getString("Data");
+
+                    if (jsonData != null) {
+                        SerializedMap dataMap = SerializedMap.fromJson(jsonData);
+                        cache.moneyAmount = (dataMap.getDouble("Money"));
+                        // You can load other data similarly later...
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            // Handle exception
+           Common.error(e,"Could not load the players " + player.getName() + " data!");
+        }
+    }
+
+
+    private void loadEnchantableItems(Player player)  {
+        String playerUUID = player.getUniqueId().toString();
+
+        String playerItemsTableQuery = "SELECT ITEM_ID, Slot_In_Inventory FROM " + playerItemTable + " WHERE PLAYER_UUID = ?";
+
+        try (PreparedStatement statement = this.getConnection().prepareStatement(playerItemsTableQuery)) {
+            statement.setString(1, playerUUID); // This sets the first "?" to the player's UUID
+
+            try (ResultSet playerItemsResult = statement.executeQuery()) {
+                while (playerItemsResult.next()) {
+
+                    //Let's get the UUID of the Item and what slot it should be in for the player.
+                    UUID itemId = UUID.fromString(playerItemsResult.getString("ITEM_ID"));
+                    int slotInInventory = playerItemsResult.getInt("Slot_In_Inventory");
+
+                    //Now lets query the item table with the UUID of the item found to get its data...
+                    String itemTableQuery = "SELECT * FROM " + itemTable + " WHERE ITEM_ID = ?";
+                    try (PreparedStatement stmtItem = getConnection().prepareStatement(itemTableQuery)) {
+                        stmtItem.setString(1, itemId.toString());
+                        ResultSet itemResult = stmtItem.executeQuery();
+
+                        //no while here since we are expecting one result.
+                        if (itemResult.next()) {
+                            // Create an item instance from the ResultSet
+                            EnchantableItem item = EnchantableItem.fromResultSet(itemResult);
+
+                            player.getInventory().setItem(slotInInventory, item.compileToItemStack());
+                        }
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            Common.error(e,"Could not load items from the database to the player " + player);
+        }
+    }
+
+    private void saveData(Player player) {
+
+        String dataSql = "REPLACE INTO " + playerTable + " (PLAYER_UUID, Name, Data, Updated) VALUES (?, ?, ?, ?)";
+
+        try(PreparedStatement statement = this.getConnection().prepareStatement(dataSql)) {
+            statement.setString(1,player.getUniqueId().toString());
+            statement.setString(2,player.getName());
+            statement.setString(3,DungeonCache.from(player).toSerializedMap().toJson());
+            statement.setTimestamp(4,new Timestamp(System.currentTimeMillis()));
+            statement.executeUpdate();
+        } catch (SQLException e) {
+            Common.error(e,"Could not save players cached data.");
+        }
+    }
+
+
+    private void saveItems(Player player) {
+        PlayerInventory inventory = player.getInventory();
+
+        for (int i = 0; i < inventory.getSize(); i++) {
+            ItemStack itemStack = inventory.getItem(i);
+            if (itemStack == null)
                 continue;
 
-            itemsAtSlotList.add(new ItemSlotPair(item, slot));
-        }
-        return SerializedMap.ofArray("Saved_Items", itemsAtSlotList);
-    }
-
-    /**
-     * Saves all normal minecraft items to a map, so we can convert
-     * it into a json string.
-     */
-    private SerializedMap normalItemsToMap(Player player) {
-        List<ItemSlotPair> itemsAtSlotList = new ArrayList<>();
-
-        ItemStack[] inventory = player.getInventory().getContents();
-
-        for (int i = 0; i < inventory.length; i++) {
-            if (inventory[i] == null || TBSItemUtil.isEnchantable(inventory[i]))
+            if (!TBSItemUtil.isEnchantable(itemStack))
                 continue;
 
-            itemsAtSlotList.add(new ItemSlotPair(inventory[i], i));
-        }
+            EnchantableItem item = EnchantableItem.fromItemStack(itemStack);
 
-        return SerializedMap.ofArray("Saved_Items", itemsAtSlotList);
+
+            String sqlItem = "REPLACE INTO " + itemTable + " (ITEM_ID, Tier, Name, Material, Attributes) VALUES (?, ?, ?, ?, ?)";
+            try(PreparedStatement saveToItemTableStatement = getConnection().prepareStatement(sqlItem)) {
+
+                Common.broadcast("Saving item " + item.getUuid());
+
+                saveToItemTableStatement.setString(1, item.getUuid().toString());
+                saveToItemTableStatement.setInt(2, item.getCurrentTier().getAsInteger());
+                saveToItemTableStatement.setString(3, item.getName());
+                saveToItemTableStatement.setString(4, item.getMaterial().toString());
+                saveToItemTableStatement.setString(5, item.serializeAttributeTierMap()); // Convert attributes to JSON
+                saveToItemTableStatement.executeUpdate();
+
+            } catch (SQLException e) {
+               Common.error(e,"Could not save item " + item.getName() + " to the items table!!!");
+            }
+
+
+            // Now we only need to update the player_items with the reference
+            String sqlPlayerItems = "REPLACE INTO " + playerItemTable + " (PLAYER_UUID, ITEM_ID, Slot_In_Inventory) VALUES (?, ?, ?)";
+            try (PreparedStatement stmtPlayerItems = getConnection().prepareStatement(sqlPlayerItems)) {
+                stmtPlayerItems.setString(1, player.getUniqueId().toString());
+                stmtPlayerItems.setString(2, item.getUuid().toString());
+                stmtPlayerItems.setInt(3, i); // Assuming `getInventorySlot` returns the slot index
+                stmtPlayerItems.executeUpdate();
+            } catch (SQLException e) {
+              Common.error(e,"Could not save " + item.getName() + " into the player_items table!!");
+            }
+        }
     }
 
-    //use this instead of returning a boolean or null when connecting to a database
-    private enum LOAD {
-        SUCCESS,
-        NO_SUCCESS
+
+    private void removeItemsWithoutOwners() {
+        String sqlRemoveItems = "DELETE FROM " + itemTable + " WHERE ITEM_ID NOT IN " +
+                "(SELECT ITEM_ID FROM " + playerItemTable + ")";
+
+        query(sqlRemoveItems);
     }
 
-    /**
-     * Custom data type where you can store either a custom item or normal minecraft item
-     * and the slot of where it is in the players inventory.
-     * <p>
-     * This is useful because it allows us to update the players inventory exactly when they
-     * re log into the server.
-     */
-    private static class ItemSlotPair implements ConfigSerializable {
-        private Pair<EnchantableItem, Integer> enchantablePair;
+    private void removeOwnerships(Player player) {
+        List<UUID> itemIdsOwnedByPlayer = new ArrayList<>();
 
-        private Pair<ItemStack, Integer> normalItemPair;
+        for (ItemStack stack : player.getInventory()) {
+            EnchantableItem item = EnchantableItem.fromItemStack(stack);
+            if (item == null)
+                continue;
 
-        public ItemSlotPair(EnchantableItem item, Integer slot) {
-            enchantablePair = new Pair<>(item, slot);
+            itemIdsOwnedByPlayer.add(item.getUuid());
         }
 
-        public ItemSlotPair(ItemStack stack, Integer slot) {
-            normalItemPair = new Pair<>(stack, slot);
+        String sql;
+        if (itemIdsOwnedByPlayer.isEmpty()) {
+            // If no items in inventory, then we assume we need to delete all items for this player.
+            sql = "DELETE FROM " + playerItemTable + " WHERE PLAYER_UUID = ?";
+        } else {
+            String placeholders = String.join(",", Collections.nCopies(itemIdsOwnedByPlayer.size(), "?"));
+            sql = "DELETE FROM " + playerItemTable + " WHERE ITEM_ID NOT IN (" + placeholders + ") AND PLAYER_UUID = ?";
         }
 
-        public EnchantableItem getEnchantableItem() {
-            if (enchantablePair == null)
-                return null;
+        try(PreparedStatement stmtRemoveOwnership = getConnection().prepareStatement(sql)) {
+            int index = 1;
 
-            return enchantablePair.getFirst();
+            if (!itemIdsOwnedByPlayer.isEmpty()) {
+                for (UUID itemId : itemIdsOwnedByPlayer) {
+                    stmtRemoveOwnership.setString(index++, itemId.toString());
+                }
+            }
+
+            // Assuming the player ID is a String or similar; you may need to adjust based on your schema.
+            stmtRemoveOwnership.setString(index, player.getUniqueId().toString());
+
+            int deletedRows = stmtRemoveOwnership.executeUpdate();
+            Common.broadcast("&cDELETED ROWS &b#" + deletedRows);
+
+        } catch (SQLException e) {
+            Common.error(e,"Could not remove ownerships for player " + player.getName());
         }
-
-        public ItemStack getNormalItem() {
-            if (normalItemPair == null)
-                return null;
-
-            return normalItemPair.getFirst();
-        }
-
-        public int getSlot() {
-            if (enchantablePair == null)
-                return normalItemPair.getSecond();
-            else
-                return enchantablePair.getSecond();
-        }
-
-        @Override
-        public SerializedMap serialize() {
-            return SerializedMap.ofArray(
-                    "Item", enchantablePair == null ? getNormalItem() : getEnchantableItem(),
-                    "Slot", getSlot()
-            );
-        }
-
-        public static ItemSlotPair deserialize(SerializedMap map) {
-            String unparsedData = map.getString("Item");
-            if (unparsedData == null)
-                return null;
-
-            ItemStack deserializedItem = null;
-            if (unparsedData.contains("type"))
-                deserializedItem = map.getItemStack("Item");
-
-            if (deserializedItem == null)
-                return new ItemSlotPair(map.get("Item", EnchantableItem.class), map.getInteger("Slot"));
-            else
-                return new ItemSlotPair(deserializedItem, map.getInteger("Slot"));
-
-
-        }
-
     }
+
+
 
 }
 

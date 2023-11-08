@@ -13,6 +13,7 @@ import net.minecraft.network.protocol.game.*;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.server.level.ClientInformation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.ServerPlayerConnection;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -25,8 +26,8 @@ import org.apache.commons.lang3.RandomUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.craftbukkit.v1_20_R1.entity.CraftPlayer;
-import org.bukkit.craftbukkit.v1_20_R1.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.v1_20_R2.entity.CraftPlayer;
+import org.bukkit.craftbukkit.v1_20_R2.inventory.CraftItemStack;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.TextDisplay;
 import org.bukkit.inventory.Inventory;
@@ -89,7 +90,8 @@ public class PlayerCorpse {
         CraftPlayer craftPlayer = (CraftPlayer) player;
         ServerPlayer serverPlayer = craftPlayer.getHandle();
 
-        ServerPlayer corpse = new ServerPlayer(serverPlayer.getServer(), serverPlayer.serverLevel().getLevel(), makeGameProfile(craftPlayer));
+        ServerPlayer corpse = new ServerPlayer(serverPlayer.getServer(), serverPlayer.serverLevel().getLevel(), makeGameProfile(craftPlayer),
+                ClientInformation.createDefault());
         this.NMSCorpse = corpse;
 
         setSkinOverlay();
@@ -185,7 +187,7 @@ public class PlayerCorpse {
         //making textures
         Property textures = (Property) craftPlayer.getGameProfile().getProperties().get("textures").toArray()[0];
         GameProfile gameProfile = new GameProfile(UUID.randomUUID(), "body" + RandomUtils.nextInt(0, 100));
-        gameProfile.getProperties().put("textures", new Property("textures", textures.getValue(), textures.getSignature()));
+        gameProfile.getProperties().put("textures", new Property("textures", textures.value(), textures.signature()));
         return gameProfile;
     }
 
@@ -238,7 +240,7 @@ public class PlayerCorpse {
 
             //showing the corpse
             connection.send(new ClientboundPlayerInfoUpdatePacket(ClientboundPlayerInfoUpdatePacket.Action.ADD_PLAYER, NMSCorpse));
-            connection.send(new ClientboundAddPlayerPacket(NMSCorpse));
+            connection.send(new ClientboundAddEntityPacket(NMSCorpse));
             connection.send(new ClientboundSetEntityDataPacket(NMSCorpse.getId(), NMSCorpse.getEntityData().getNonDefaultValues()));
 
             //adding the team to hide the name tag
@@ -298,7 +300,7 @@ public class PlayerCorpse {
         }
 
         @Override
-        protected void onDisplay(InventoryDrawer drawer) {
+        protected void onPreDisplay(InventoryDrawer drawer) {
             for (int i = ARMOR_SLOTS.getStartingSlot(); i < ARMOR_SLOTS.getFinalSlot(); i++) {
                 drawer.setItem(i, armor[i - ARMOR_SLOTS.getStartingSlot()]);
             }
