@@ -72,7 +72,6 @@ public class MariaDatabase extends SimpleDatabase implements Database {
                         "PRIMARY KEY (ITEM_ID))",
                 itemTable, playerTable
         );
-
         query(createTableSQL);
     }
 
@@ -84,11 +83,11 @@ public class MariaDatabase extends SimpleDatabase implements Database {
     private void makePlayerDataTable() {
             String createPlayerDataTableSQL = String.format(
                     "CREATE TABLE IF NOT EXISTS %s (" +
-                            "UUID VARCHAR(64) NOT NULL, " +
+                            "PLAYER_UUID VARCHAR(64) NOT NULL, " +
                             "Name TEXT, " +
                             "Data LONGTEXT, " +
                             "Updated DATETIME, " +
-                            "PRIMARY KEY (UUID))",
+                            "PRIMARY KEY (PLAYER_UUID))",
                     playerTable
             );
 
@@ -98,11 +97,11 @@ public class MariaDatabase extends SimpleDatabase implements Database {
     private void makePlayerItemTable() {
         String createPlayerItemTableSQL = String.format(
                 "CREATE TABLE IF NOT EXISTS %s (" +
-                        "UUID VARCHAR(64) NOT NULL, " +
+                        "PLAYER_UUID VARCHAR(64) NOT NULL, " +
                         "ITEM_ID VARCHAR(64) NOT NULL, " +
                         "Slot_In_Inventory TINYINT(3), " +
-                        "PRIMARY KEY (UUID, ITEM_ID), " +
-                        "FOREIGN KEY (UUID) REFERENCES %s(UUID) ON DELETE CASCADE ON UPDATE NO ACTION, " +
+                        "PRIMARY KEY (PLAYER_UUID, ITEM_ID), " +
+                        "FOREIGN KEY (PLAYER_UUID) REFERENCES %s(PLAYER_UUID) ON DELETE CASCADE ON UPDATE NO ACTION, " +
                         "FOREIGN KEY (ITEM_ID) REFERENCES %s(ITEM_ID) ON DELETE CASCADE ON UPDATE NO ACTION)",
                 playerItemTable, playerTable, itemTable
         );
@@ -157,6 +156,9 @@ public class MariaDatabase extends SimpleDatabase implements Database {
         Common.runAsync(() -> {
            try {
                 removeOwnerships(player);
+
+                //todo move this later just testing. This is an expensive task.
+                removeItemsWithoutOwners();
            } catch (Throwable t) {
                Common.error(t, "Unable to CLEAN player data for " + player.getName());
            }
@@ -170,7 +172,7 @@ public class MariaDatabase extends SimpleDatabase implements Database {
 
     private void loadPlayerData(Player player)  {
         DungeonCache cache = DungeonCache.from(player);
-        String sql = "SELECT * FROM player_data WHERE UUID = ?";
+        String sql = "SELECT * FROM player_data WHERE PLAYER_UUID = ?";
 
         try (PreparedStatement stmt = this.getConnection().prepareStatement(sql)) {
             stmt.setString(1, player.getUniqueId().toString());
@@ -197,7 +199,7 @@ public class MariaDatabase extends SimpleDatabase implements Database {
     private void loadEnchantableItems(Player player)  {
         String playerUUID = player.getUniqueId().toString();
 
-        String playerItemsTableQuery = "SELECT ITEM_ID, Slot_In_Inventory FROM " + playerItemTable + " WHERE UUID = ?";
+        String playerItemsTableQuery = "SELECT ITEM_ID, Slot_In_Inventory FROM " + playerItemTable + " WHERE PLAYER_UUID = ?";
 
         try (PreparedStatement statement = this.getConnection().prepareStatement(playerItemsTableQuery)) {
             statement.setString(1, playerUUID); // This sets the first "?" to the player's UUID
@@ -232,7 +234,7 @@ public class MariaDatabase extends SimpleDatabase implements Database {
 
     private void saveData(Player player) {
 
-        String dataSql = "REPLACE INTO " + playerTable + " (UUID, Name, Data, Updated) VALUES (?, ?, ?, ?)";
+        String dataSql = "REPLACE INTO " + playerTable + " (PLAYER_UUID, Name, Data, Updated) VALUES (?, ?, ?, ?)";
 
         try(PreparedStatement statement = this.getConnection().prepareStatement(dataSql)) {
             statement.setString(1,player.getUniqueId().toString());
@@ -278,7 +280,7 @@ public class MariaDatabase extends SimpleDatabase implements Database {
 
 
             // Now we only need to update the player_items with the reference
-            String sqlPlayerItems = "REPLACE INTO " + playerItemTable + " (UUID, ITEM_ID, Slot_In_Inventory) VALUES (?, ?, ?)";
+            String sqlPlayerItems = "REPLACE INTO " + playerItemTable + " (PLAYER_UUID, ITEM_ID, Slot_In_Inventory) VALUES (?, ?, ?)";
             try (PreparedStatement stmtPlayerItems = getConnection().prepareStatement(sqlPlayerItems)) {
                 stmtPlayerItems.setString(1, player.getUniqueId().toString());
                 stmtPlayerItems.setString(2, item.getUuid().toString());
@@ -292,7 +294,10 @@ public class MariaDatabase extends SimpleDatabase implements Database {
 
 
     private void removeItemsWithoutOwners() {
+        String sqlRemoveItems = "DELETE FROM " + itemTable + " WHERE ITEM_ID NOT IN " +
+                "(SELECT ITEM_ID FROM " + playerItemTable + ")";
 
+        query(sqlRemoveItems);
     }
 
     private void removeOwnerships(Player player) {
@@ -309,10 +314,10 @@ public class MariaDatabase extends SimpleDatabase implements Database {
         String sql;
         if (itemIdsOwnedByPlayer.isEmpty()) {
             // If no items in inventory, then we assume we need to delete all items for this player.
-            sql = "DELETE FROM " + playerItemTable + " WHERE UUID = ?";
+            sql = "DELETE FROM " + playerItemTable + " WHERE PLAYER_UUID = ?";
         } else {
             String placeholders = String.join(",", Collections.nCopies(itemIdsOwnedByPlayer.size(), "?"));
-            sql = "DELETE FROM " + playerItemTable + " WHERE ITEM_ID NOT IN (" + placeholders + ") AND UUID = ?";
+            sql = "DELETE FROM " + playerItemTable + " WHERE ITEM_ID NOT IN (" + placeholders + ") AND PLAYER_UUID = ?";
         }
 
         try(PreparedStatement stmtRemoveOwnership = getConnection().prepareStatement(sql)) {

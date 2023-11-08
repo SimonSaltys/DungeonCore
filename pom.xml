@@ -161,7 +161,7 @@
                 <artifactId>maven-jar-plugin</artifactId>
                 <configuration>
                     <outputDirectory>
-                        C:\Users\simon\Desktop\Main\MinecraftPlugins\DevelopmentServer\plugins
+                        /Users/saltsimon/Desktop/Custom Plugins/Server Latest/plugins
                     </outputDirectory>
                 </configuration>
                 <!-- Change version to the latest one from
