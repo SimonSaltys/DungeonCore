@@ -35,9 +35,7 @@ import java.util.function.BiConsumer;
 @Setter
 public class EnchantableItem {
 
-    private static final List<EnchantableItem> allItems = new ArrayList<>();
-
-    public static final Integer MAX_ENCHANTS_PER_ITEM = 3;
+    public static final Integer MAX_ENCHANTS_PER_ITEM = 100;
 
     private String name;
 
@@ -58,7 +56,6 @@ public class EnchantableItem {
         this.currentTier = tier;
         this.uuid = uuid;
 
-        allItems.add(this);
     }
 
     public static EnchantableItem makeArmor() {
@@ -232,8 +229,7 @@ public class EnchantableItem {
             tier = Tier.fromInteger(integer);
         }
 
-        //todo change later............ back to max_enchants_per_item
-        for (int i = 0; i < 100; i++) {
+        for (int i = 0; i < MAX_ENCHANTS_PER_ITEM; i++) {
             String json = CompMetadata.getMetadata(item, "attribute_" + (i + 1));
             if (json == null)
                 continue;
@@ -276,9 +272,5 @@ public class EnchantableItem {
             enchantableItems.add(item);
 
         return enchantableItems;
-    }
-
-    public static List<EnchantableItem> getAllItems() {
-        return Collections.unmodifiableList(allItems);
     }
 }

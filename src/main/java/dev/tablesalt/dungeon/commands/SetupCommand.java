@@ -30,8 +30,8 @@ public final class SetupCommand extends GameSubCommand {
             MariaDatabase.getInstance().saveCache(player);
 
 
-        else if(arg.equalsIgnoreCase("test")) {
-
+        else if(arg.equalsIgnoreCase("remove")) {
+            MariaDatabase.getInstance().cleanCache(player);
         }
 
         else
@@ -42,7 +42,7 @@ public final class SetupCommand extends GameSubCommand {
     @Override
     protected List<String> tabComplete() {
         if (args.length == 1)
-            return Arrays.asList("save","load","test");
+            return Arrays.asList("save","load","remove");
 
         return NO_COMPLETE;
     }

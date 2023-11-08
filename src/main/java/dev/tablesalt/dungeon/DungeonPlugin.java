@@ -29,14 +29,16 @@ public final class DungeonPlugin extends SimplePlugin {
     public void onPluginStart() {
 
         Common.runTimer(20,() -> {
+
             for (Player player : Remain.getOnlinePlayers())
                 for (ItemStack stack : player.getInventory()) {
                     if (TBSItemUtil.isEnchantable(stack)) {
-                        EnchantableItem item = EnchantableItem.fromItemStack(stack);
-
-                        Common.broadcast(item.getAttributeTierMap().size() + " SIZE");
-                        Common.broadcast(item.getAttributeTierMap().toString() + " CONTENTS");
-                        Common.broadcast(" ");
+                        //
+//                        Common.broadcast(item + "<------");
+//
+//                        Common.broadcast(item.getAttributeTierMap().size() + " SIZE");
+//                        Common.broadcast(item.getAttributeTierMap().toString() + " CONTENTS");
+//                        Common.broadcast(" ");
                     }
                 }
         });

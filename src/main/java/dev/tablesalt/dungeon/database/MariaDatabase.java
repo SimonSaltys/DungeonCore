@@ -16,9 +16,9 @@ import org.mineacademy.fo.collection.SerializedMap;
 import org.mineacademy.fo.database.SimpleDatabase;
 
 import java.sql.*;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 /**
  * This class is able to load and save relevant data from an off site database.
@@ -151,6 +151,19 @@ public class MariaDatabase extends SimpleDatabase implements Database {
         });
     }
 
+    public void cleanCache(Player player) {
+        Valid.checkSync("Please call saveCache on the main thread.");
+
+        Common.runAsync(() -> {
+           try {
+                removeOwnerships(player);
+           } catch (Throwable t) {
+               Common.error(t, "Unable to CLEAN player data for " + player.getName());
+           }
+        });
+
+    }
+
     /*----------------------------------------------------------------*/
     /* HELPER METHODS FOR SAVING AND LOADING */
     /*----------------------------------------------------------------*/
@@ -275,7 +288,51 @@ public class MariaDatabase extends SimpleDatabase implements Database {
               Common.error(e,"Could not save " + item.getName() + " into the player_items table!!");
             }
         }
+    }
 
+
+    private void removeItemsWithoutOwners() {
+
+    }
+
+    private void removeOwnerships(Player player) {
+        List<UUID> itemIdsOwnedByPlayer = new ArrayList<>();
+
+        for (ItemStack stack : player.getInventory()) {
+            EnchantableItem item = EnchantableItem.fromItemStack(stack);
+            if (item == null)
+                continue;
+
+            itemIdsOwnedByPlayer.add(item.getUuid());
+        }
+
+        String sql;
+        if (itemIdsOwnedByPlayer.isEmpty()) {
+            // If no items in inventory, then we assume we need to delete all items for this player.
+            sql = "DELETE FROM " + playerItemTable + " WHERE UUID = ?";
+        } else {
+            String placeholders = String.join(",", Collections.nCopies(itemIdsOwnedByPlayer.size(), "?"));
+            sql = "DELETE FROM " + playerItemTable + " WHERE ITEM_ID NOT IN (" + placeholders + ") AND UUID = ?";
+        }
+
+        try(PreparedStatement stmtRemoveOwnership = getConnection().prepareStatement(sql)) {
+            int index = 1;
+
+            if (!itemIdsOwnedByPlayer.isEmpty()) {
+                for (UUID itemId : itemIdsOwnedByPlayer) {
+                    stmtRemoveOwnership.setString(index++, itemId.toString());
+                }
+            }
+
+            // Assuming the player ID is a String or similar; you may need to adjust based on your schema.
+            stmtRemoveOwnership.setString(index, player.getUniqueId().toString());
+
+            int deletedRows = stmtRemoveOwnership.executeUpdate();
+            Common.broadcast("&cDELETED ROWS &b#" + deletedRows);
+
+        } catch (SQLException e) {
+            Common.error(e,"Could not remove ownerships for player " + player.getName());
+        }
     }
 
 

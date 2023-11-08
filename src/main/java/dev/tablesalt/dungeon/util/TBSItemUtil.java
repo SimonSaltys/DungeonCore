@@ -148,20 +148,6 @@ public class TBSItemUtil {
         return UUID.fromString(uuidString);
     }
 
-//    public EnchantableItem getAsEnchantableItem(ItemStack stack) {
-//        UUID stackUUID = getItemsUUID(stack);
-//
-//        if (stackUUID == null)
-//            return null;
-//
-//        for (EnchantableItem item : EnchantableItem.getAllItems())
-//            if (item.getUuid() == stackUUID)
-//                return item;
-//
-//        return null;
-//    }
-
-
     /**
      * returns true if the item can
      * be enchanted in the enchanting menu
