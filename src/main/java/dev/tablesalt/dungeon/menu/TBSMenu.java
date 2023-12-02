@@ -26,7 +26,11 @@ public class TBSMenu extends Menu {
     }
 
 
-    public void onRestart() {
+    public void preRestart() {
+    }
+
+    public void postRestart() {
+
     }
 
     protected void onMenuDrag(Player player, int slot, DragType type, ItemStack cursor) {
@@ -41,12 +45,15 @@ public class TBSMenu extends Menu {
         for (int i : slotsToPersist)
             itemsToPutBack.add(getInventory().getItem(i));
 
-        onRestart();
+        preRestart();
 
         restartMenu();
 
+        postRestart();
+
         for (int i = 0; i < slotsToPersist.size(); i++)
             getInventory().setItem(slotsToPersist.get(i), itemsToPutBack.get(i));
+
 
     }
 

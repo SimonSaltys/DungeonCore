@@ -14,31 +14,19 @@ import org.mineacademy.fo.Common;
 import org.mineacademy.fo.PlayerUtil;
 
 public class DatabaseListener implements Listener {
-
+    private static final MariaDatabase db = MariaDatabase.getInstance();
 
     @EventHandler(priority = EventPriority.LOW)
     public void onJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
 
-
+        db.loadCache(player,(cache) -> {});
     }
 
     @EventHandler(priority = EventPriority.LOW)
     public void onLeave(PlayerQuitEvent event) {
         Player player = event.getPlayer();
 
-    }
-
-    @EventHandler
-    public void onItemDropped(PlayerDropItemEvent event) {
-        DungeonCache cache = DungeonCache.from(event.getPlayer());
-    }
-
-    @EventHandler
-    public void onItemPickedUp(EntityPickupItemEvent event) {
-        if (!(event.getEntity() instanceof Player player))
-            return;
-
-        DungeonCache cache = DungeonCache.from(player);
+        db.saveCache(player);
     }
 }

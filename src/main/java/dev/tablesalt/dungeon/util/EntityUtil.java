@@ -45,9 +45,10 @@ public class EntityUtil {
     }
 
     public TextDisplay getClosestTextDisplay(Location location, double radius) {
-        for(Entity entity : Remain.getNearbyEntities(location,radius))
-            if (entity instanceof TextDisplay textDisplay)
-                return textDisplay;
+        if (location != null)
+            for(Entity entity : Remain.getNearbyEntities(location,radius))
+                if (entity instanceof TextDisplay textDisplay)
+                    return textDisplay;
 
         return null;
     }
