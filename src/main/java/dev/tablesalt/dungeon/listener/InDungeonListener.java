@@ -40,7 +40,6 @@ public class InDungeonListener implements Listener {
         Common.runTimer(1, new BoostTask());
     }
 
-
     @EventHandler
     public void onChestLoot(InventoryClickEvent event) {
         Player player = (Player) event.getWhoClicked();

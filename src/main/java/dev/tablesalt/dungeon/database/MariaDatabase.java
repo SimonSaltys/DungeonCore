@@ -1,20 +1,26 @@
 package dev.tablesalt.dungeon.database;
 
+import com.earth2me.essentials.ITarget;
 import dev.tablesalt.dungeon.DungeonPlugin;
 import dev.tablesalt.dungeon.item.ItemAttribute;
 import dev.tablesalt.dungeon.item.Tier;
 import dev.tablesalt.dungeon.util.TBSItemUtil;
+import io.r2dbc.spi.Parameter;
 import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.mineacademy.fo.Common;
 import org.mineacademy.fo.Valid;
 import org.mineacademy.fo.collection.SerializedMap;
 import org.mineacademy.fo.database.SimpleDatabase;
+import org.mineacademy.fo.remain.Remain;
 
+import java.security.Key;
 import java.sql.*;
 import java.util.*;
 import java.util.function.Consumer;
@@ -55,6 +61,16 @@ public class MariaDatabase extends SimpleDatabase implements Database {
            makeItemTable();
            makePlayerItemTable();
         });
+    }
+
+    public void loadForAll() {
+        for (Player player : Remain.getOnlinePlayers())
+            loadCache(player,cache -> {});
+    }
+
+    public void saveForAll() {
+        for (Player player: Remain.getOnlinePlayers())
+            saveCache(player);
     }
 
     /**
@@ -142,35 +158,17 @@ public class MariaDatabase extends SimpleDatabase implements Database {
                 Common.broadcast("Saving");
                 saveData(player);
                 saveItems(player);
-
-
+                removeOwnerships(player);
             } catch (Throwable t) {
                 Common.error(t, "Unable to SAVE player data for " + player.getName());
             }
         });
     }
-
-    public void cleanCache(Player player) {
-        Valid.checkSync("Please call saveCache on the main thread.");
-
-        Common.runAsync(() -> {
-           try {
-                removeOwnerships(player);
-
-                //todo move this later just testing. This is an expensive task.
-                removeItemsWithoutOwners();
-           } catch (Throwable t) {
-               Common.error(t, "Unable to CLEAN player data for " + player.getName());
-           }
-        });
-
-    }
-
     /*----------------------------------------------------------------*/
     /* HELPER METHODS FOR SAVING AND LOADING */
     /*----------------------------------------------------------------*/
 
-    private void loadPlayerData(Player player)  {
+    private void loadPlayerData(Player player) {
         DungeonCache cache = DungeonCache.from(player);
         String sql = "SELECT * FROM player_data WHERE PLAYER_UUID = ?";
 
@@ -184,7 +182,17 @@ public class MariaDatabase extends SimpleDatabase implements Database {
 
                     if (jsonData != null) {
                         SerializedMap dataMap = SerializedMap.fromJson(jsonData);
+
+                        //loading money
                         cache.moneyAmount = (dataMap.getDouble("Money"));
+
+                        //loading basic itemstacks (not enchantable, ex: sticks, planks, ect...)
+                        HashMap<Integer, ItemStack> normalItems = dataMap.getMap(
+                                "Normal_Items", Integer.class,ItemStack.class);
+
+                        for (Map.Entry<Integer, ItemStack> entry : normalItems.entrySet())
+                            player.getInventory().setItem(entry.getKey(),entry.getValue());
+
                         // You can load other data similarly later...
                     }
                 }
@@ -196,8 +204,9 @@ public class MariaDatabase extends SimpleDatabase implements Database {
     }
 
 
-    private void loadEnchantableItems(Player player)  {
+    private void loadEnchantableItems(Player player) {
         String playerUUID = player.getUniqueId().toString();
+        DungeonCache cache = DungeonCache.from(player);
 
         String playerItemsTableQuery = "SELECT ITEM_ID, Slot_In_Inventory FROM " + playerItemTable + " WHERE PLAYER_UUID = ?";
 
@@ -211,6 +220,7 @@ public class MariaDatabase extends SimpleDatabase implements Database {
                     UUID itemId = UUID.fromString(playerItemsResult.getString("ITEM_ID"));
                     int slotInInventory = playerItemsResult.getInt("Slot_In_Inventory");
 
+
                     //Now lets query the item table with the UUID of the item found to get its data...
                     String itemTableQuery = "SELECT * FROM " + itemTable + " WHERE ITEM_ID = ?";
                     try (PreparedStatement stmtItem = getConnection().prepareStatement(itemTableQuery)) {
@@ -222,7 +232,11 @@ public class MariaDatabase extends SimpleDatabase implements Database {
                             // Create an item instance from the ResultSet
                             EnchantableItem item = EnchantableItem.fromResultSet(itemResult);
 
-                            player.getInventory().setItem(slotInInventory, item.compileToItemStack());
+                            if (slotInInventory == Keys.ENCHANTING_MENU_SLOT)
+                                cache.setItemInEnchanter(item);
+                            //todo make sure the slot is in the proper range before trying to put it in inventory
+                            else
+                                player.getInventory().setItem(slotInInventory, item.compileToItemStack());
                         }
                     }
                 }
@@ -239,7 +253,7 @@ public class MariaDatabase extends SimpleDatabase implements Database {
         try(PreparedStatement statement = this.getConnection().prepareStatement(dataSql)) {
             statement.setString(1,player.getUniqueId().toString());
             statement.setString(2,player.getName());
-            statement.setString(3,DungeonCache.from(player).toSerializedMap().toJson());
+            statement.setString(3,DungeonCache.toSerializedMap(player).toJson());
             statement.setTimestamp(4,new Timestamp(System.currentTimeMillis()));
             statement.executeUpdate();
         } catch (SQLException e) {
@@ -250,7 +264,9 @@ public class MariaDatabase extends SimpleDatabase implements Database {
 
     private void saveItems(Player player) {
         PlayerInventory inventory = player.getInventory();
+        DungeonCache cache = DungeonCache.from(player);
 
+        //save all enchantable items in inventory
         for (int i = 0; i < inventory.getSize(); i++) {
             ItemStack itemStack = inventory.getItem(i);
             if (itemStack == null)
@@ -259,40 +275,56 @@ public class MariaDatabase extends SimpleDatabase implements Database {
             if (!TBSItemUtil.isEnchantable(itemStack))
                 continue;
 
-            EnchantableItem item = EnchantableItem.fromItemStack(itemStack);
+            saveItem(player,itemStack,i);
+        }
+
+        //save the item in the item upgrader, they might of left it in it...
+        EnchantableItem itemInEnchanter = cache.getItemInEnchanter();
+        if (itemInEnchanter != null)
+            saveItem(player, itemInEnchanter, Keys.ENCHANTING_MENU_SLOT);
+
+        //save there stash later
+    }
+
+    private void saveItem(Player player, ItemStack itemStack, int slot) {
+        EnchantableItem item = EnchantableItem.fromItemStack(itemStack);
+
+        saveItem(player,item,slot);
+    }
+
+    private void saveItem(Player player, EnchantableItem item, int slot) {
+        String sqlItem = "REPLACE INTO " + itemTable + " (ITEM_ID, Tier, Name, Material, Attributes) VALUES (?, ?, ?, ?, ?)";
+        try(PreparedStatement saveToItemTableStatement = getConnection().prepareStatement(sqlItem)) {
+
+            Common.broadcast("Saving item " + item.getFormattedName() + " in slot &a" + slot);
+
+            saveToItemTableStatement.setString(1, item.getUuid().toString());
+            saveToItemTableStatement.setInt(2, item.getCurrentTier().getAsInteger());
+            saveToItemTableStatement.setString(3, item.getName());
+            saveToItemTableStatement.setString(4, item.getMaterial().toString());
+            saveToItemTableStatement.setString(5, item.serializeAttributeTierMap()); // Convert attributes to JSON
+            saveToItemTableStatement.executeUpdate();
+
+        } catch (SQLException e) {
+            Common.error(e,"Could not save item " + item.getName() + " to the items table!!!");
+        }
 
 
-            String sqlItem = "REPLACE INTO " + itemTable + " (ITEM_ID, Tier, Name, Material, Attributes) VALUES (?, ?, ?, ?, ?)";
-            try(PreparedStatement saveToItemTableStatement = getConnection().prepareStatement(sqlItem)) {
-
-                Common.broadcast("Saving item " + item.getUuid());
-
-                saveToItemTableStatement.setString(1, item.getUuid().toString());
-                saveToItemTableStatement.setInt(2, item.getCurrentTier().getAsInteger());
-                saveToItemTableStatement.setString(3, item.getName());
-                saveToItemTableStatement.setString(4, item.getMaterial().toString());
-                saveToItemTableStatement.setString(5, item.serializeAttributeTierMap()); // Convert attributes to JSON
-                saveToItemTableStatement.executeUpdate();
-
-            } catch (SQLException e) {
-               Common.error(e,"Could not save item " + item.getName() + " to the items table!!!");
-            }
-
-
-            // Now we only need to update the player_items with the reference
-            String sqlPlayerItems = "REPLACE INTO " + playerItemTable + " (PLAYER_UUID, ITEM_ID, Slot_In_Inventory) VALUES (?, ?, ?)";
-            try (PreparedStatement stmtPlayerItems = getConnection().prepareStatement(sqlPlayerItems)) {
-                stmtPlayerItems.setString(1, player.getUniqueId().toString());
-                stmtPlayerItems.setString(2, item.getUuid().toString());
-                stmtPlayerItems.setInt(3, i); // Assuming `getInventorySlot` returns the slot index
-                stmtPlayerItems.executeUpdate();
-            } catch (SQLException e) {
-              Common.error(e,"Could not save " + item.getName() + " into the player_items table!!");
-            }
+        // Now we only need to update the player_items with the reference
+        String sqlPlayerItems = "REPLACE INTO " + playerItemTable + " (PLAYER_UUID, ITEM_ID, Slot_In_Inventory) VALUES (?, ?, ?)";
+        try (PreparedStatement stmtPlayerItems = getConnection().prepareStatement(sqlPlayerItems)) {
+            stmtPlayerItems.setString(1, player.getUniqueId().toString());
+            stmtPlayerItems.setString(2, item.getUuid().toString());
+            stmtPlayerItems.setInt(3, slot);
+            stmtPlayerItems.executeUpdate();
+        } catch (SQLException e) {
+            Common.error(e,"Could not save " + item.getName() + " into the player_items table!!");
         }
     }
 
 
+    //todo move this to bungee cord to deal with. we only want one task of this running for all programs and threads since
+    // this is a very expensive operation.
     private void removeItemsWithoutOwners() {
         String sqlRemoveItems = "DELETE FROM " + itemTable + " WHERE ITEM_ID NOT IN " +
                 "(SELECT ITEM_ID FROM " + playerItemTable + ")";
@@ -302,6 +334,7 @@ public class MariaDatabase extends SimpleDatabase implements Database {
 
     private void removeOwnerships(Player player) {
         List<UUID> itemIdsOwnedByPlayer = new ArrayList<>();
+        EnchantableItem itemInEnchanter = DungeonCache.from(player).getItemInEnchanter();
 
         for (ItemStack stack : player.getInventory()) {
             EnchantableItem item = EnchantableItem.fromItemStack(stack);
@@ -310,6 +343,9 @@ public class MariaDatabase extends SimpleDatabase implements Database {
 
             itemIdsOwnedByPlayer.add(item.getUuid());
         }
+
+        if (itemInEnchanter != null)
+            itemIdsOwnedByPlayer.add(itemInEnchanter.getUuid());
 
         String sql;
         if (itemIdsOwnedByPlayer.isEmpty()) {

@@ -1,6 +1,7 @@
 package dev.tablesalt.dungeon.util;
 
 import dev.tablesalt.dungeon.database.DungeonCache;
+import dev.tablesalt.dungeon.database.EnchantableItem;
 import dev.tablesalt.dungeon.game.DungeonGame;
 import dev.tablesalt.dungeon.maps.DungeonMap;
 import dev.tablesalt.gamelib.players.PlayerCache;
@@ -44,6 +45,21 @@ public class TBSPlayerUtil {
         for (Map.Entry<Integer, ItemStack> entry : failedItems.entrySet()) {
             player.getWorld().dropItemNaturally(player.getLocation(), entry.getValue());
         }
+    }
+    public HashMap<Integer,ItemStack> getItemsInSlots(Player player) {
+        PlayerInventory inventory = player.getInventory();
+        HashMap<Integer,ItemStack> itemsInSlots = new HashMap<>();
+
+        for (int i = 0; i < inventory.getSize(); i++) {
+
+            ItemStack stack = inventory.getItem(i);
+            if(stack == null || TBSItemUtil.isEnchantable(stack))
+                continue;
+
+            itemsInSlots.put(i,stack);
+        }
+
+        return itemsInSlots;
     }
 
     public ItemStack[] getAllItemsExcludingArmor(Player player) {

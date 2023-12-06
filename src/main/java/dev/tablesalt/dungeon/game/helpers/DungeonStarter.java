@@ -32,7 +32,7 @@ public class DungeonStarter extends Starter {
         activateExtractLocations();
         DungeonUtil.spawnLoot(game);
 
-//        teleportPlayers();
+        teleportPlayers();
     }
 
 

@@ -6,11 +6,14 @@ import org.bukkit.entity.Display;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.TextDisplay;
+import org.bukkit.util.BoundingBox;
 import org.bukkit.util.Transformation;
 import org.mineacademy.fo.ChatUtil;
 import org.mineacademy.fo.RandomUtil;
 import org.mineacademy.fo.remain.CompChatColor;
 import org.mineacademy.fo.remain.Remain;
+
+import java.util.Set;
 
 @UtilityClass
 public class EntityUtil {
@@ -45,9 +48,10 @@ public class EntityUtil {
     }
 
     public TextDisplay getClosestTextDisplay(Location location, double radius) {
-        for(Entity entity : Remain.getNearbyEntities(location,radius))
-            if (entity instanceof TextDisplay textDisplay)
-                return textDisplay;
+        if (location != null)
+            for(Entity entity : Remain.getNearbyEntities(location,radius))
+                if (entity instanceof TextDisplay textDisplay)
+                    return textDisplay;
 
         return null;
     }

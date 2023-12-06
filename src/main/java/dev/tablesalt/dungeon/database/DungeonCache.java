@@ -1,17 +1,23 @@
 package dev.tablesalt.dungeon.database;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
 import dev.tablesalt.dungeon.event.PlayerGainGoldEvent;
 import dev.tablesalt.dungeon.util.TBSItemUtil;
+import dev.tablesalt.dungeon.util.TBSPlayerUtil;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.mineacademy.fo.Common;
+import org.mineacademy.fo.SerializeUtil;
 import org.mineacademy.fo.collection.SerializedMap;
 import org.mineacademy.fo.remain.Remain;
 
 import javax.annotation.Nullable;
+import java.lang.reflect.Type;
 import java.util.*;
 
 /**
@@ -81,15 +87,14 @@ public class DungeonCache {
         return player != null && player.isOnline() ? player : null;
     }
 
-    public SerializedMap toSerializedMap() {
+    public static SerializedMap toSerializedMap(Player player) {
+        DungeonCache cache = DungeonCache.from(player);
 
         return SerializedMap.ofArray(
-                "Money", moneyAmount
-        );
+                "Money", cache.getMoney(),
+                "Normal_Items", SerializeUtil.serialize(SerializeUtil.Mode.JSON,
+                        TBSPlayerUtil.getItemsInSlots(player)));
     }
-
-
-
     /*----------------------------------------------------------------*/
     /* STATIC METHODS */
     /*----------------------------------------------------------------*/

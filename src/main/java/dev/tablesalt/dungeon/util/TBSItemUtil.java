@@ -47,7 +47,7 @@ public class TBSItemUtil {
      * applies a random attribute and
      * increases the tier of other random attributes
      */
-    public ItemStack enchantItem(Player player, EnchantableItem item) {
+    public EnchantableItem enchantItem(EnchantableItem item) {
 
         int currentTier = item.getCurrentTier().getAsInteger();
 
@@ -66,7 +66,7 @@ public class TBSItemUtil {
             }
         }
 
-        return item.compileToItemStack();
+        return item;
     }
 
     private void applyRandomAttribute(EnchantableItem item) {
@@ -113,9 +113,10 @@ public class TBSItemUtil {
         List<ItemAttribute> attributes = new ArrayList<>();
 
         //let's get all current attributes on the item
-        for (ItemAttribute attribute : item.getAttributeTierMap().keySet())
-            if (item.getAttributeTierMap().get(attribute) < 3)
+        for (ItemAttribute attribute : item.getAttributeTierMap().keySet()) {
+            if (attribute != null && item.getAttributeTierMap().get(attribute) < 3)
                 attributes.add(attribute);
+        }
 
         if (attributes.isEmpty()) return;
 
