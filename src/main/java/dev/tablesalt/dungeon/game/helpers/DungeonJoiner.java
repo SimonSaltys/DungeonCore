@@ -17,7 +17,6 @@ public class DungeonJoiner extends PlayerJoiner {
 
     @Override
     protected boolean cleanPlayerOnJoin() {
-
         return false;
     }
 
@@ -28,6 +27,6 @@ public class DungeonJoiner extends PlayerJoiner {
 
     @Override
     protected void onGameJoin(Player player) {
-        DungeonUtil.teleportToLobby(player, game);
+            //
     }
 }

@@ -10,6 +10,7 @@ import dev.tablesalt.dungeon.item.ItemAttribute;
 import dev.tablesalt.dungeon.listener.*;
 import dev.tablesalt.dungeon.menu.MenuListener;
 import dev.tablesalt.dungeon.model.effects.Effects;
+import dev.tablesalt.dungeon.util.ScoreBoardUtil;
 import dev.tablesalt.dungeon.util.TBSItemUtil;
 import dev.tablesalt.gamelib.game.helpers.Game;
 import dev.tablesalt.gamelib.game.helpers.GameListener;
@@ -32,16 +33,16 @@ public final class DungeonPlugin extends SimplePlugin {
     @Override
     protected void onReloadablesStart() {
         initialization();
-
         DungeonSettings.getInstance().onLoad();
     }
 
     @Override
     public void onPluginStop() {
-        DungeonCache.purge();
         for (Game game : Game.getGames())
             game.getStopper().stop();
 
+        MariaDatabase.getInstance().saveForAll();
+        DungeonCache.purge();
         Effects.disable();
     }
 
@@ -52,8 +53,10 @@ public final class DungeonPlugin extends SimplePlugin {
         GameTypeList.getInstance().addType(new Type<>("dungeon", DungeonGame.class));
         LootChance.loadChances();
         ItemAttribute.registerAttributes();
+        ScoreBoardUtil.displayHubScoreboardToAll();
 
         MariaDatabase.getInstance().connect();
+        MariaDatabase.getInstance().loadForAll();
         Effects.loadEffects();
 
         registerDungeonEvents();

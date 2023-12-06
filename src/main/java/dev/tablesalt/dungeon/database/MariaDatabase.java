@@ -18,6 +18,7 @@ import org.mineacademy.fo.Common;
 import org.mineacademy.fo.Valid;
 import org.mineacademy.fo.collection.SerializedMap;
 import org.mineacademy.fo.database.SimpleDatabase;
+import org.mineacademy.fo.remain.Remain;
 
 import java.security.Key;
 import java.sql.*;
@@ -60,6 +61,16 @@ public class MariaDatabase extends SimpleDatabase implements Database {
            makeItemTable();
            makePlayerItemTable();
         });
+    }
+
+    public void loadForAll() {
+        for (Player player : Remain.getOnlinePlayers())
+            loadCache(player,cache -> {});
+    }
+
+    public void saveForAll() {
+        for (Player player: Remain.getOnlinePlayers())
+            saveCache(player);
     }
 
     /**

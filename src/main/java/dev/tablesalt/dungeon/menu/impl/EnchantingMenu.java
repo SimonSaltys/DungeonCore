@@ -51,6 +51,7 @@ public class EnchantingMenu extends TBSMenu {
 
     private final EnchantingAnimation enchantingAnimation;
 
+
     private static final int ENCHANT_SLOT = 20;
 
     public static void openEnchantMenu(Player player) {
@@ -67,10 +68,6 @@ public class EnchantingMenu extends TBSMenu {
         basicLoopAnimation.launch();
 
         makeEnchantingButton();
-
-        Common.runLater(0, () -> {
-            Common.broadcast("Found Item " + getItemAt(ENCHANT_SLOT));
-        });
     }
 
 
@@ -106,13 +103,24 @@ public class EnchantingMenu extends TBSMenu {
     }
 
     @Override
+    protected void onPreDisplay(InventoryDrawer drawer) {
+        EnchantableItem itemLeft = DungeonCache.from(getViewer()).getItemInEnchanter();
+
+        drawer.setItem(ENCHANT_SLOT, itemLeft == null ? NO_ITEM : itemLeft.compileToItemStack());
+    }
+
+    @Override
     protected void onMenuClose(Player player, Inventory inventory) {
         if (basicLoopAnimation.isRunning())
             basicLoopAnimation.cancel();
 
         if (enchantingAnimation.isRunning()) {
             enchantingAnimation.cancel();
-        }
+            //save the item that has been upgraded
+            saveItemInCache(enchantingAnimation.getItemEnchanting());
+        } else
+            //save the item that has not been upgraded
+            saveItemInCache(EnchantableItem.fromItemStack(inventory.getItem(ENCHANT_SLOT)));
     }
 
 
@@ -161,6 +169,9 @@ public class EnchantingMenu extends TBSMenu {
 
         TBSColor color = TBSColor.WHITE;
 
+        @Getter
+        private EnchantableItem itemEnchanting;
+
 
         protected EnchantingAnimation() {
             super(-1, 3, 3);
@@ -172,8 +183,11 @@ public class EnchantingMenu extends TBSMenu {
 
             this.color = color;
 
-            setItem(ENCHANT_SLOT, NO_ITEM);
+            itemEnchanting = getItemInEnchanter();
+            TBSItemUtil.enchantItem(itemEnchanting);
+            EnchantingSound.getInstance().playToWithItem(getViewer(),itemEnchanting);
 
+            setItem(ENCHANT_SLOT, NO_ITEM);
             launch();
         }
 
@@ -193,10 +207,20 @@ public class EnchantingMenu extends TBSMenu {
         }
 
         @Override
+        public void cancel() {
+            super.cancel();
+            setUpgrading(false);
+        }
+
+        @Override
         protected void onEnd() {
             setAll(TBSColor.WHITE);
+            setItem(ENCHANT_SLOT, itemEnchanting.compileToItemStack());
+            setUpgrading(false);
+
             restart();
         }
+
 
         @Override
         protected void onTickError(Throwable t) {
@@ -208,6 +232,54 @@ public class EnchantingMenu extends TBSMenu {
     /*----------------------------------------------------------------*/
     /* HELPER METHODS */
     /*----------------------------------------------------------------*/
+
+    private void saveItemInCache(EnchantableItem item) {
+        DungeonCache.from(getViewer()).setItemInEnchanter(item);
+    }
+
+    private EnchantableItem getItemInEnchanter() {
+        return EnchantableItem.fromItemStack(getInventory().getItem(ENCHANT_SLOT));
+    }
+
+    private void setUpgrading(boolean isUpgrading) {
+        PlayerCache.from(getViewer()).getTagger().setPlayerTag("upgrading", isUpgrading);
+    }
+
+    private boolean isUpgrading() {
+        return PlayerCache.from(getViewer()).getTagger().getBooleanTagSafe("upgrading");
+    }
+
+    private boolean canUpgrade(Player player, EnchantableItem item) {
+
+        DungeonCache dungeonCache = DungeonCache.from(player);
+
+        if (item != null && !item.getCurrentTier().equals(Tier.THREE))
+            if (dungeonCache.getMoney() >= Tier.getNext(item.getCurrentTier()).getCostToUpgrade())
+                return !isUpgrading();
+
+        return false;
+    }
+
+    private void attemptUpgrade(Player player) {
+        DungeonCache dungeonCache = DungeonCache.from(player);
+        EnchantableItem itemToUpgrade = getItemInEnchanter();
+
+        if (canUpgrade(player, itemToUpgrade)) {
+            Tier tierToUpgrade = Tier.getNext(itemToUpgrade.getCurrentTier());
+
+            setUpgrading(true);
+            enchantingAnimation.launchWithColor(tierToUpgrade.getColor());
+            dungeonCache.takeMoney(tierToUpgrade.getCostToUpgrade());
+        } else {
+
+            if (itemToUpgrade != null && itemToUpgrade.getCurrentTier().equals(Tier.THREE)) {
+                animateTitle("&4&lItem is Max Level!");
+                return;
+            }
+
+            animateTitle("&4&lNot Enough Money!");
+        }
+    }
 
     protected void setGlass(Integer slot) {
         Inventory inventory = getInventory();
@@ -238,8 +310,7 @@ public class EnchantingMenu extends TBSMenu {
         enchantButton = new TBSButton(enchantingCreator) {
             @Override
             public void onClickedInMenu(Player player, Menu menu, ClickType click) {
-
-
+                attemptUpgrade(player);
             }
         };
     }
@@ -307,47 +378,50 @@ public class EnchantingMenu extends TBSMenu {
                 if (mostRecentAdded == null) return;
 
                 if (mostRecentAdded.getRarity() == Rarity.EPIC || mostRecentAdded.getRarity() == Rarity.MYTHIC) {
-                    TextComponent component = makeTextComponent();
+                    TextComponent component = makeTextComponent(player,item);
+                    Common.broadcast("Sending message!");
                     MessageUtil.forAllPlayersNotInGame(receiver -> receiver.sendMessage(component));
 
                     TBSSound.GoodItemEnchanted.getInstance().playTo(player);
                 }
-
             }
-
-            private TextComponent makeTextComponent() {
-                TextColor mainColor = item.getCurrentTier().getColor().getTextColor();
-
-                return Component.text(Common.colorize(MessageUtil.makeInfo(" &7" + player.getName() + " just rolled a cool ")))
-
-                        .append(Component.text()
-                                .content(Rarity.MYTHIC + " " + ItemUtil.bountifyCapitalized(item.getName()) + " ").color(mainColor)
-                                .hoverEvent(HoverEvent.showText(Component.text().content(Common.colorize(loreToString()))))
-                                .append(Component.text(item.getCurrentTier().getAsRomanNumeral(), Style.style(mainColor, TextDecoration.BOLD))).build());
-
-            }
-
-            private String loreToString() {
-                StringBuilder builder = new StringBuilder();
-
-                builder.append("&7" + player.getName() + "'s " +
-                        item.getCurrentTier().getColor().getChatColor()
-                        + Rarity.MYTHIC + " " + item.getName() + "&l " + item.getCurrentTier().getAsRomanNumeral()
-                        + "\n");
-
-                List<String> lores = item.getLores();
-
-                for (int i = 0; i < lores.size(); i++) {
-                    builder.append(lores.get(i));
-
-                    if (i != lores.size() - 1)
-                        builder.append("\n");
-
-                }
-
-                return builder.toString();
-            }
-
         }
     }
+
+    private static TextComponent makeTextComponent(Player player, EnchantableItem item) {
+        TextColor mainColor = item.getCurrentTier().getColor().getTextColor();
+
+        return Component.text(Common.colorize(MessageUtil.makeInfo(" &7" + player.getName() + " just rolled a cool ")))
+
+                .append(Component.text()
+                        .content(Rarity.MYTHIC + " " + ItemUtil.bountifyCapitalized(item.getFormattedName()) + " ").color(mainColor)
+                        .hoverEvent(HoverEvent.showText(Component.text().content(Common.colorize(loreToString(player, item)))))
+                        .append(Component.text(item.getCurrentTier().getAsRomanNumeral(), Style.style(mainColor, TextDecoration.BOLD))).build());
+
+    }
+
+    private static String loreToString(Player player, EnchantableItem item) {
+        StringBuilder builder = new StringBuilder();
+
+        builder.append("&7")
+                .append(player.getName()).append("'s ")
+                .append(item.getCurrentTier().getColor().getChatColor())
+                .append(Rarity.MYTHIC).append(" ")
+                .append(item.getName()).append("&l ")
+                .append(item.getCurrentTier().getAsRomanNumeral())
+                .append("\n");
+
+        List<String> lores = item.getLores();
+
+        for (int i = 0; i < lores.size(); i++) {
+            builder.append(lores.get(i));
+
+            if (i != lores.size() - 1)
+                builder.append("\n");
+
+        }
+
+        return builder.toString();
+    }
 }
+

@@ -47,7 +47,7 @@ public class TBSItemUtil {
      * applies a random attribute and
      * increases the tier of other random attributes
      */
-    public EnchantableItem enchantItem(Player player, EnchantableItem item) {
+    public EnchantableItem enchantItem(EnchantableItem item) {
 
         int currentTier = item.getCurrentTier().getAsInteger();
 
